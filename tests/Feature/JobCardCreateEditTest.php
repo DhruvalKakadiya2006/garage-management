@@ -1,0 +1,281 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Customer;
+use App\Models\Employee;
+use App\Models\JobCard;
+use App\Models\LabourMaster;
+use App\Models\SparePart;
+use App\Models\User;
+use App\Models\Vehicle;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class JobCardCreateEditTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private function makeUser(): User
+    {
+        return User::factory()->create();
+    }
+
+    private function makeTechnician(): Employee
+    {
+        return Employee::create([
+            'name' => 'Ramesh',
+            'role' => 'technician',
+            'mobile' => '9876543210',
+            'specialization' => 'battery',
+            'active' => true,
+        ]);
+    }
+
+    private function makePart(string $code, string $name, float $mrp, float $labor, int $stock): SparePart
+    {
+        return SparePart::create([
+            'part_name' => $name,
+            'part_code' => $code,
+            'category' => 'battery',
+            'unit' => 'pcs',
+            'purchase_price' => $mrp * 0.6,
+            'mrp' => $mrp,
+            'labor_charge' => $labor,
+            'gst_rate' => 18,
+            'current_stock_qty' => $stock,
+            'reorder_level' => 5,
+        ]);
+    }
+
+    public function test_store_creates_job_card_with_line_items_totals_and_stock()
+    {
+        $user = $this->makeUser();
+        $technician = $this->makeTechnician();
+
+        $customer = Customer::create(['name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-AB-1234', 'vehicle_brand' => 'Ola', 'model' => 'S1 Pro']);
+        $partA = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 20);
+        $partB = $this->makePart('BAT-01', 'Battery Cell', 100, 20, 20);
+        $labour = LabourMaster::create(['service_name' => 'General Service', 'category' => 'general', 'standard_rate' => 200, 'taxable' => true]);
+
+        $this->actingAs($user)
+            ->post(route('job-cards.store'), [
+                'job_date' => '2026-08-03',
+                'customer_id' => $customer->id,
+                'vehicle_id' => $vehicle->id,
+                'odometer_reading_km' => 12000,
+                'job_type' => 'paid_service',
+                'status' => 'received',
+                'complaints' => [
+                    ['description' => 'Battery not charging', 'charge' => '100'],
+                ],
+                'parts' => [
+                    ['spare_part_id' => $partA->id, 'quantity' => 2, 'mrp' => 50, 'labor_charge' => 10],
+                    ['spare_part_id' => $partB->id, 'quantity' => 1, 'mrp' => 100, 'labor_charge' => 20, 'under_warranty' => '1'],
+                ],
+                'labours' => [
+                    ['labour_master_id' => $labour->id, 'technician_id' => $technician->id, 'rate' => 200, 'qty' => 1],
+                ],
+            ])
+            ->assertRedirect();
+
+        $jobCard = JobCard::first();
+
+        $this->assertNotNull($jobCard);
+        $this->assertStringStartsWith('JC-', $jobCard->job_card_no);
+        $this->assertEquals('received', $jobCard->status);
+        $this->assertEquals($customer->id, $jobCard->customer_id);
+        $this->assertEquals($vehicle->id, $jobCard->vehicle_id);
+
+        // Line items
+        $this->assertCount(1, $jobCard->complaints);
+        $this->assertCount(2, $jobCard->parts);
+        $this->assertCount(1, $jobCard->labours);
+
+        // Warranty part is not charged but still line item
+        $this->assertEquals(0, (float) $jobCard->parts->firstWhere('spare_part_id', $partB->id)->line_total);
+        $this->assertEquals(1, (int) $jobCard->parts->firstWhere('spare_part_id', $partB->id)->under_warranty);
+
+        // Totals: complaint 100 + partA 2*(50+10)=120 + partB 0 (warranty) + labour 200 = 420
+        $this->assertEquals(100, (float) $jobCard->complaints->sum('charge'));
+        $this->assertEquals(120, (float) $jobCard->parts->whereNotIn('spare_part_id', [$partB->id])->sum('line_total'));
+        $this->assertEquals(200, (float) $jobCard->labours->sum('line_total'));
+        $this->assertEqualsWithDelta(420, (float) $jobCard->grand_total, 0.01);
+        $this->assertEquals(0, (float) $jobCard->cgst_amount);
+        $this->assertEquals(0, (float) $jobCard->sgst_amount);
+
+        // Stock deducted for BOTH parts (warranty part physically used)
+        $this->assertEquals(18, (int) $partA->fresh()->current_stock_qty);
+        $this->assertEquals(19, (int) $partB->fresh()->current_stock_qty);
+    }
+
+    public function test_update_syncs_line_items_recalculates_totals_and_adjusts_stock()
+    {
+        $user = $this->makeUser();
+        $technician = $this->makeTechnician();
+
+        $customer = Customer::create(['name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-AB-1234', 'vehicle_brand' => 'Ola', 'model' => 'S1 Pro']);
+        $partA = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 20);
+        $partB = $this->makePart('BAT-01', 'Battery Cell', 100, 20, 20);
+        $partC = $this->makePart('MOT-01', 'Motor Spares', 30, 5, 20);
+        $labour = LabourMaster::create(['service_name' => 'General Service', 'category' => 'general', 'standard_rate' => 200, 'taxable' => true]);
+
+        $jobCard = JobCard::create([
+            'job_date' => '2026-08-03',
+            'customer_id' => $customer->id,
+            'vehicle_id' => $vehicle->id,
+            'job_type' => 'paid_service',
+            'status' => 'received',
+            'gst_applicable' => false,
+        ]);
+
+        // Build the same initial set as the create test
+        $this->actingAs($user)
+            ->put(route('job-cards.update', $jobCard), [
+                'job_date' => '2026-08-03',
+                'customer_id' => $customer->id,
+                'vehicle_id' => $vehicle->id,
+                'odometer_reading_km' => 12000,
+                'job_type' => 'paid_service',
+                'status' => 'in_progress',
+                'complaints' => [
+                    ['description' => 'Battery not charging', 'charge' => '100'],
+                ],
+                'parts' => [
+                    ['spare_part_id' => $partA->id, 'quantity' => 2, 'mrp' => 50, 'labor_charge' => 10],
+                    ['spare_part_id' => $partB->id, 'quantity' => 1, 'mrp' => 100, 'labor_charge' => 20, 'under_warranty' => '1'],
+                ],
+                'labours' => [
+                    ['labour_master_id' => $labour->id, 'technician_id' => $technician->id, 'rate' => 200, 'qty' => 1],
+                ],
+            ])
+            ->assertRedirect();
+
+        $this->assertEquals(18, (int) $partA->fresh()->current_stock_qty);
+        $this->assertEquals(19, (int) $partB->fresh()->current_stock_qty);
+
+        // Now edit: change part A qty 2->5, remove the labour line, add part C, enable GST
+        $this->actingAs($user)
+            ->put(route('job-cards.update', $jobCard), [
+                'job_date' => '2026-08-04',
+                'customer_id' => $customer->id,
+                'vehicle_id' => $vehicle->id,
+                'odometer_reading_km' => 12000,
+                'job_type' => 'paid_service',
+                'urgent' => '1',
+                'status' => 'in_progress',
+                'gst_applicable' => '1',
+                'complaints' => [
+                    ['description' => 'Battery not charging', 'charge' => '100'],
+                ],
+                'parts' => [
+                    ['spare_part_id' => $partA->id, 'quantity' => 5, 'mrp' => 50, 'labor_charge' => 10],
+                    ['spare_part_id' => $partB->id, 'quantity' => 1, 'mrp' => 100, 'labor_charge' => 20, 'under_warranty' => '1'],
+                    ['spare_part_id' => $partC->id, 'quantity' => 3, 'mrp' => 30, 'labor_charge' => 5],
+                ],
+                'labours' => [],
+            ])
+            ->assertRedirect();
+
+        $jobCard->refresh();
+
+        // Line items fully replaced: no duplicates, no leftovers
+        $this->assertCount(1, $jobCard->complaints);
+        $this->assertCount(3, $jobCard->parts);
+        $this->assertCount(0, $jobCard->labours);
+        $this->assertEquals(300, (float) $jobCard->parts->firstWhere('spare_part_id', $partA->id)->line_total);
+        $this->assertEquals(0, (float) $jobCard->parts->firstWhere('spare_part_id', $partB->id)->line_total);
+        $this->assertEquals(105, (float) $jobCard->parts->firstWhere('spare_part_id', $partC->id)->line_total);
+
+        // New header values applied
+        $this->assertEquals('in_progress', $jobCard->status);
+        $this->assertEquals(1, (int) $jobCard->urgent);
+
+        // Totals: complaint 100 + partA 5*60=300 + partB 0 + partC 3*35=105 = 505
+        // GST 18% on partA (300) + partC (105) only; complaint is never taxed, partB is warranty
+        // Pre-rounding total 577.90 -> rounds to 578.00, round-off +0.10
+        $this->assertEqualsWithDelta(505, (float) ($jobCard->grand_total - $jobCard->cgst_amount - $jobCard->sgst_amount - $jobCard->round_off_amount), 0.01);
+        $this->assertEqualsWithDelta(36.45, (float) $jobCard->cgst_amount, 0.01);
+        $this->assertEqualsWithDelta(36.45, (float) $jobCard->sgst_amount, 0.01);
+        $this->assertEqualsWithDelta(0.10, (float) $jobCard->round_off_amount, 0.01);
+        $this->assertEqualsWithDelta(578.00, (float) $jobCard->grand_total, 0.01);
+
+        // Stock: A -> 15 (5 total), B -> 19 (1 total), C -> 17 (3 total)
+        $this->assertEquals(15, (int) $partA->fresh()->current_stock_qty);
+        $this->assertEquals(19, (int) $partB->fresh()->current_stock_qty);
+        $this->assertEquals(17, (int) $partC->fresh()->current_stock_qty);
+    }
+
+    public function test_store_rejects_vehicle_that_does_not_belong_to_customer()
+    {
+        $user = $this->makeUser();
+
+        $customerA = Customer::create(['name' => 'A', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $customerB = Customer::create(['name' => 'B', 'mobile' => '9000000002', 'customer_type' => 'regular']);
+        $vehicleOfB = Vehicle::create(['customer_id' => $customerB->id, 'registration_no' => 'GJ-01-CD-5678', 'vehicle_brand' => 'Ather', 'model' => '450X']);
+        $partA = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 20);
+        $labour = LabourMaster::create(['service_name' => 'General Service', 'category' => 'general', 'standard_rate' => 200, 'taxable' => true]);
+
+        $this->actingAs($user)
+            ->post(route('job-cards.store'), [
+                'job_date' => '2026-08-03',
+                'customer_id' => $customerA->id,
+                'vehicle_id' => $vehicleOfB->id,
+                'job_type' => 'paid_service',
+                'status' => 'received',
+                'complaints' => [
+                    ['description' => 'Brake noise', 'charge' => '50'],
+                ],
+                'parts' => [
+                    ['spare_part_id' => $partA->id, 'quantity' => 1, 'mrp' => 50, 'labor_charge' => 10],
+                ],
+                'labours' => [
+                    ['labour_master_id' => $labour->id, 'rate' => 200, 'qty' => 1],
+                ],
+            ])
+            ->assertSessionHasErrors('vehicle_id');
+
+        $this->assertDatabaseCount('job_cards', 0);
+        $this->assertEquals(20, (int) $partA->fresh()->current_stock_qty);
+    }
+
+    public function test_create_and_edit_pages_render()
+    {
+        $user = $this->makeUser();
+        $this->actingAs($user);
+
+        $response = $this->get(route('job-cards.create'));
+        $response->assertOk();
+        $response->assertSee('Create New Job Card');
+        $response->assertSee('jobCardForm');
+
+        $customer = Customer::create(['name' => 'A', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-CD-5678', 'vehicle_brand' => 'Ather', 'model' => '450X']);
+        $partA = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 20);
+
+        $jobCard = JobCard::create([
+            'job_date' => '2026-08-03',
+            'customer_id' => $customer->id,
+            'vehicle_id' => $vehicle->id,
+            'job_type' => 'paid_service',
+            'status' => 'received',
+        ]);
+        $jobCard->complaints()->create(['description' => 'Brake noise', 'charge' => 50]);
+        $jobCard->parts()->create([
+            'spare_part_id' => $partA->id,
+            'quantity' => 1,
+            'mrp' => 50,
+            'labor_charge' => 10,
+            'under_warranty' => false,
+            'line_total' => 60,
+        ]);
+
+        $response = $this->get(route('job-cards.edit', $jobCard));
+        $response->assertOk();
+        $response->assertSee('Edit Job Card ' . $jobCard->job_card_no);
+        $response->assertSee('jobCardForm');
+        $response->assertSee('Brake noise');
+    }
+}
