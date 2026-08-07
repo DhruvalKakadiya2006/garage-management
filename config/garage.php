@@ -16,6 +16,40 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Workshop / company details
+    |--------------------------------------------------------------------------
+    |
+    | Printed on the header of Job Card invoices and estimates. Values come
+    | from the .env file so they can be changed without touching code; empty
+    | entries are simply omitted from the document.
+    |
+    */
+
+    'company' => [
+        'name' => env('COMPANY_NAME', 'Kakadiya EV Hub'),
+        'address_line1' => env('COMPANY_ADDRESS_LINE1', ''),
+        'address_line2' => env('COMPANY_ADDRESS_LINE2', ''),
+        'city' => env('COMPANY_CITY', 'Surat'),
+        'state' => env('COMPANY_STATE', 'Gujarat'),
+        'pin' => env('COMPANY_PIN', ''),
+        'gstin' => env('COMPANY_GSTIN', ''),
+        'phone' => env('COMPANY_PHONE', ''),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Estimate validity
+    |--------------------------------------------------------------------------
+    |
+    | Number of days an estimate remains valid. Shown on the Estimate PDF in
+    | place of invoice payment terms.
+    |
+    */
+
+    'estimate_validity_days' => (int) env('ESTIMATE_VALIDITY_DAYS', 15),
+
+    /*
+    |--------------------------------------------------------------------------
     | Option lists
     |--------------------------------------------------------------------------
     |
@@ -28,10 +62,8 @@ return [
     'option_lists' => [
 
         'customer_type' => [
-            'walk-in' => 'Walk-in',
             'regular' => 'Regular',
-            'fleet' => 'Fleet',
-            'dealer' => 'Dealer',
+            'counter' => 'Counter',
         ],
 
         'job_type' => [
@@ -50,14 +82,6 @@ return [
             'ready_for_delivery' => 'Ready For Delivery',
             'delivered' => 'Delivered',
             'cancelled' => 'Cancelled',
-        ],
-
-        'estimate_status' => [
-            'draft' => 'Draft',
-            'sent' => 'Sent',
-            'approved' => 'Approved',
-            'rejected' => 'Rejected',
-            'expired' => 'Expired',
         ],
 
         'payment_mode' => [

@@ -22,7 +22,7 @@ class CounterInvoiceController extends Controller
 
     public function create()
     {
-        $customers = Customer::orderBy('name')->get();
+        $customers = Customer::orderBy('display_name')->get();
         $spareParts = SparePart::orderBy('part_name')->get();
         
         return view('counter_invoices.create', compact('customers', 'spareParts'));
@@ -95,7 +95,7 @@ class CounterInvoiceController extends Controller
     public function edit(CounterInvoice $counterInvoice)
     {
         $counterInvoice->load('items');
-        $customers = Customer::orderBy('name')->get();
+        $customers = Customer::orderBy('display_name')->get();
         $spareParts = SparePart::orderBy('part_name')->get();
         
         return view('counter_invoices.edit', compact('counterInvoice', 'customers', 'spareParts'));

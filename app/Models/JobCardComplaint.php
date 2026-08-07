@@ -10,11 +10,7 @@ class JobCardComplaint extends Model
     use HasFactory;
 
     protected $fillable = [
-        'job_card_id', 'description', 'charge',
-    ];
-
-    protected $casts = [
-        'charge' => 'decimal:2',
+        'job_card_id', 'description',
     ];
 
     public function jobCard()

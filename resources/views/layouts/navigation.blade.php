@@ -3,15 +3,12 @@ $navItems = [
     ['route' => 'dashboard', 'pattern' => 'dashboard', 'icon' => 'home', 'label' => __('Dashboard')],
     ['route' => 'customers.index', 'pattern' => 'customers.*', 'icon' => 'users', 'label' => __('Customers')],
     ['route' => 'vehicles.index', 'pattern' => 'vehicles.*', 'icon' => 'truck', 'label' => __('Vehicles')],
-    ['route' => 'estimates.index', 'pattern' => 'estimates.*', 'icon' => 'document-text', 'label' => __('Estimates')],
     ['route' => 'job-cards.index', 'pattern' => 'job-cards.*', 'icon' => 'wrench-screwdriver', 'label' => __('Job Cards')],
     ['route' => 'counter-invoices.index', 'pattern' => 'counter-invoices.*', 'icon' => 'receipt-percent', 'label' => __('Counter Invoice')],
     ['route' => 'payments.index', 'pattern' => 'payments.*', 'icon' => 'banknotes', 'label' => __('Payments')],
     ['route' => 'reports.index', 'pattern' => 'reports.*', 'icon' => 'chart-bar', 'label' => __('Reports')],
     ['route' => 'employees.index', 'pattern' => 'employees.*', 'icon' => 'user-group', 'label' => __('Employees')],
-    ['route' => 'spare-parts.index', 'pattern' => 'spare-parts.*', 'icon' => 'cube', 'label' => __('Spare Parts')],
-    ['route' => 'labour-masters.index', 'pattern' => 'labour-masters.*', 'icon' => 'clipboard-document-list', 'label' => __('Labour Master')],
-    ['route' => 'suppliers.index', 'pattern' => 'suppliers.*', 'icon' => 'building-storefront', 'label' => __('Suppliers')],
+    ['route' => 'inventory.index', 'pattern' => ['inventory.*', 'spare-parts.*', 'labour-masters.*'], 'icon' => 'cube', 'label' => __('Inventory')],
 ];
 
 $userInitials = collect(explode(' ', trim((string) Auth::user()->name)))

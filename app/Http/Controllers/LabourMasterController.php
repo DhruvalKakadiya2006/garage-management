@@ -70,7 +70,7 @@ class LabourMasterController extends Controller
             $labourMaster->delete();
             return redirect()->route('labour-masters.index')->with('success', 'Labour service deleted.');
         } catch (QueryException $e) {
-            return back()->with('error', 'Cannot delete — this labour service has existing job cards, estimates, or invoices linked to it.');
+            return back()->with('error', 'Cannot delete — this labour service has existing job cards or invoices linked to it.');
         }
     }
 }

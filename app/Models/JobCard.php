@@ -11,18 +11,17 @@ class JobCard extends Model
 
     protected $fillable = [
         'job_card_no', 'job_date', 'customer_id', 'vehicle_id', 'odometer_reading_km',
-        'job_type', 'urgent', 'assigned_technician_id', 'supervisor_id',
+        'job_type', 'assigned_technician_id', 'supervisor_id',
         'promised_delivery_date', 'promised_delivery_time', 'status',
         'discount_percent', 'discount_amount', 'gst_applicable',
         'cgst_amount', 'sgst_amount', 'round_off_amount', 'grand_total',
-        'remarks', 'source_estimate_id',
+        'remarks', 'invoice_generated_at', 'estimate_generated_at',
     ];
 
     protected $casts = [
         'job_date' => 'date',
         'promised_delivery_date' => 'date',
         'odometer_reading_km' => 'integer',
-        'urgent' => 'boolean',
         'discount_percent' => 'decimal:2',
         'discount_amount' => 'decimal:2',
         'gst_applicable' => 'boolean',
@@ -30,6 +29,8 @@ class JobCard extends Model
         'sgst_amount' => 'decimal:2',
         'round_off_amount' => 'decimal:2',
         'grand_total' => 'decimal:2',
+        'invoice_generated_at' => 'datetime',
+        'estimate_generated_at' => 'datetime',
     ];
 
     protected static function boot()
@@ -72,11 +73,6 @@ class JobCard extends Model
     public function supervisor()
     {
         return $this->belongsTo(Employee::class, 'supervisor_id');
-    }
-
-    public function sourceEstimate()
-    {
-        return $this->belongsTo(Estimate::class, 'source_estimate_id');
     }
 
     public function complaints()

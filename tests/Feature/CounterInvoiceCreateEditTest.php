@@ -101,7 +101,7 @@ class CounterInvoiceCreateEditTest extends TestCase
     public function test_store_creates_invoice_for_existing_customer()
     {
         $user = $this->makeUser();
-        $customer = Customer::create(['name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
         $partA = $this->makePart('BRK-01', 'Brake Shoe', 50, 20);
 
         $this->actingAs($user)

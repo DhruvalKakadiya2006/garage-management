@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\SparePart;
-use App\Models\Supplier;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 
@@ -13,8 +12,7 @@ class SparePartController extends Controller
     {
         $lowStock = $request->boolean('low_stock');
 
-        $spareParts = SparePart::with('supplier')
-            ->when($lowStock, function ($query) {
+        $spareParts = SparePart::when($lowStock, function ($query) {
                 $query->whereColumn('current_stock_qty', '<=', 'reorder_level');
             })
             ->latest()
@@ -25,8 +23,7 @@ class SparePartController extends Controller
 
     public function create()
     {
-        $suppliers = Supplier::orderBy('name')->get();
-        return view('spare_parts.create', compact('suppliers'));
+        return view('spare_parts.create');
     }
 
     public function store(Request $request)
@@ -44,7 +41,6 @@ class SparePartController extends Controller
             'gst_rate' => 'nullable|numeric|min:0|max:100',
             'current_stock_qty' => 'nullable|integer|min:0',
             'reorder_level' => 'nullable|integer|min:0',
-            'supplier_id' => 'nullable|exists:suppliers,id',
         ]);
 
         // Set defaults
@@ -59,8 +55,7 @@ class SparePartController extends Controller
 
     public function edit(SparePart $sparePart)
     {
-        $suppliers = Supplier::orderBy('name')->get();
-        return view('spare_parts.edit', compact('sparePart', 'suppliers'));
+        return view('spare_parts.edit', compact('sparePart'));
     }
 
     public function update(Request $request, SparePart $sparePart)
@@ -78,7 +73,6 @@ class SparePartController extends Controller
             'gst_rate' => 'nullable|numeric|min:0|max:100',
             'current_stock_qty' => 'nullable|integer|min:0',
             'reorder_level' => 'nullable|integer|min:0',
-            'supplier_id' => 'nullable|exists:suppliers,id',
         ]);
 
         // Set defaults
@@ -97,7 +91,7 @@ class SparePartController extends Controller
             $sparePart->delete();
             return redirect()->route('spare-parts.index')->with('success', 'Spare part deleted.');
         } catch (QueryException $e) {
-            return back()->with('error', 'Cannot delete — this part has existing job cards, estimates, or invoices linked to it.');
+            return back()->with('error', 'Cannot delete — this part has existing job cards or invoices linked to it.');
         }
     }
 }

@@ -10,8 +10,37 @@ class CustomerController extends Controller
 {
     public function index()
     {
-        $customers = Customer::latest()->paginate(15);
+        $customers = Customer::with([
+            'vehicles',
+            'jobCards' => fn ($q) => $q->withSum('payments', 'amount'),
+            'counterInvoices' => fn ($q) => $q->withSum('payments', 'amount'),
+        ])
+            ->withCount(['jobCards', 'counterInvoices'])
+            ->latest()
+            ->paginate(15);
+
+        $customers->getCollection()->transform(function (Customer $customer) {
+            $customer->setAttribute(
+                'outstanding',
+                $customer->jobCards->sum(fn ($jc) => (float) $jc->outstanding)
+                    + $customer->counterInvoices->sum(fn ($ci) => (float) $ci->outstanding)
+            );
+            return $customer;
+        });
+
         return view('customers.index', compact('customers'));
+    }
+
+    public function show(Customer $customer)
+    {
+        $customer->load([
+            'vehicles',
+            'jobCards' => fn ($q) => $q->withSum('payments', 'amount')->latest(),
+            'counterInvoices' => fn ($q) => $q->withSum('payments', 'amount')->latest(),
+        ]);
+        $customer->loadCount(['jobCards', 'counterInvoices']);
+
+        return view('customers.show', compact('customer'));
     }
 
     public function create()
@@ -22,14 +51,17 @@ class CustomerController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'mobile' => 'required|string|max:20|unique:customers,mobile',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'nullable|string|max:255',
+            'surname' => 'nullable|string|max:255',
+            'company_name' => 'nullable|string|max:255',
+            'display_name' => 'nullable|string|max:255',
+            'mobile' => ['required', 'string', 'regex:/^[6-9]\d{9}$/', 'unique:customers,mobile'],
             'alt_mobile' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string',
             'city' => 'nullable|string|max:100',
-            'pincode' => 'nullable|string|max:10',
-            'gstin' => 'nullable|string|max:20',
+            'gstin' => ['nullable', 'string', 'regex:/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/'],
             'customer_type' => 'required|in:' . implode(',', array_keys(config('garage.option_lists.customer_type'))),
         ]);
 
@@ -46,14 +78,17 @@ class CustomerController extends Controller
     public function update(Request $request, Customer $customer)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'mobile' => 'required|string|max:20|unique:customers,mobile,' . $customer->id,
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'nullable|string|max:255',
+            'surname' => 'nullable|string|max:255',
+            'company_name' => 'nullable|string|max:255',
+            'display_name' => 'nullable|string|max:255',
+            'mobile' => ['required', 'string', 'regex:/^[6-9]\d{9}$/', 'unique:customers,mobile,' . $customer->id],
             'alt_mobile' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string',
             'city' => 'nullable|string|max:100',
-            'pincode' => 'nullable|string|max:10',
-            'gstin' => 'nullable|string|max:20',
+            'gstin' => ['nullable', 'string', 'regex:/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/'],
             'customer_type' => 'required|in:' . implode(',', array_keys(config('garage.option_lists.customer_type'))),
         ]);
 
@@ -68,7 +103,7 @@ class CustomerController extends Controller
             $customer->delete();
             return redirect()->route('customers.index')->with('success', 'Customer deleted.');
         } catch (QueryException $e) {
-            return back()->with('error', 'Cannot delete — this customer has existing job cards, estimates, or invoices linked to it.');
+            return back()->with('error', 'Cannot delete — this customer has existing job cards or invoices linked to it.');
         }
     }
 }

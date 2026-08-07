@@ -52,7 +52,7 @@
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap text-gray-500">{{ $index + 1 }}</td>
                                     <td class="px-6 py-4">
-                                        <div class="font-medium text-gray-900">{{ $row['customer']->name }}</div>
+                                        <div class="font-medium text-gray-900">{{ $row['customer']->display_name }}</div>
                                         <div class="text-xs text-gray-500">{{ $row['customer']->mobile ?? '-' }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-gray-600 capitalize">

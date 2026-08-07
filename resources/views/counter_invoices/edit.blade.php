@@ -73,7 +73,7 @@
                         <x-select name="customer_id" label="Select Customer" placeholder="-- Select Customer --">
                             @foreach ($customers as $customer)
                                 <option value="{{ $customer->id }}" {{ old('customer_id', $counterInvoice->customer_id) == $customer->id ? 'selected' : '' }}>
-                                    {{ $customer->name }} — {{ $customer->mobile }}
+                                    {{ $customer->display_name }} — {{ $customer->mobile }}
                                 </option>
                             @endforeach
                         </x-select>

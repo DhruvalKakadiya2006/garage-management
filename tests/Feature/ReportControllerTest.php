@@ -27,7 +27,7 @@ class ReportControllerTest extends TestCase
     private function makeCustomer(string $name = 'Dhruval', string $mobile = '9000000001'): Customer
     {
         return Customer::create([
-            'name' => $name,
+            'first_name' => $name,
             'mobile' => $mobile,
             'customer_type' => 'regular',
         ]);

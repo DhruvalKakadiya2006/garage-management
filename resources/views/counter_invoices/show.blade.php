@@ -53,7 +53,7 @@
                         <h3 class="font-semibold text-gray-900 mb-3">Customer</h3>
                         <dl class="space-y-2 text-sm">
                             @if($counterInvoice->customer_id)
-                                <div><dt class="inline font-medium">Name:</dt> <dd class="inline">{{ $counterInvoice->customer->name }}</dd></div>
+                                <div><dt class="inline font-medium">Name:</dt> <dd class="inline">{{ $counterInvoice->customer->display_name }}</dd></div>
                                 <div><dt class="inline font-medium">Mobile:</dt> <dd class="inline">{{ $counterInvoice->customer->mobile }}</dd></div>
                             @else
                                 <div><dt class="inline font-medium">Walk-in Name:</dt> <dd class="inline">{{ $counterInvoice->walkin_name ?? '-' }}</dd></div>

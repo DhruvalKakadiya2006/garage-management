@@ -85,12 +85,12 @@
                                         if ($payable) {
                                             if ($payable instanceof \App\Models\JobCard) {
                                                 $docNo = $payable->job_card_no;
-                                                $customerName = $payable->customer->name ?? '-';
+                                                $customerName = $payable->customer->display_name ?? '-';
                                                 $docRoute = route('job-cards.show', $payable->id);
                                             } else {
                                                 $docNo = $payable->invoice_no;
                                                 $customerName = $payable->customer_id
-                                                    ? ($payable->customer->name ?? '-')
+                                                    ? ($payable->customer->display_name ?? '-')
                                                     : ($payable->walkin_name ?? 'Walk-in');
                                                 $docRoute = route('counter-invoices.show', $payable->id);
                                             }

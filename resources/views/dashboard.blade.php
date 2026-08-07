@@ -127,10 +127,6 @@
                             <x-heroicon-o-plus class="w-4 h-4 mr-1.5" />
                             New Job Card
                         </x-button>
-                        <x-button :href="route('estimates.create')" class="w-full">
-                            <x-heroicon-o-plus class="w-4 h-4 mr-1.5" />
-                            New Estimate
-                        </x-button>
                         <x-button variant="success" :href="route('counter-invoices.create')" class="w-full">
                             <x-heroicon-o-plus class="w-4 h-4 mr-1.5" />
                             New Counter Invoice
@@ -160,10 +156,7 @@
                                 <li class="flex items-center justify-between gap-3 py-3">
                                     <div class="flex items-center gap-3 min-w-0">
                                         <span class="font-medium text-sm text-gray-900 shrink-0">{{ $jc->job_card_no }}</span>
-                                        <span class="text-sm text-gray-500 truncate">{{ $jc->customer->name ?? '-' }}</span>
-                                        @if($jc->urgent)
-                                            <x-heroicon-o-fire class="w-4 h-4 text-red-600 shrink-0" title="Urgent" />
-                                        @endif
+                                        <span class="text-sm text-gray-500 truncate">{{ $jc->customer->display_name ?? '-' }}</span>
                                     </div>
                                     <div class="flex items-center gap-3 shrink-0">
                                         <x-badge :color="$jobCardStatuses[$jc->status][0] ?? 'gray'">

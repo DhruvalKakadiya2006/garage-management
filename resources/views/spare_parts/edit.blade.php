@@ -39,13 +39,6 @@
                     <div class="grid grid-cols-3 gap-4">
                         <x-input name="current_stock_qty" label="Current Stock Qty" type="number" :value="$sparePart->current_stock_qty" />
                         <x-input name="reorder_level" label="Reorder Level" type="number" :value="$sparePart->reorder_level" />
-                        <x-select name="supplier_id" label="Supplier" placeholder="-- Select Supplier --">
-                            @foreach ($suppliers as $supplier)
-                                <option value="{{ $supplier->id }}" {{ old('supplier_id', $sparePart->supplier_id) == $supplier->id ? 'selected' : '' }}>
-                                    {{ $supplier->name }}
-                                </option>
-                            @endforeach
-                        </x-select>
                     </div>
 
                     <div class="flex justify-end gap-3 pt-2">

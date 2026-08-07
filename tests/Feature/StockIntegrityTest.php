@@ -50,35 +50,44 @@ class StockIntegrityTest extends TestCase
         ]);
     }
 
-    private function jobCardStorePayload(Customer $customer, Vehicle $vehicle, array $parts): array
+    private function storePayload(Customer $customer, Vehicle $vehicle): array
     {
         return [
             'job_date' => '2026-08-03',
             'customer_id' => $customer->id,
             'vehicle_id' => $vehicle->id,
             'job_type' => 'paid_service',
-            'status' => 'received',
-            'parts' => $parts,
         ];
+    }
+
+    private function assignPayload(array $parts): array
+    {
+        return ['parts' => $parts];
     }
 
     public function test_deleting_job_card_returns_part_stock()
     {
         $user = $this->makeUser();
-        $customer = Customer::create(['name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
         $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-AB-1234', 'vehicle_brand' => 'Ola', 'model' => 'S1 Pro']);
         $part = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 10);
 
         $this->actingAs($user)
-            ->post(route('job-cards.store'), $this->jobCardStorePayload($customer, $vehicle, [
+            ->post(route('job-cards.store'), $this->storePayload($customer, $vehicle))
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $jobCard = JobCard::first();
+        $this->assertNotNull($jobCard);
+
+        $this->actingAs($user)
+            ->post(route('job-cards.assign-update', $jobCard), $this->assignPayload([
                 ['spare_part_id' => $part->id, 'quantity' => 2, 'mrp' => 50, 'labor_charge' => 10],
             ]))
             ->assertRedirect()
             ->assertSessionHasNoErrors();
 
         $this->assertEquals(8, (int) $part->fresh()->current_stock_qty);
-
-        $jobCard = JobCard::first();
 
         $this->actingAs($user)
             ->delete(route('job-cards.destroy', $jobCard))
@@ -117,15 +126,22 @@ class StockIntegrityTest extends TestCase
         $this->assertEquals(10, (int) $part->fresh()->current_stock_qty);
     }
 
-    public function test_job_card_store_rejects_quantity_exceeding_stock()
+    public function test_job_card_assign_rejects_quantity_exceeding_stock()
     {
         $user = $this->makeUser();
-        $customer = Customer::create(['name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
         $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-AB-1234', 'vehicle_brand' => 'Ola', 'model' => 'S1 Pro']);
         $part = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 2);
 
         $this->actingAs($user)
-            ->post(route('job-cards.store'), $this->jobCardStorePayload($customer, $vehicle, [
+            ->post(route('job-cards.store'), $this->storePayload($customer, $vehicle))
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $jobCard = JobCard::first();
+
+        $this->actingAs($user)
+            ->post(route('job-cards.assign-update', $jobCard), $this->assignPayload([
                 ['spare_part_id' => $part->id, 'quantity' => 5, 'mrp' => 50, 'labor_charge' => 10],
             ]))
             ->assertSessionHasErrors(['parts.0.quantity']);
@@ -133,7 +149,7 @@ class StockIntegrityTest extends TestCase
         $this->assertStringContainsString('Brake Shoe', session('errors')->first('parts.0.quantity'));
         $this->assertStringContainsString('2', session('errors')->first('parts.0.quantity'));
 
-        $this->assertDatabaseCount('job_cards', 0);
+        $this->assertDatabaseCount('job_cards', 1);
         $this->assertDatabaseCount('job_card_parts', 0);
         $this->assertEquals(2, (int) $part->fresh()->current_stock_qty);
     }
@@ -160,10 +176,10 @@ class StockIntegrityTest extends TestCase
         $this->assertEquals(2, (int) $part->fresh()->current_stock_qty);
     }
 
-    public function test_job_card_update_swapping_part_adjusts_stock_on_both_parts()
+    public function test_job_card_assign_swapping_part_adjusts_stock_on_both_parts()
     {
         $user = $this->makeUser();
-        $customer = Customer::create(['name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
         $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-AB-1234', 'vehicle_brand' => 'Ola', 'model' => 'S1 Pro']);
         $partA = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 10);
         $partB = $this->makePart('BAT-01', 'Battery Cell', 100, 20, 10);
@@ -172,7 +188,7 @@ class StockIntegrityTest extends TestCase
 
         // Start with part A, qty 2
         $this->actingAs($user)
-            ->put(route('job-cards.update', $jobCard), $this->jobCardStorePayload($customer, $vehicle, [
+            ->post(route('job-cards.assign-update', $jobCard), $this->assignPayload([
                 ['spare_part_id' => $partA->id, 'quantity' => 2, 'mrp' => 50, 'labor_charge' => 10],
             ]))
             ->assertRedirect()
@@ -183,7 +199,7 @@ class StockIntegrityTest extends TestCase
 
         // Swap to part B, qty 3
         $this->actingAs($user)
-            ->put(route('job-cards.update', $jobCard), $this->jobCardStorePayload($customer, $vehicle, [
+            ->post(route('job-cards.assign-update', $jobCard), $this->assignPayload([
                 ['spare_part_id' => $partB->id, 'quantity' => 3, 'mrp' => 100, 'labor_charge' => 20],
             ]))
             ->assertRedirect()
@@ -197,10 +213,10 @@ class StockIntegrityTest extends TestCase
         $this->assertEquals($partB->id, $jobCard->parts->first()->spare_part_id);
     }
 
-    public function test_job_card_update_rejects_over_stock_accounting_for_current_line()
+    public function test_job_card_assign_rejects_over_stock_accounting_for_current_line()
     {
         $user = $this->makeUser();
-        $customer = Customer::create(['name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
         $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-AB-1234', 'vehicle_brand' => 'Ola', 'model' => 'S1 Pro']);
         $partA = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 10);
 
@@ -208,7 +224,7 @@ class StockIntegrityTest extends TestCase
 
         // Start with part A, qty 6 (stock 10 -> 4)
         $this->actingAs($user)
-            ->put(route('job-cards.update', $jobCard), $this->jobCardStorePayload($customer, $vehicle, [
+            ->post(route('job-cards.assign-update', $jobCard), $this->assignPayload([
                 ['spare_part_id' => $partA->id, 'quantity' => 6, 'mrp' => 50, 'labor_charge' => 10],
             ]))
             ->assertRedirect()
@@ -218,7 +234,7 @@ class StockIntegrityTest extends TestCase
 
         // Bump to qty 12: available = 4 in stock + 6 already on this line = 10 -> rejected
         $this->actingAs($user)
-            ->put(route('job-cards.update', $jobCard), $this->jobCardStorePayload($customer, $vehicle, [
+            ->post(route('job-cards.assign-update', $jobCard), $this->assignPayload([
                 ['spare_part_id' => $partA->id, 'quantity' => 12, 'mrp' => 50, 'labor_charge' => 10],
             ]))
             ->assertSessionHasErrors(['parts.0.quantity']);
@@ -230,7 +246,7 @@ class StockIntegrityTest extends TestCase
 
     public function test_job_card_part_model_swap_moves_stock_between_parts()
     {
-        $customer = Customer::create(['name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
         $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-AB-1234', 'vehicle_brand' => 'Ola', 'model' => 'S1 Pro']);
         $partA = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 5);
         $partB = $this->makePart('BAT-01', 'Battery Cell', 100, 20, 5);
@@ -299,7 +315,7 @@ class StockIntegrityTest extends TestCase
 
     public function test_creating_guard_prevents_overselling_at_model_level()
     {
-        $customer = Customer::create(['name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
         $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-AB-1234', 'vehicle_brand' => 'Ola', 'model' => 'S1 Pro']);
         $part = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 3);
 
@@ -346,7 +362,7 @@ class StockIntegrityTest extends TestCase
 
     public function test_database_cascade_no_longer_silently_deletes_parts()
     {
-        $customer = Customer::create(['name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
         $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-AB-1234', 'vehicle_brand' => 'Ola', 'model' => 'S1 Pro']);
         $part = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 10);
 

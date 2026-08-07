@@ -6,7 +6,31 @@
                 Job Card {{ $jobCard->job_card_no }}
             </h2>
             <div class="space-x-2">
-                <x-button :href="route('job-cards.edit', $jobCard)">
+                <x-button :href="route('job-cards.assign', $jobCard)">
+                    Assign & Bill
+                </x-button>
+                @if ($jobCard->parts->count() + $jobCard->labours->count() > 0)
+                    <x-button variant="secondary" :href="route('job-cards.invoice', $jobCard)">
+                        <x-heroicon-o-document-text class="w-4 h-4 mr-1.5" />
+                        Generate Invoice
+                    </x-button>
+                    <x-button variant="secondary" :href="route('job-cards.estimate', $jobCard)">
+                        <x-heroicon-o-document-chart-bar class="w-4 h-4 mr-1.5" />
+                        Generate Estimate
+                    </x-button>
+                @else
+                    <button type="button" disabled title="Add at least one part or labour line to generate"
+                            class="inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium text-sm transition-colors duration-150 bg-white text-gray-700 border border-gray-300 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                        <x-heroicon-o-document-text class="w-4 h-4 mr-1.5" />
+                        Generate Invoice
+                    </button>
+                    <button type="button" disabled title="Add at least one part or labour line to generate"
+                            class="inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium text-sm transition-colors duration-150 bg-white text-gray-700 border border-gray-300 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                        <x-heroicon-o-document-chart-bar class="w-4 h-4 mr-1.5" />
+                        Generate Estimate
+                    </button>
+                @endif
+                <x-button variant="secondary" :href="route('job-cards.edit', $jobCard)">
                     Edit
                 </x-button>
                 <x-button variant="secondary" :href="route('job-cards.index')">
@@ -80,7 +104,7 @@
                     <div>
                         <h3 class="font-semibold text-gray-900 mb-3">Customer & Vehicle</h3>
                         <dl class="space-y-2 text-sm">
-                            <div><dt class="inline font-medium">Customer:</dt> <dd class="inline">{{ $jobCard->customer->name }}</dd></div>
+                            <div><dt class="inline font-medium">Customer:</dt> <dd class="inline">{{ $jobCard->customer->display_name }}</dd></div>
                             <div><dt class="inline font-medium">Vehicle:</dt> <dd class="inline">{{ $jobCard->vehicle->registration_no }}</dd></div>
                             <div><dt class="inline font-medium">Odometer:</dt> <dd class="inline">{{ $jobCard->odometer_reading_km ?? '-' }} km</dd></div>
                         </dl>
@@ -101,7 +125,7 @@
             <div class="bg-white shadow-sm sm:rounded-lg p-6">
                 <h3 class="font-semibold text-gray-900 mb-3">Complaints</h3>
                 @foreach($jobCard->complaints as $complaint)
-                    <div class="mb-2 text-sm">{{ $complaint->description }} — {{ config('garage.currency_symbol') }}{{ number_format($complaint->charge, 2) }}</div>
+                    <div class="mb-2 text-sm">{{ $complaint->description }}</div>
                 @endforeach
             </div>
             @endif
@@ -170,13 +194,11 @@
             <div class="bg-white shadow-sm sm:rounded-lg p-6">
                 <div class="max-w-md ml-auto space-y-2 text-sm">
                     @php
-                        $complaintsTotal = $jobCard->complaints->sum('charge');
                         $partsTotal = $jobCard->parts->sum('line_total');
                         $laboursTotal = $jobCard->labours->sum('line_total');
-                        $subtotal = $complaintsTotal + $partsTotal + $laboursTotal;
+                        $subtotal = $partsTotal + $laboursTotal;
                         $afterDiscount = $subtotal - $jobCard->discount_amount;
                     @endphp
-                    <div class="flex justify-between"><span>Complaints Total:</span><span>{{ config('garage.currency_symbol') }}{{ number_format($complaintsTotal, 2) }}</span></div>
                     <div class="flex justify-between"><span>Parts Total:</span><span>{{ config('garage.currency_symbol') }}{{ number_format($partsTotal, 2) }}</span></div>
                     <div class="flex justify-between"><span>Labour Total:</span><span>{{ config('garage.currency_symbol') }}{{ number_format($laboursTotal, 2) }}</span></div>
                     <div class="flex justify-between font-medium"><span>Subtotal:</span><span>{{ config('garage.currency_symbol') }}{{ number_format($subtotal, 2) }}</span></div>

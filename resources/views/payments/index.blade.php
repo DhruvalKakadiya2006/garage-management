@@ -75,10 +75,10 @@
                             @if ($payable)
                                 @php
                                     if ($payable instanceof \App\Models\JobCard) {
-                                        $customerName = $payable->customer->name ?? '-';
+                                        $customerName = $payable->customer->display_name ?? '-';
                                     } else {
                                         $customerName = $payable->customer_id
-                                            ? ($payable->customer->name ?? '-')
+                                            ? ($payable->customer->display_name ?? '-')
                                             : ($payable->walkin_name ?? 'Walk-in');
                                     }
                                 @endphp

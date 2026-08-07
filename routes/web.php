@@ -6,14 +6,13 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\LabourMasterController;
-use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SparePartController;
-use App\Http\Controllers\EstimateController;
 use App\Http\Controllers\JobCardController;
 use App\Http\Controllers\CounterInvoiceController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\InventoryController;
 
 Route::get('/', function () {
     return redirect(auth()->check() ? route('dashboard') : route('login'));
@@ -28,11 +27,19 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('vehicles', VehicleController::class);
     Route::resource('employees', EmployeeController::class);
     Route::resource('labour-masters', LabourMasterController::class);
-    Route::resource('suppliers', SupplierController::class);
     Route::resource('spare-parts', SparePartController::class);
-    Route::resource('estimates', EstimateController::class);
-    Route::post('estimates/{estimate}/convert-to-job-card', [EstimateController::class, 'convertToJobCard'])->name('estimates.convert-to-job-card');
-    Route::resource('job-cards', JobCardController::class);
+    Route::get('inventory', [InventoryController::class, 'index'])->name('inventory.index');
+    Route::get('job-cards', [JobCardController::class, 'index'])->name('job-cards.index');
+    Route::get('job-cards/create', [JobCardController::class, 'create'])->name('job-cards.create');
+    Route::post('job-cards', [JobCardController::class, 'store'])->name('job-cards.store');
+    Route::get('job-cards/{jobCard}/assign', [JobCardController::class, 'assign'])->name('job-cards.assign');
+    Route::post('job-cards/{jobCard}/assign', [JobCardController::class, 'updateAssign'])->name('job-cards.assign-update');
+    Route::get('job-cards/{jobCard}/invoice', [JobCardController::class, 'generateInvoice'])->name('job-cards.invoice');
+    Route::get('job-cards/{jobCard}/estimate', [JobCardController::class, 'generateEstimate'])->name('job-cards.estimate');
+    Route::get('job-cards/{jobCard}', [JobCardController::class, 'show'])->name('job-cards.show');
+    Route::get('job-cards/{jobCard}/edit', [JobCardController::class, 'edit'])->name('job-cards.edit');
+    Route::put('job-cards/{jobCard}', [JobCardController::class, 'update'])->name('job-cards.update');
+    Route::delete('job-cards/{jobCard}', [JobCardController::class, 'destroy'])->name('job-cards.destroy');
     Route::resource('counter-invoices', CounterInvoiceController::class);
     
     // Payments routes

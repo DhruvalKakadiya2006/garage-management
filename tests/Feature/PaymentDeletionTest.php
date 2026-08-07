@@ -53,7 +53,7 @@ class PaymentDeletionTest extends TestCase
     public function test_deleting_job_card_deletes_its_payments()
     {
         $user = $this->makeUser();
-        $customer = Customer::create(['name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
         $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-AB-1234', 'vehicle_brand' => 'Ola', 'model' => 'S1 Pro']);
 
         $jobCard = JobCard::create([
@@ -109,7 +109,7 @@ class PaymentDeletionTest extends TestCase
     public function test_payments_index_renders_deleted_record_for_orphaned_payment()
     {
         $user = $this->makeUser();
-        $customer = Customer::create(['name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
         $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-AB-1234', 'vehicle_brand' => 'Ola', 'model' => 'S1 Pro']);
 
         $jobCard = JobCard::create([
@@ -139,7 +139,7 @@ class PaymentDeletionTest extends TestCase
     public function test_index_pages_eager_load_payment_sum_and_derive_status_labels()
     {
         $user = $this->makeUser();
-        $customer = Customer::create(['name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
         $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-AB-1234', 'vehicle_brand' => 'Ola', 'model' => 'S1 Pro']);
 
         $paidJob = JobCard::create([
@@ -192,7 +192,7 @@ class PaymentDeletionTest extends TestCase
     public function test_single_record_without_eager_load_still_computes_live_amounts()
     {
         $user = $this->makeUser();
-        $customer = Customer::create(['name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
         $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-AB-1234', 'vehicle_brand' => 'Ola', 'model' => 'S1 Pro']);
 
         $jobCard = JobCard::create([

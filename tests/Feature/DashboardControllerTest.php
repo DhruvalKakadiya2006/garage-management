@@ -24,7 +24,7 @@ class DashboardControllerTest extends TestCase
 
     public function test_todays_delivered_job_card_counts_towards_month_revenue(): void
     {
-        $customer = Customer::create(['name' => 'Test', 'mobile' => '1111111111']);
+        $customer = Customer::create(['first_name' => 'Test', 'mobile' => '1111111111']);
         $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ01AB1234']);
 
         JobCard::create([
@@ -63,7 +63,7 @@ class DashboardControllerTest extends TestCase
 
     public function test_todays_job_cards_are_counted_in_today_tiles(): void
     {
-        $customer = Customer::create(['name' => 'Test', 'mobile' => '1111111111']);
+        $customer = Customer::create(['first_name' => 'Test', 'mobile' => '1111111111']);
         $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ01AB1234']);
 
         JobCard::create([
@@ -86,7 +86,7 @@ class DashboardControllerTest extends TestCase
 
     public function test_job_cards_outside_this_month_are_excluded_from_month_revenue(): void
     {
-        $customer = Customer::create(['name' => 'Test', 'mobile' => '1111111111']);
+        $customer = Customer::create(['first_name' => 'Test', 'mobile' => '1111111111']);
         $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ01AB1234']);
 
         JobCard::create([

@@ -48,28 +48,54 @@ class JobCardCreateEditTest extends TestCase
         ]);
     }
 
-    public function test_store_creates_job_card_with_line_items_totals_and_stock()
+    private function storePayload(int $customerId, int $vehicleId): array
+    {
+        return [
+            'job_date' => '2026-08-03',
+            'customer_id' => $customerId,
+            'vehicle_id' => $vehicleId,
+            'odometer_reading_km' => 12000,
+            'job_type' => 'paid_service',
+            'complaints' => [
+                ['description' => 'Battery not charging'],
+            ],
+        ];
+    }
+
+    public function test_create_then_assign_builds_lines_totals_and_stock()
     {
         $user = $this->makeUser();
         $technician = $this->makeTechnician();
 
-        $customer = Customer::create(['name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
         $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-AB-1234', 'vehicle_brand' => 'Ola', 'model' => 'S1 Pro']);
         $partA = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 20);
         $partB = $this->makePart('BAT-01', 'Battery Cell', 100, 20, 20);
         $labour = LabourMaster::create(['service_name' => 'General Service', 'category' => 'general', 'standard_rate' => 200, 'taxable' => true]);
 
+        // Step 1: basic info only — no technician, parts, labour, or totals
+        $response = $this->actingAs($user)
+            ->post(route('job-cards.store'), $this->storePayload($customer->id, $vehicle->id))
+            ->assertSessionHasNoErrors();
+
+        $jobCard = JobCard::first();
+
+        $this->assertNotNull($jobCard);
+        $response->assertRedirect(route('job-cards.assign', $jobCard));
+        $this->assertStringStartsWith('JC-', $jobCard->job_card_no);
+        $this->assertEquals('received', $jobCard->status);
+        $this->assertEquals($customer->id, $jobCard->customer_id);
+        $this->assertEquals($vehicle->id, $jobCard->vehicle_id);
+        $this->assertNull($jobCard->assigned_technician_id);
+        $this->assertCount(1, $jobCard->complaints);
+        $this->assertCount(0, $jobCard->parts);
+        $this->assertCount(0, $jobCard->labours);
+        $this->assertEquals(0, (float) $jobCard->grand_total);
+
+        // Step 2: assign & bill
         $this->actingAs($user)
-            ->post(route('job-cards.store'), [
-                'job_date' => '2026-08-03',
-                'customer_id' => $customer->id,
-                'vehicle_id' => $vehicle->id,
-                'odometer_reading_km' => 12000,
-                'job_type' => 'paid_service',
-                'status' => 'received',
-                'complaints' => [
-                    ['description' => 'Battery not charging', 'charge' => '100'],
-                ],
+            ->post(route('job-cards.assign-update', $jobCard), [
+                'assigned_technician_id' => $technician->id,
                 'parts' => [
                     ['spare_part_id' => $partA->id, 'quantity' => 2, 'mrp' => 50, 'labor_charge' => 10],
                     ['spare_part_id' => $partB->id, 'quantity' => 1, 'mrp' => 100, 'labor_charge' => 20, 'under_warranty' => '1'],
@@ -78,18 +104,12 @@ class JobCardCreateEditTest extends TestCase
                     ['labour_master_id' => $labour->id, 'technician_id' => $technician->id, 'rate' => 200, 'qty' => 1],
                 ],
             ])
-            ->assertRedirect();
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
 
-        $jobCard = JobCard::first();
+        $jobCard->refresh();
 
-        $this->assertNotNull($jobCard);
-        $this->assertStringStartsWith('JC-', $jobCard->job_card_no);
-        $this->assertEquals('received', $jobCard->status);
-        $this->assertEquals($customer->id, $jobCard->customer_id);
-        $this->assertEquals($vehicle->id, $jobCard->vehicle_id);
-
-        // Line items
-        $this->assertCount(1, $jobCard->complaints);
+        $this->assertEquals($technician->id, $jobCard->assigned_technician_id);
         $this->assertCount(2, $jobCard->parts);
         $this->assertCount(1, $jobCard->labours);
 
@@ -97,11 +117,10 @@ class JobCardCreateEditTest extends TestCase
         $this->assertEquals(0, (float) $jobCard->parts->firstWhere('spare_part_id', $partB->id)->line_total);
         $this->assertEquals(1, (int) $jobCard->parts->firstWhere('spare_part_id', $partB->id)->under_warranty);
 
-        // Totals: complaint 100 + partA 2*(50+10)=120 + partB 0 (warranty) + labour 200 = 420
-        $this->assertEquals(100, (float) $jobCard->complaints->sum('charge'));
+        // Totals: partA 2*(50+10)=120 + partB 0 (warranty) + labour 200 = 320
         $this->assertEquals(120, (float) $jobCard->parts->whereNotIn('spare_part_id', [$partB->id])->sum('line_total'));
         $this->assertEquals(200, (float) $jobCard->labours->sum('line_total'));
-        $this->assertEqualsWithDelta(420, (float) $jobCard->grand_total, 0.01);
+        $this->assertEqualsWithDelta(320, (float) $jobCard->grand_total, 0.01);
         $this->assertEquals(0, (float) $jobCard->cgst_amount);
         $this->assertEquals(0, (float) $jobCard->sgst_amount);
 
@@ -110,12 +129,12 @@ class JobCardCreateEditTest extends TestCase
         $this->assertEquals(19, (int) $partB->fresh()->current_stock_qty);
     }
 
-    public function test_update_syncs_line_items_recalculates_totals_and_adjusts_stock()
+    public function test_assign_resyncs_line_items_recalculates_totals_and_adjusts_stock()
     {
         $user = $this->makeUser();
         $technician = $this->makeTechnician();
 
-        $customer = Customer::create(['name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
         $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-AB-1234', 'vehicle_brand' => 'Ola', 'model' => 'S1 Pro']);
         $partA = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 20);
         $partB = $this->makePart('BAT-01', 'Battery Cell', 100, 20, 20);
@@ -133,16 +152,8 @@ class JobCardCreateEditTest extends TestCase
 
         // Build the same initial set as the create test
         $this->actingAs($user)
-            ->put(route('job-cards.update', $jobCard), [
-                'job_date' => '2026-08-03',
-                'customer_id' => $customer->id,
-                'vehicle_id' => $vehicle->id,
-                'odometer_reading_km' => 12000,
-                'job_type' => 'paid_service',
-                'status' => 'in_progress',
-                'complaints' => [
-                    ['description' => 'Battery not charging', 'charge' => '100'],
-                ],
+            ->post(route('job-cards.assign-update', $jobCard), [
+                'assigned_technician_id' => $technician->id,
                 'parts' => [
                     ['spare_part_id' => $partA->id, 'quantity' => 2, 'mrp' => 50, 'labor_charge' => 10],
                     ['spare_part_id' => $partB->id, 'quantity' => 1, 'mrp' => 100, 'labor_charge' => 20, 'under_warranty' => '1'],
@@ -151,25 +162,17 @@ class JobCardCreateEditTest extends TestCase
                     ['labour_master_id' => $labour->id, 'technician_id' => $technician->id, 'rate' => 200, 'qty' => 1],
                 ],
             ])
-            ->assertRedirect();
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
 
         $this->assertEquals(18, (int) $partA->fresh()->current_stock_qty);
         $this->assertEquals(19, (int) $partB->fresh()->current_stock_qty);
 
-        // Now edit: change part A qty 2->5, remove the labour line, add part C, enable GST
+        // Re-assign: change part A qty 2->5, remove the labour line, add part C, enable GST
         $this->actingAs($user)
-            ->put(route('job-cards.update', $jobCard), [
-                'job_date' => '2026-08-04',
-                'customer_id' => $customer->id,
-                'vehicle_id' => $vehicle->id,
-                'odometer_reading_km' => 12000,
-                'job_type' => 'paid_service',
-                'urgent' => '1',
-                'status' => 'in_progress',
+            ->post(route('job-cards.assign-update', $jobCard), [
+                'assigned_technician_id' => $technician->id,
                 'gst_applicable' => '1',
-                'complaints' => [
-                    ['description' => 'Battery not charging', 'charge' => '100'],
-                ],
                 'parts' => [
                     ['spare_part_id' => $partA->id, 'quantity' => 5, 'mrp' => 50, 'labor_charge' => 10],
                     ['spare_part_id' => $partB->id, 'quantity' => 1, 'mrp' => 100, 'labor_charge' => 20, 'under_warranty' => '1'],
@@ -177,46 +180,66 @@ class JobCardCreateEditTest extends TestCase
                 ],
                 'labours' => [],
             ])
-            ->assertRedirect();
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
 
         $jobCard->refresh();
 
         // Line items fully replaced: no duplicates, no leftovers
-        $this->assertCount(1, $jobCard->complaints);
         $this->assertCount(3, $jobCard->parts);
         $this->assertCount(0, $jobCard->labours);
         $this->assertEquals(300, (float) $jobCard->parts->firstWhere('spare_part_id', $partA->id)->line_total);
         $this->assertEquals(0, (float) $jobCard->parts->firstWhere('spare_part_id', $partB->id)->line_total);
         $this->assertEquals(105, (float) $jobCard->parts->firstWhere('spare_part_id', $partC->id)->line_total);
 
-        // New header values applied
-        $this->assertEquals('in_progress', $jobCard->status);
-        $this->assertEquals(1, (int) $jobCard->urgent);
-
-        // Totals: complaint 100 + partA 5*60=300 + partB 0 + partC 3*35=105 = 505
-        // GST 18% on partA (300) + partC (105) only; complaint is never taxed, partB is warranty
-        // Pre-rounding total 577.90 -> rounds to 578.00, round-off +0.10
-        $this->assertEqualsWithDelta(505, (float) ($jobCard->grand_total - $jobCard->cgst_amount - $jobCard->sgst_amount - $jobCard->round_off_amount), 0.01);
+        // Totals: partA 5*60=300 + partB 0 + partC 3*35=105 = 405
+        // GST 18% on partA (300) + partC (105) only; partB is warranty
+        // Pre-rounding total 477.90 -> rounds to 478.00, round-off +0.10
+        $this->assertEqualsWithDelta(405, (float) ($jobCard->grand_total - $jobCard->cgst_amount - $jobCard->sgst_amount - $jobCard->round_off_amount), 0.01);
         $this->assertEqualsWithDelta(36.45, (float) $jobCard->cgst_amount, 0.01);
         $this->assertEqualsWithDelta(36.45, (float) $jobCard->sgst_amount, 0.01);
         $this->assertEqualsWithDelta(0.10, (float) $jobCard->round_off_amount, 0.01);
-        $this->assertEqualsWithDelta(578.00, (float) $jobCard->grand_total, 0.01);
+        $this->assertEqualsWithDelta(478.00, (float) $jobCard->grand_total, 0.01);
 
         // Stock: A -> 15 (5 total), B -> 19 (1 total), C -> 17 (3 total)
         $this->assertEquals(15, (int) $partA->fresh()->current_stock_qty);
         $this->assertEquals(19, (int) $partB->fresh()->current_stock_qty);
         $this->assertEquals(17, (int) $partC->fresh()->current_stock_qty);
+
+        // Basic edit: update status + complaints only, line items stay untouched
+        $this->actingAs($user)
+            ->put(route('job-cards.update', $jobCard), [
+                'job_date' => '2026-08-04',
+                'customer_id' => $customer->id,
+                'vehicle_id' => $vehicle->id,
+                'odometer_reading_km' => 12000,
+                'job_type' => 'paid_service',
+                'status' => 'in_progress',
+                'complaints' => [
+                    ['description' => 'Battery not charging'],
+                    ['description' => 'Check brakes too'],
+                ],
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $jobCard->refresh();
+
+        $this->assertEquals('in_progress', $jobCard->status);
+        $this->assertEquals('2026-08-04', $jobCard->job_date->format('Y-m-d'));
+        $this->assertCount(2, $jobCard->complaints);
+        $this->assertCount(3, $jobCard->parts);
+        $this->assertCount(0, $jobCard->labours);
+        $this->assertEquals(478.00, (float) $jobCard->grand_total);
     }
 
     public function test_store_rejects_vehicle_that_does_not_belong_to_customer()
     {
         $user = $this->makeUser();
 
-        $customerA = Customer::create(['name' => 'A', 'mobile' => '9000000001', 'customer_type' => 'regular']);
-        $customerB = Customer::create(['name' => 'B', 'mobile' => '9000000002', 'customer_type' => 'regular']);
+        $customerA = Customer::create(['first_name' => 'A', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $customerB = Customer::create(['first_name' => 'B', 'mobile' => '9000000002', 'customer_type' => 'regular']);
         $vehicleOfB = Vehicle::create(['customer_id' => $customerB->id, 'registration_no' => 'GJ-01-CD-5678', 'vehicle_brand' => 'Ather', 'model' => '450X']);
-        $partA = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 20);
-        $labour = LabourMaster::create(['service_name' => 'General Service', 'category' => 'general', 'standard_rate' => 200, 'taxable' => true]);
 
         $this->actingAs($user)
             ->post(route('job-cards.store'), [
@@ -224,24 +247,16 @@ class JobCardCreateEditTest extends TestCase
                 'customer_id' => $customerA->id,
                 'vehicle_id' => $vehicleOfB->id,
                 'job_type' => 'paid_service',
-                'status' => 'received',
                 'complaints' => [
-                    ['description' => 'Brake noise', 'charge' => '50'],
-                ],
-                'parts' => [
-                    ['spare_part_id' => $partA->id, 'quantity' => 1, 'mrp' => 50, 'labor_charge' => 10],
-                ],
-                'labours' => [
-                    ['labour_master_id' => $labour->id, 'rate' => 200, 'qty' => 1],
+                    ['description' => 'Brake noise'],
                 ],
             ])
             ->assertSessionHasErrors('vehicle_id');
 
         $this->assertDatabaseCount('job_cards', 0);
-        $this->assertEquals(20, (int) $partA->fresh()->current_stock_qty);
     }
 
-    public function test_create_and_edit_pages_render()
+    public function test_create_edit_and_assign_pages_render()
     {
         $user = $this->makeUser();
         $this->actingAs($user);
@@ -251,9 +266,10 @@ class JobCardCreateEditTest extends TestCase
         $response->assertSee('Create New Job Card');
         $response->assertSee('jobCardForm');
 
-        $customer = Customer::create(['name' => 'A', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $customer = Customer::create(['first_name' => 'A', 'mobile' => '9000000001', 'customer_type' => 'regular']);
         $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-CD-5678', 'vehicle_brand' => 'Ather', 'model' => '450X']);
         $partA = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 20);
+        $technician = $this->makeTechnician();
 
         $jobCard = JobCard::create([
             'job_date' => '2026-08-03',
@@ -262,7 +278,7 @@ class JobCardCreateEditTest extends TestCase
             'job_type' => 'paid_service',
             'status' => 'received',
         ]);
-        $jobCard->complaints()->create(['description' => 'Brake noise', 'charge' => 50]);
+        $jobCard->complaints()->create(['description' => 'Brake noise']);
         $jobCard->parts()->create([
             'spare_part_id' => $partA->id,
             'quantity' => 1,
@@ -277,5 +293,11 @@ class JobCardCreateEditTest extends TestCase
         $response->assertSee('Edit Job Card ' . $jobCard->job_card_no);
         $response->assertSee('jobCardForm');
         $response->assertSee('Brake noise');
+
+        $response = $this->get(route('job-cards.assign', $jobCard));
+        $response->assertOk();
+        $response->assertSee('Assign & Bill', false);
+        $response->assertSee('Brake Shoe');
+        $response->assertSee('Ramesh');
     }
 }

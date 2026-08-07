@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\CounterInvoice;
 use App\Models\Customer;
-use App\Models\Estimate;
 use App\Models\JobCard;
 use App\Models\LabourMaster;
 use App\Models\SparePart;
@@ -25,7 +24,7 @@ class MasterDeletionRestrictTest extends TestCase
 
     private function makeCustomer(string $name = 'Dhruval', string $mobile = '9000000001'): Customer
     {
-        return Customer::create(['name' => $name, 'mobile' => $mobile, 'customer_type' => 'regular']);
+        return Customer::create(['first_name' => $name, 'mobile' => $mobile, 'customer_type' => 'regular']);
     }
 
     private function makeVehicle(Customer $customer, string $regNo = 'GJ-01-AB-1234'): Vehicle
@@ -66,17 +65,6 @@ class MasterDeletionRestrictTest extends TestCase
         ]);
     }
 
-    private function makeEstimate(Customer $customer, Vehicle $vehicle): Estimate
-    {
-        return Estimate::create([
-            'estimate_date' => '2026-08-03',
-            'customer_id' => $customer->id,
-            'vehicle_id' => $vehicle->id,
-            'status' => 'draft',
-            'gst_applicable' => false,
-        ]);
-    }
-
     private function makeCounterInvoice(Customer $customer): CounterInvoice
     {
         return CounterInvoice::create([
@@ -95,25 +83,10 @@ class MasterDeletionRestrictTest extends TestCase
 
         $this->actingAs($user)
             ->delete(route('customers.destroy', $customer))
-            ->assertSessionHas('error', 'Cannot delete — this customer has existing job cards, estimates, or invoices linked to it.');
+            ->assertSessionHas('error', 'Cannot delete — this customer has existing job cards or invoices linked to it.');
 
         $this->assertDatabaseHas('customers', ['id' => $customer->id]);
         $this->assertDatabaseHas('job_cards', ['customer_id' => $customer->id]);
-    }
-
-    public function test_deleting_customer_with_linked_estimate_is_blocked()
-    {
-        $user = $this->makeUser();
-        $customer = $this->makeCustomer();
-        $vehicle = $this->makeVehicle($customer);
-        $this->makeEstimate($customer, $vehicle);
-
-        $this->actingAs($user)
-            ->delete(route('customers.destroy', $customer))
-            ->assertSessionHas('error', 'Cannot delete — this customer has existing job cards, estimates, or invoices linked to it.');
-
-        $this->assertDatabaseHas('customers', ['id' => $customer->id]);
-        $this->assertDatabaseHas('estimates', ['customer_id' => $customer->id]);
     }
 
     public function test_deleting_customer_with_linked_counter_invoice_is_blocked()
@@ -124,7 +97,7 @@ class MasterDeletionRestrictTest extends TestCase
 
         $this->actingAs($user)
             ->delete(route('customers.destroy', $customer))
-            ->assertSessionHas('error', 'Cannot delete — this customer has existing job cards, estimates, or invoices linked to it.');
+            ->assertSessionHas('error', 'Cannot delete — this customer has existing job cards or invoices linked to it.');
 
         $this->assertDatabaseHas('customers', ['id' => $customer->id]);
         $this->assertDatabaseHas('counter_invoices', ['customer_id' => $customer->id]);
@@ -139,48 +112,10 @@ class MasterDeletionRestrictTest extends TestCase
 
         $this->actingAs($user)
             ->delete(route('vehicles.destroy', $vehicle))
-            ->assertSessionHas('error', 'Cannot delete — this vehicle has existing job cards, estimates, or invoices linked to it.');
+            ->assertSessionHas('error', 'Cannot delete — this vehicle has existing job cards or invoices linked to it.');
 
         $this->assertDatabaseHas('vehicles', ['id' => $vehicle->id]);
         $this->assertDatabaseHas('job_cards', ['vehicle_id' => $vehicle->id]);
-    }
-
-    public function test_deleting_vehicle_with_linked_estimate_is_blocked()
-    {
-        $user = $this->makeUser();
-        $customer = $this->makeCustomer();
-        $vehicle = $this->makeVehicle($customer);
-        $this->makeEstimate($customer, $vehicle);
-
-        $this->actingAs($user)
-            ->delete(route('vehicles.destroy', $vehicle))
-            ->assertSessionHas('error', 'Cannot delete — this vehicle has existing job cards, estimates, or invoices linked to it.');
-
-        $this->assertDatabaseHas('vehicles', ['id' => $vehicle->id]);
-        $this->assertDatabaseHas('estimates', ['vehicle_id' => $vehicle->id]);
-    }
-
-    public function test_deleting_spare_part_used_in_estimate_part_is_blocked()
-    {
-        $user = $this->makeUser();
-        $customer = $this->makeCustomer();
-        $vehicle = $this->makeVehicle($customer);
-        $part = $this->makePart();
-        $estimate = $this->makeEstimate($customer, $vehicle);
-        $estimate->parts()->create([
-            'spare_part_id' => $part->id,
-            'quantity' => 1,
-            'mrp' => 50,
-            'labor_charge' => 10,
-            'line_total' => 60,
-        ]);
-
-        $this->actingAs($user)
-            ->delete(route('spare-parts.destroy', $part))
-            ->assertSessionHas('error', 'Cannot delete — this part has existing job cards, estimates, or invoices linked to it.');
-
-        $this->assertDatabaseHas('spare_parts', ['id' => $part->id]);
-        $this->assertDatabaseHas('estimate_parts', ['spare_part_id' => $part->id]);
     }
 
     public function test_deleting_spare_part_used_in_job_card_part_is_blocked()
@@ -201,7 +136,7 @@ class MasterDeletionRestrictTest extends TestCase
 
         $this->actingAs($user)
             ->delete(route('spare-parts.destroy', $part))
-            ->assertSessionHas('error', 'Cannot delete — this part has existing job cards, estimates, or invoices linked to it.');
+            ->assertSessionHas('error', 'Cannot delete — this part has existing job cards or invoices linked to it.');
 
         $this->assertDatabaseHas('spare_parts', ['id' => $part->id]);
         $this->assertDatabaseHas('job_card_parts', ['spare_part_id' => $part->id]);
@@ -223,7 +158,7 @@ class MasterDeletionRestrictTest extends TestCase
 
         $this->actingAs($user)
             ->delete(route('spare-parts.destroy', $part))
-            ->assertSessionHas('error', 'Cannot delete — this part has existing job cards, estimates, or invoices linked to it.');
+            ->assertSessionHas('error', 'Cannot delete — this part has existing job cards or invoices linked to it.');
 
         $this->assertDatabaseHas('spare_parts', ['id' => $part->id]);
         $this->assertDatabaseHas('counter_invoice_items', ['spare_part_id' => $part->id]);
@@ -245,32 +180,10 @@ class MasterDeletionRestrictTest extends TestCase
 
         $this->actingAs($user)
             ->delete(route('labour-masters.destroy', $labour))
-            ->assertSessionHas('error', 'Cannot delete — this labour service has existing job cards, estimates, or invoices linked to it.');
+            ->assertSessionHas('error', 'Cannot delete — this labour service has existing job cards or invoices linked to it.');
 
         $this->assertDatabaseHas('labour_masters', ['id' => $labour->id]);
         $this->assertDatabaseHas('job_card_labours', ['labour_master_id' => $labour->id]);
-    }
-
-    public function test_deleting_labour_master_used_in_estimate_labour_is_blocked()
-    {
-        $user = $this->makeUser();
-        $customer = $this->makeCustomer();
-        $vehicle = $this->makeVehicle($customer);
-        $labour = $this->makeLabour();
-        $estimate = $this->makeEstimate($customer, $vehicle);
-        $estimate->labours()->create([
-            'labour_master_id' => $labour->id,
-            'rate' => 200,
-            'qty' => 1,
-            'line_total' => 200,
-        ]);
-
-        $this->actingAs($user)
-            ->delete(route('labour-masters.destroy', $labour))
-            ->assertSessionHas('error', 'Cannot delete — this labour service has existing job cards, estimates, or invoices linked to it.');
-
-        $this->assertDatabaseHas('labour_masters', ['id' => $labour->id]);
-        $this->assertDatabaseHas('estimate_labours', ['labour_master_id' => $labour->id]);
     }
 
     public function test_deleting_unlinked_customer_still_works()

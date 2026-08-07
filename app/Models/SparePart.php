@@ -13,7 +13,7 @@ class SparePart extends Model
     protected $fillable = [
         'part_name', 'part_code', 'category', 'compatible_vehicle_brand', 'unit',
         'purchase_price', 'mrp', 'labor_charge', 'hsn_code', 'gst_rate',
-        'current_stock_qty', 'reorder_level', 'supplier_id',
+        'current_stock_qty', 'reorder_level',
     ];
 
     protected $casts = [
@@ -35,8 +35,5 @@ class SparePart extends Model
         );
     }
 
-    public function supplier()
-    {
-        return $this->belongsTo(Supplier::class);
-    }
+
 }

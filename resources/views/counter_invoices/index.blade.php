@@ -49,7 +49,7 @@
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-600">
                             @if($invoice->customer_id)
-                                {{ $invoice->customer->name }}
+                                {{ $invoice->customer->display_name }}
                             @else
                                 {{ $invoice->walkin_name ?? 'Walk-in' }}
                                 @if($invoice->walkin_mobile)

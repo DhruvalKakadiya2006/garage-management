@@ -41,7 +41,7 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer Name</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Brand</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Model</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Warranty Valid Till</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">RTO Status</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </x-slot>
@@ -52,7 +52,7 @@
                             {{ $vehicle->registration_no }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {{ $vehicle->customer->name ?? '-' }}
+                            {{ $vehicle->customer->display_name ?? '-' }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                             {{ $vehicle->vehicle_brand ?? '-' }}
@@ -61,7 +61,7 @@
                             {{ $vehicle->model ?? '-' }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {{ $vehicle->warranty_valid_till ? $vehicle->warranty_valid_till->format('d M Y') : '-' }}
+                            {{ $vehicle->is_non_rto ? 'Non-RTO' : 'RTO' }}
                         </td>
                         <x-data-table-actions
                             :model="$vehicle"
