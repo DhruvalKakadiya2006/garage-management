@@ -2,7 +2,7 @@
 $navItems = [
     ['route' => 'dashboard', 'pattern' => 'dashboard', 'icon' => 'home', 'label' => __('Dashboard')],
     ['route' => 'customers.index', 'pattern' => 'customers.*', 'icon' => 'users', 'label' => __('Customers')],
-    ['route' => 'vehicles.index', 'pattern' => 'vehicles.*', 'icon' => 'truck', 'label' => __('Vehicles')],
+    ['route' => 'vehicle-catalog.index', 'pattern' => ['vehicle-catalog.*', 'vehicle-brands.*', 'vehicle-models.*'], 'icon' => 'book-open', 'label' => __('Vehicle Catalog')],
     ['route' => 'job-cards.index', 'pattern' => 'job-cards.*', 'icon' => 'wrench-screwdriver', 'label' => __('Job Cards')],
     ['route' => 'counter-invoices.index', 'pattern' => 'counter-invoices.*', 'icon' => 'receipt-percent', 'label' => __('Counter Invoice')],
     ['route' => 'payments.index', 'pattern' => 'payments.*', 'icon' => 'banknotes', 'label' => __('Payments')],

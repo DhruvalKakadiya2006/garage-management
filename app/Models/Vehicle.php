@@ -10,9 +10,8 @@ class Vehicle extends Model
     use HasFactory;
 
     protected $fillable = [
-        'customer_id', 'registration_no', 'chassis_no', 'motor_battery_serial_no',
-        'vehicle_brand', 'model', 'battery_type', 'is_non_rto',
-        'current_odometer_km', 'color', 'remarks',
+        'customer_id', 'vehicle_model_id', 'registration_no', 'chassis_no',
+        'motor_battery_serial_no', 'is_non_rto', 'current_odometer_km', 'color', 'remarks',
     ];
 
     protected $casts = [
@@ -23,5 +22,10 @@ class Vehicle extends Model
     public function customer()
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function vehicleModel()
+    {
+        return $this->belongsTo(VehicleModel::class);
     }
 }

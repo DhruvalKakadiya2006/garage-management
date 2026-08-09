@@ -115,10 +115,13 @@
                                             </div>
                                         </td>
                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
-                                            {{ $vehicle->vehicle_brand }} {{ $vehicle->model }}
+                                            <div>{{ $vehicle->vehicleModel?->vehicleBrand?->name }} {{ $vehicle->vehicleModel?->name }}</div>
+                                            @if ($vehicle->color)
+                                                <div class="text-xs text-gray-400">{{ $vehicle->color }}</div>
+                                            @endif
                                         </td>
                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
-                                            {{ $vehicle->battery_type ?? '—' }}
+                                            {{ ucwords(str_replace('-', ' ', (string) ($vehicle->vehicleModel?->battery_type ?? '—'))) }}
                                         </td>
                                     </tr>
                                 @endforeach

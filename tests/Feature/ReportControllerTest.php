@@ -13,11 +13,13 @@ use App\Models\User;
 use App\Models\Vehicle;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\SeedsVehicleCatalog;
 use Tests\TestCase;
 
 class ReportControllerTest extends TestCase
 {
     use RefreshDatabase;
+    use SeedsVehicleCatalog;
 
     private function makeUser(): User
     {
@@ -35,12 +37,7 @@ class ReportControllerTest extends TestCase
 
     private function makeVehicle(Customer $customer): Vehicle
     {
-        return Vehicle::create([
-            'customer_id' => $customer->id,
-            'registration_no' => 'GJ-01-AB-' . random_int(1000, 9999),
-            'vehicle_brand' => 'Ola',
-            'model' => 'S1 Pro',
-        ]);
+        return $this->makeCatalogVehicle($customer, 'GJ-01-AB-' . random_int(1000, 9999), 'Ola', 'S1 Pro');
     }
 
     private function makeJobCard(Customer $customer, string $date, string $status = 'delivered', string $jobType = 'paid_service', float $grandTotal = 0): JobCard

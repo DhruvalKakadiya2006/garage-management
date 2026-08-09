@@ -11,11 +11,13 @@ use App\Models\User;
 use App\Models\Vehicle;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\SeedsVehicleCatalog;
 use Tests\TestCase;
 
 class StockIntegrityTest extends TestCase
 {
     use RefreshDatabase;
+    use SeedsVehicleCatalog;
 
     private function makeUser(): User
     {
@@ -69,7 +71,7 @@ class StockIntegrityTest extends TestCase
     {
         $user = $this->makeUser();
         $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
-        $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-AB-1234', 'vehicle_brand' => 'Ola', 'model' => 'S1 Pro']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
         $part = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 10);
 
         $this->actingAs($user)
@@ -130,7 +132,7 @@ class StockIntegrityTest extends TestCase
     {
         $user = $this->makeUser();
         $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
-        $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-AB-1234', 'vehicle_brand' => 'Ola', 'model' => 'S1 Pro']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
         $part = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 2);
 
         $this->actingAs($user)
@@ -180,7 +182,7 @@ class StockIntegrityTest extends TestCase
     {
         $user = $this->makeUser();
         $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
-        $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-AB-1234', 'vehicle_brand' => 'Ola', 'model' => 'S1 Pro']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
         $partA = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 10);
         $partB = $this->makePart('BAT-01', 'Battery Cell', 100, 20, 10);
 
@@ -217,7 +219,7 @@ class StockIntegrityTest extends TestCase
     {
         $user = $this->makeUser();
         $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
-        $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-AB-1234', 'vehicle_brand' => 'Ola', 'model' => 'S1 Pro']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
         $partA = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 10);
 
         $jobCard = $this->makeJobCard($customer, $vehicle);
@@ -247,7 +249,7 @@ class StockIntegrityTest extends TestCase
     public function test_job_card_part_model_swap_moves_stock_between_parts()
     {
         $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
-        $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-AB-1234', 'vehicle_brand' => 'Ola', 'model' => 'S1 Pro']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
         $partA = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 5);
         $partB = $this->makePart('BAT-01', 'Battery Cell', 100, 20, 5);
 
@@ -316,7 +318,7 @@ class StockIntegrityTest extends TestCase
     public function test_creating_guard_prevents_overselling_at_model_level()
     {
         $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
-        $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-AB-1234', 'vehicle_brand' => 'Ola', 'model' => 'S1 Pro']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
         $part = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 3);
 
         $jobCard = $this->makeJobCard($customer, $vehicle);
@@ -363,7 +365,7 @@ class StockIntegrityTest extends TestCase
     public function test_database_cascade_no_longer_silently_deletes_parts()
     {
         $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
-        $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-AB-1234', 'vehicle_brand' => 'Ola', 'model' => 'S1 Pro']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
         $part = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 10);
 
         $jobCard = $this->makeJobCard($customer, $vehicle);

@@ -63,7 +63,7 @@
                         <div>
                             <div class="font-medium text-gray-500 text-xs uppercase tracking-wider mb-1">Vehicle</div>
                             <div class="font-semibold text-gray-900">{{ $jobCard->vehicle->registration_no ?? 'NON-RTO' }}</div>
-                            <div class="text-gray-600">{{ $jobCard->vehicle->vehicle_brand }} {{ $jobCard->vehicle->model }}</div>
+                            <div class="text-gray-600">{{ $jobCard->vehicle->vehicleModel?->vehicleBrand?->name }} {{ $jobCard->vehicle->vehicleModel?->name }}</div>
                         </div>
                         <div>
                             <div class="font-medium text-gray-500 text-xs uppercase tracking-wider mb-1">Job Date / Status</div>

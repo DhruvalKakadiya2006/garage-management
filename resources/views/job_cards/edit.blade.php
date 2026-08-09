@@ -19,8 +19,8 @@
             'id' => $v->id,
             'customer_id' => $v->customer_id,
             'registration_no' => $v->registration_no,
-            'brand' => $v->vehicle_brand,
-            'model' => $v->model,
+            'brand' => $v->vehicleModel?->vehicleBrand?->name,
+            'model' => $v->vehicleModel?->name,
         ])->values();
     @endphp
 

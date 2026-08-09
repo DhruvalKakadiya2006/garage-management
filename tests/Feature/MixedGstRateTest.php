@@ -7,13 +7,14 @@ use App\Models\JobCard;
 use App\Models\LabourMaster;
 use App\Models\SparePart;
 use App\Models\User;
-use App\Models\Vehicle;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\SeedsVehicleCatalog;
 use Tests\TestCase;
 
 class MixedGstRateTest extends TestCase
 {
     use RefreshDatabase;
+    use SeedsVehicleCatalog;
 
     private function makeUser(): User
     {
@@ -84,7 +85,7 @@ class MixedGstRateTest extends TestCase
     {
         $user = $this->makeUser();
         $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
-        $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-AB-1234', 'vehicle_brand' => 'Ola', 'model' => 'S1 Pro']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
         $partA = $this->makePart('BRK-01', 'Brake Shoe', 100, 20, 18);
         $partB = $this->makePart('OIL-01', 'Loose Oil', 50, 20, null);
         $labour1 = $this->makeLabour('General Service', 100, true, 18);
@@ -118,7 +119,7 @@ class MixedGstRateTest extends TestCase
     {
         $user = $this->makeUser();
         $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
-        $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-AB-1234', 'vehicle_brand' => 'Ola', 'model' => 'S1 Pro']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
         $partA = $this->makePart('BRK-01', 'Brake Shoe', 100, 20, 18);
         $partB = $this->makePart('OIL-01', 'Loose Oil', 50, 20, null);
         $labour1 = $this->makeLabour('General Service', 100, true, 18);

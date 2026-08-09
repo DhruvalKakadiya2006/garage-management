@@ -204,7 +204,7 @@
                 <td style="width:33%;">
                     <div class="section-title">Vehicle</div>
                     <div><span class="label">Registration:</span> <span class="value">{{ $vehicle->registration_no ?? 'NON-RTO' }}</span></div>
-                    <div><span class="label">Make / Model:</span> <span class="value">{{ $vehicle->vehicle_brand }} {{ $vehicle->model }}</span></div>
+                    <div><span class="label">Make / Model:</span> <span class="value">{{ $vehicle->vehicleModel?->vehicleBrand?->name }} {{ $vehicle->vehicleModel?->name }}</span></div>
                     @if ($vehicle->color)
                         <div><span class="label">Color:</span> <span class="value">{{ $vehicle->color }}</span></div>
                     @endif

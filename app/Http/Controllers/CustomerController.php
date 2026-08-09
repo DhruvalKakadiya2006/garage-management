@@ -11,7 +11,7 @@ class CustomerController extends Controller
     public function index()
     {
         $customers = Customer::with([
-            'vehicles',
+            'vehicles.vehicleModel.vehicleBrand',
             'jobCards' => fn ($q) => $q->withSum('payments', 'amount'),
             'counterInvoices' => fn ($q) => $q->withSum('payments', 'amount'),
         ])
@@ -34,7 +34,7 @@ class CustomerController extends Controller
     public function show(Customer $customer)
     {
         $customer->load([
-            'vehicles',
+            'vehicles.vehicleModel.vehicleBrand',
             'jobCards' => fn ($q) => $q->withSum('payments', 'amount')->latest(),
             'counterInvoices' => fn ($q) => $q->withSum('payments', 'amount')->latest(),
         ]);

@@ -8,13 +8,14 @@ use App\Models\JobCard;
 use App\Models\LabourMaster;
 use App\Models\SparePart;
 use App\Models\User;
-use App\Models\Vehicle;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\SeedsVehicleCatalog;
 use Tests\TestCase;
 
 class JobCardCreateEditTest extends TestCase
 {
     use RefreshDatabase;
+    use SeedsVehicleCatalog;
 
     private function makeUser(): User
     {
@@ -68,7 +69,7 @@ class JobCardCreateEditTest extends TestCase
         $technician = $this->makeTechnician();
 
         $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
-        $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-AB-1234', 'vehicle_brand' => 'Ola', 'model' => 'S1 Pro']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
         $partA = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 20);
         $partB = $this->makePart('BAT-01', 'Battery Cell', 100, 20, 20);
         $labour = LabourMaster::create(['service_name' => 'General Service', 'category' => 'general', 'standard_rate' => 200, 'taxable' => true]);
@@ -135,7 +136,7 @@ class JobCardCreateEditTest extends TestCase
         $technician = $this->makeTechnician();
 
         $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
-        $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-AB-1234', 'vehicle_brand' => 'Ola', 'model' => 'S1 Pro']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
         $partA = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 20);
         $partB = $this->makePart('BAT-01', 'Battery Cell', 100, 20, 20);
         $partC = $this->makePart('MOT-01', 'Motor Spares', 30, 5, 20);
@@ -239,7 +240,7 @@ class JobCardCreateEditTest extends TestCase
 
         $customerA = Customer::create(['first_name' => 'A', 'mobile' => '9000000001', 'customer_type' => 'regular']);
         $customerB = Customer::create(['first_name' => 'B', 'mobile' => '9000000002', 'customer_type' => 'regular']);
-        $vehicleOfB = Vehicle::create(['customer_id' => $customerB->id, 'registration_no' => 'GJ-01-CD-5678', 'vehicle_brand' => 'Ather', 'model' => '450X']);
+        $vehicleOfB = $this->makeCatalogVehicle($customerB, 'GJ-01-CD-5678', 'Ather', '450X');
 
         $this->actingAs($user)
             ->post(route('job-cards.store'), [
@@ -267,7 +268,7 @@ class JobCardCreateEditTest extends TestCase
         $response->assertSee('jobCardForm');
 
         $customer = Customer::create(['first_name' => 'A', 'mobile' => '9000000001', 'customer_type' => 'regular']);
-        $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-CD-5678', 'vehicle_brand' => 'Ather', 'model' => '450X']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-CD-5678', 'Ather', '450X');
         $partA = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 20);
         $technician = $this->makeTechnician();
 

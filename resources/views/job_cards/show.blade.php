@@ -105,7 +105,10 @@
                         <h3 class="font-semibold text-gray-900 mb-3">Customer & Vehicle</h3>
                         <dl class="space-y-2 text-sm">
                             <div><dt class="inline font-medium">Customer:</dt> <dd class="inline">{{ $jobCard->customer->display_name }}</dd></div>
-                            <div><dt class="inline font-medium">Vehicle:</dt> <dd class="inline">{{ $jobCard->vehicle->registration_no }}</dd></div>
+                            <div><dt class="inline font-medium">Vehicle:</dt> <dd class="inline">{{ $jobCard->vehicle->registration_no ?? 'NON-RTO' }}</dd></div>
+                            <div><dt class="inline font-medium">Make/Model:</dt> <dd class="inline">
+                                {{ $jobCard->vehicle->vehicleModel?->vehicleBrand?->name }} {{ $jobCard->vehicle->vehicleModel?->name }}
+                            </dd></div>
                             <div><dt class="inline font-medium">Odometer:</dt> <dd class="inline">{{ $jobCard->odometer_reading_km ?? '-' }} km</dd></div>
                         </dl>
                     </div>

@@ -173,10 +173,10 @@
                             {{ $jc->customer->display_name ?? '-' }}
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-600">
-                            {{ $jc->vehicle->vehicle_brand ?? '-' }}
+                            {{ $jc->vehicle?->vehicleModel?->vehicleBrand?->name ?? '-' }}
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-600">
-                            {{ $jc->vehicle->model ?? '-' }}
+                            {{ $jc->vehicle?->vehicleModel?->name ?? '-' }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                             {{ $jc->vehicle->color ?? '-' }}

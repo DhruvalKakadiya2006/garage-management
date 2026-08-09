@@ -8,13 +8,14 @@ use App\Models\JobCard;
 use App\Models\Payment;
 use App\Models\SparePart;
 use App\Models\User;
-use App\Models\Vehicle;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\SeedsVehicleCatalog;
 use Tests\TestCase;
 
 class PaymentDeletionTest extends TestCase
 {
     use RefreshDatabase;
+    use SeedsVehicleCatalog;
 
     private function makeUser(): User
     {
@@ -54,7 +55,7 @@ class PaymentDeletionTest extends TestCase
     {
         $user = $this->makeUser();
         $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
-        $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-AB-1234', 'vehicle_brand' => 'Ola', 'model' => 'S1 Pro']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
 
         $jobCard = JobCard::create([
             'job_date' => '2026-08-03',
@@ -110,7 +111,7 @@ class PaymentDeletionTest extends TestCase
     {
         $user = $this->makeUser();
         $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
-        $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-AB-1234', 'vehicle_brand' => 'Ola', 'model' => 'S1 Pro']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
 
         $jobCard = JobCard::create([
             'job_date' => '2026-08-03',
@@ -140,7 +141,7 @@ class PaymentDeletionTest extends TestCase
     {
         $user = $this->makeUser();
         $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
-        $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-AB-1234', 'vehicle_brand' => 'Ola', 'model' => 'S1 Pro']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
 
         $paidJob = JobCard::create([
             'job_date' => '2026-08-03',
@@ -193,7 +194,7 @@ class PaymentDeletionTest extends TestCase
     {
         $user = $this->makeUser();
         $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
-        $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-AB-1234', 'vehicle_brand' => 'Ola', 'model' => 'S1 Pro']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
 
         $jobCard = JobCard::create([
             'job_date' => '2026-08-03',

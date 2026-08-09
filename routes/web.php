@@ -3,7 +3,9 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CustomerController;
-use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\CustomerVehicleController;
+use App\Http\Controllers\VehicleBrandController;
+use App\Http\Controllers\VehicleModelController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\LabourMasterController;
 use App\Http\Controllers\SparePartController;
@@ -24,7 +26,28 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
 
 Route::middleware(['auth'])->group(function () {
     Route::resource('customers', CustomerController::class);
-    Route::resource('vehicles', VehicleController::class);
+
+    // Customer-owned vehicles (managed from the Customers page; the standalone
+    // Vehicles list page was replaced by the Vehicle Catalog master data page).
+    Route::get('vehicles/create', [CustomerVehicleController::class, 'create'])->name('vehicles.create');
+    Route::post('vehicles', [CustomerVehicleController::class, 'store'])->name('vehicles.store');
+    Route::get('vehicles/{vehicle}/edit', [CustomerVehicleController::class, 'edit'])->name('vehicles.edit');
+    Route::put('vehicles/{vehicle}', [CustomerVehicleController::class, 'update'])->name('vehicles.update');
+    Route::delete('vehicles/{vehicle}', [CustomerVehicleController::class, 'destroy'])->name('vehicles.destroy');
+
+    // Vehicle Catalog: master data of brands and models.
+    Route::get('vehicle-catalog', [VehicleBrandController::class, 'index'])->name('vehicle-catalog.index');
+    Route::get('vehicle-brands/create', [VehicleBrandController::class, 'create'])->name('vehicle-brands.create');
+    Route::post('vehicle-brands', [VehicleBrandController::class, 'store'])->name('vehicle-brands.store');
+    Route::get('vehicle-brands/{vehicleBrand}/edit', [VehicleBrandController::class, 'edit'])->name('vehicle-brands.edit');
+    Route::put('vehicle-brands/{vehicleBrand}', [VehicleBrandController::class, 'update'])->name('vehicle-brands.update');
+    Route::delete('vehicle-brands/{vehicleBrand}', [VehicleBrandController::class, 'destroy'])->name('vehicle-brands.destroy');
+    Route::get('vehicle-models/create', [VehicleModelController::class, 'create'])->name('vehicle-models.create');
+    Route::post('vehicle-models', [VehicleModelController::class, 'store'])->name('vehicle-models.store');
+    Route::get('vehicle-models/{vehicleModel}/edit', [VehicleModelController::class, 'edit'])->name('vehicle-models.edit');
+    Route::put('vehicle-models/{vehicleModel}', [VehicleModelController::class, 'update'])->name('vehicle-models.update');
+    Route::delete('vehicle-models/{vehicleModel}', [VehicleModelController::class, 'destroy'])->name('vehicle-models.destroy');
+
     Route::resource('employees', EmployeeController::class);
     Route::resource('labour-masters', LabourMasterController::class);
     Route::resource('spare-parts', SparePartController::class);

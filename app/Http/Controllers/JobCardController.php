@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\JobCard;
 use App\Models\Customer;
 use App\Models\Vehicle;
+use App\Models\VehicleBrand;
 use App\Models\Employee;
 use App\Models\SparePart;
 use App\Models\LabourMaster;
@@ -17,7 +18,7 @@ class JobCardController extends Controller
 {
     public function index(Request $request)
     {
-        $query = JobCard::with(['customer', 'vehicle', 'assignedTechnician', 'parts', 'labours'])
+        $query = JobCard::with(['customer', 'vehicle.vehicleModel.vehicleBrand', 'assignedTechnician', 'parts', 'labours'])
             ->withSum('payments', 'amount');
 
         // Filter by technician
@@ -30,9 +31,9 @@ class JobCardController extends Controller
             $query->where('status', $request->status);
         }
 
-        // Filter by vehicle brand
+        // Filter by vehicle brand (from the Vehicle Catalog)
         if ($request->filled('brand')) {
-            $query->whereHas('vehicle', fn ($q) => $q->where('vehicle_brand', $request->brand));
+            $query->whereHas('vehicle.vehicleModel.vehicleBrand', fn ($q) => $q->where('name', $request->brand));
         }
 
         // Filter by date range
@@ -45,7 +46,7 @@ class JobCardController extends Controller
 
         $jobCards = $query->latest()->paginate(15)->withQueryString();
         $technicians = Employee::active()->orderBy('name')->get();
-        $brands = Vehicle::query()->select('vehicle_brand')->distinct()->orderBy('vehicle_brand')->pluck('vehicle_brand');
+        $brands = VehicleBrand::query()->orderBy('name')->pluck('name');
 
         return view('job_cards.index', compact('jobCards', 'technicians', 'brands'));
     }
@@ -53,7 +54,7 @@ class JobCardController extends Controller
     public function create(Request $request)
     {
         $customers = Customer::orderBy('display_name')->get();
-        $vehicles = Vehicle::with('customer')->orderBy('registration_no')->get();
+        $vehicles = Vehicle::with(['vehicleModel.vehicleBrand'])->orderBy('registration_no')->get();
 
         $customerId = $request->integer('customer_id') ?: null;
         $vehicleId = $request->integer('vehicle_id') ?: null;
@@ -281,7 +282,7 @@ class JobCardController extends Controller
     {
         $jobCard->load(['complaints']);
         $customers = Customer::orderBy('display_name')->get();
-        $vehicles = Vehicle::with('customer')->orderBy('registration_no')->get();
+        $vehicles = Vehicle::with(['vehicleModel.vehicleBrand'])->orderBy('registration_no')->get();
 
         return view('job_cards.edit', compact('jobCard', 'customers', 'vehicles'));
     }

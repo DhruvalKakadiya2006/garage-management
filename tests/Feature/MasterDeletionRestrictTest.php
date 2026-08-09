@@ -11,11 +11,13 @@ use App\Models\User;
 use App\Models\Vehicle;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
+use Tests\Concerns\SeedsVehicleCatalog;
 use Tests\TestCase;
 
 class MasterDeletionRestrictTest extends TestCase
 {
     use RefreshDatabase;
+    use SeedsVehicleCatalog;
 
     private function makeUser(): User
     {
@@ -29,7 +31,7 @@ class MasterDeletionRestrictTest extends TestCase
 
     private function makeVehicle(Customer $customer, string $regNo = 'GJ-01-AB-1234'): Vehicle
     {
-        return Vehicle::create(['customer_id' => $customer->id, 'registration_no' => $regNo, 'vehicle_brand' => 'Ola', 'model' => 'S1 Pro']);
+        return $this->makeCatalogVehicle($customer, $regNo, 'Ola', 'S1 Pro');
     }
 
     private function makePart(string $code = 'BRK-01', string $name = 'Brake Shoe', int $stock = 10): SparePart
@@ -207,7 +209,7 @@ class MasterDeletionRestrictTest extends TestCase
 
         $this->actingAs($user)
             ->delete(route('vehicles.destroy', $vehicle))
-            ->assertRedirect(route('vehicles.index'))
+            ->assertRedirect(route('customers.index'))
             ->assertSessionHas('success', 'Vehicle deleted.');
 
         $this->assertDatabaseMissing('vehicles', ['id' => $vehicle->id]);

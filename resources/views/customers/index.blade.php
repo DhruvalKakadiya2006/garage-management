@@ -20,8 +20,9 @@
                 'id' => (string) $v->id,
                 'registration_no' => $v->registration_no,
                 'is_non_rto' => (bool) $v->is_non_rto,
-                'brand' => $v->vehicle_brand,
-                'model' => $v->model,
+                'brand' => $v->vehicleModel?->vehicleBrand?->name,
+                'model' => $v->vehicleModel?->name,
+                'color' => $v->color,
             ])->values(),
         ])->values();
     @endphp
@@ -128,13 +129,17 @@
                             </div>
                             @forelse ($customer->vehicles as $vehicle)
                                 <div class="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
-                                    <span class="text-sm font-medium text-gray-900">{{ $vehicle->registration_no ?? '—' }}</span>
                                     @if ($vehicle->is_non_rto)
                                         <x-badge color="amber">NON-RTO</x-badge>
+                                    @else
+                                        <span class="text-sm font-medium text-gray-900">{{ $vehicle->registration_no }}</span>
                                     @endif
                                     <span class="text-sm text-gray-600">
-                                        {{ $vehicle->vehicle_brand }} {{ $vehicle->model }}
+                                        {{ $vehicle->vehicleModel?->vehicleBrand?->name }} {{ $vehicle->vehicleModel?->name }}
                                     </span>
+                                    @if ($vehicle->color)
+                                        <span class="text-sm text-gray-400">{{ $vehicle->color }}</span>
+                                    @endif
                                 </div>
                             @empty
                                 <div class="text-sm text-gray-500">No vehicles registered for this customer.</div>

@@ -7,13 +7,14 @@ use App\Models\JobCard;
 use App\Models\LabourMaster;
 use App\Models\SparePart;
 use App\Models\User;
-use App\Models\Vehicle;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\SeedsVehicleCatalog;
 use Tests\TestCase;
 
 class JobCardDocumentPdfTest extends TestCase
 {
     use RefreshDatabase;
+    use SeedsVehicleCatalog;
 
     private function makeUser(): User
     {
@@ -52,13 +53,7 @@ class JobCardDocumentPdfTest extends TestCase
             'city' => 'Surat',
             'gstin' => '24AAAAA0000A1Z5',
         ]);
-        $vehicle = Vehicle::create([
-            'customer_id' => $customer->id,
-            'registration_no' => 'GJ-01-AB-1234',
-            'vehicle_brand' => 'Ola',
-            'model' => 'S1 Pro',
-            'color' => 'Black',
-        ]);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro', 'Black');
 
         $part = $this->makePart('BRK-01', 'Brake Shoe', 50, 20);
         $labour = LabourMaster::create([
@@ -168,7 +163,7 @@ class JobCardDocumentPdfTest extends TestCase
     {
         $user = $this->makeUser();
         $customer = Customer::create(['first_name' => 'A', 'mobile' => '9000000002', 'customer_type' => 'regular']);
-        $vehicle = Vehicle::create(['customer_id' => $customer->id, 'registration_no' => 'GJ-01-CD-5678', 'vehicle_brand' => 'Ather', 'model' => '450X']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-CD-5678', 'Ather', '450X');
 
         $jobCard = JobCard::create([
             'job_date' => '2026-08-03',
