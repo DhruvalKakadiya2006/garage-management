@@ -11,15 +11,26 @@ use App\Models\SparePart;
 use App\Models\LabourMaster;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Services\GstCalculator;
+use App\Services\PartPriceResolver;
+use App\Services\StockValidator;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class JobCardController extends Controller
 {
     public function index(Request $request)
     {
-        $query = JobCard::with(['customer', 'vehicle.vehicleModel.vehicleBrand', 'assignedTechnician', 'parts', 'labours'])
-            ->withSum('payments', 'amount');
+        // Reject malformed / one-sided date filters with a friendly redirect
+        $validated = $request->validate([
+            'from_date' => 'nullable|date|required_with:to_date',
+            'to_date' => 'nullable|date|required_with:from_date',
+        ], [], ['from_date' => 'From Date', 'to_date' => 'To Date']);
+
+        $query = JobCard::with(['customer', 'vehicle.vehicleModel.vehicleBrand', 'assignedTechnician'])
+            ->withSum('payments', 'amount')
+            ->withExists('parts')
+            ->withExists('labours');
 
         // Filter by technician
         if ($request->filled('technician')) {
@@ -37,11 +48,11 @@ class JobCardController extends Controller
         }
 
         // Filter by date range
-        if ($request->filled('from_date')) {
-            $query->whereDate('job_date', '>=', $request->from_date);
+        if (!empty($validated['from_date'])) {
+            $query->whereDate('job_date', '>=', $validated['from_date']);
         }
-        if ($request->filled('to_date')) {
-            $query->whereDate('job_date', '<=', $request->to_date);
+        if (!empty($validated['to_date'])) {
+            $query->whereDate('job_date', '<=', $validated['to_date']);
         }
 
         $jobCards = $query->latest()->paginate(15)->withQueryString();
@@ -71,8 +82,8 @@ class JobCardController extends Controller
         }
 
         $initialData = [
-            'customer_id' => $customerId ?: '',
-            'vehicle_id' => $vehicleId ?: '',
+            'customer_id' => $customerId ? (string) $customerId : '',
+            'vehicle_id' => $vehicleId ? (string) $vehicleId : '',
             'complaints' => [],
         ];
 
@@ -128,8 +139,8 @@ class JobCardController extends Controller
 
     public function show(JobCard $jobCard)
     {
-        $jobCard->load(['customer', 'vehicle', 'assignedTechnician', 'supervisor',
-                        'complaints', 'parts.sparePart', 'labours.labourMaster', 'labours.technician']);
+        $jobCard->load(['customer', 'vehicle.vehicleModel.vehicleBrand', 'assignedTechnician', 'supervisor',
+                        'complaints', 'parts.sparePart', 'labours.labourMaster', 'labours.technician', 'payments']);
         return view('job_cards.show', compact('jobCard'));
     }
 
@@ -169,7 +180,8 @@ class JobCardController extends Controller
             ? 'TAX-INVOICE-' . $jobCard->job_card_no . '.pdf'
             : 'ESTIMATE-' . $jobCard->job_card_no . '.pdf';
 
-        $pdf = Pdf::loadView('pdf.job-card', compact('jobCard', 'documentType'));
+        $pdf = Pdf::setBasePath(base_path())
+            ->loadView('pdf.job-card', compact('jobCard', 'documentType'));
 
         return $pdf->download($filename);
     }
@@ -195,26 +207,28 @@ class JobCardController extends Controller
             'parts' => 'nullable|array',
             'parts.*.spare_part_id' => 'required|exists:spare_parts,id',
             'parts.*.quantity' => 'required|integer|min:1',
-            'parts.*.mrp' => 'required|numeric|min:0',
             'parts.*.labor_charge' => 'required|numeric|min:0',
             'parts.*.under_warranty' => 'boolean',
             'labours' => 'nullable|array',
             'labours.*.labour_master_id' => 'required|exists:labour_masters,id',
             'labours.*.technician_id' => 'nullable|exists:employees,id',
             'labours.*.rate' => 'required|numeric|min:0',
-            'labours.*.qty' => 'required|numeric|min:0',
+            'labours.*.qty' => 'required|numeric|min:0.01',
         ]);
 
         // Stock check accounting for quantity this job card already reserves
-        $stockErrors = $this->validatePartsStock($request, $jobCard);
+        $stockErrors = app(StockValidator::class)->validate($request->input('parts', []), $jobCard, 'parts');
         if (!empty($stockErrors)) {
             return back()->withErrors($stockErrors)->withInput();
         }
 
+        // MRP is always taken from the part master, never from the client submission
+        $parts = app(PartPriceResolver::class)->priceLines($request->parts ?? []);
+
         DB::beginTransaction();
         try {
             $calculations = app(GstCalculator::class)->calculate(
-                $this->buildGstLines($request),
+                $this->buildGstLines($parts, $request->labours ?? []),
                 $request->has('gst_applicable'),
                 $request->discount_percent ?? 0,
                 $request->discount_amount ?? 0,
@@ -240,8 +254,8 @@ class JobCardController extends Controller
             ]);
 
             // Save parts (stock deduction happens in model boot)
-            if (!empty($request->parts)) {
-                foreach ($request->parts as $part) {
+            if (!empty($parts)) {
+                foreach ($parts as $part) {
                     $underWarranty = isset($part['under_warranty']) && $part['under_warranty'];
                     $lineTotal = $underWarranty ? 0 : ($part['quantity'] * ($part['mrp'] + $part['labor_charge']));
 
@@ -274,7 +288,8 @@ class JobCardController extends Controller
             return redirect()->route('job-cards.show', $jobCard)->with('success', 'Job Card assigned and billed.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withInput()->withErrors(['error' => 'Failed to save assignment: ' . $e->getMessage()]);
+            Log::error($e);
+            return back()->withInput()->withErrors(['error' => 'Something went wrong saving this record. Please try again.']);
         }
     }
 
@@ -352,67 +367,31 @@ class JobCardController extends Controller
             return redirect()->route('job-cards.index')->with('success', 'Job Card deleted.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Failed to delete job card: ' . $e->getMessage()]);
+            Log::error($e);
+            return back()->withErrors(['error' => 'Something went wrong deleting this record. Please try again.']);
         }
     }
 
-    private function validatePartsStock(Request $request, ?JobCard $jobCard): array
+    private function buildGstLines(array $parts, array $labours): array
     {
-        $errors = [];
-        $parts = $request->input('parts', []);
+        $partIds = collect($parts)->pluck('spare_part_id')->unique();
+        $spareParts = $partIds->isEmpty() ? collect() : SparePart::whereIn('id', $partIds)->get()->keyBy('id');
 
-        if (empty($parts)) {
-            return $errors;
-        }
-
-        // Aggregate requested quantity per part across all lines in this request
-        $usageByPart = [];
-        foreach ($parts as $index => $part) {
-            $partId = (int) $part['spare_part_id'];
-            $usageByPart[$partId] = ($usageByPart[$partId] ?? 0) + (int) $part['quantity'];
-        }
-
-        foreach ($usageByPart as $partId => $requestedQty) {
-            $sparePart = SparePart::find($partId);
-            if (!$sparePart) {
-                continue;
-            }
-
-            $available = (int) $sparePart->current_stock_qty;
-            if ($jobCard) {
-                // Quantity this job card already reserves for the same part
-                $available += (int) $jobCard->parts()->where('spare_part_id', $partId)->sum('quantity');
-            }
-
-            if ($requestedQty > $available) {
-                $index = collect($parts)->search(fn ($part) => (int) $part['spare_part_id'] === $partId);
-                $errors["parts.{$index}.quantity"] = "Insufficient stock for '{$sparePart->part_name}'. Requested {$requestedQty}, only {$available} available.";
-            }
-        }
-
-        return $errors;
-    }
-
-    private function buildGstLines(Request $request): array
-    {
-        $partIds = collect($request->parts ?? [])->pluck('spare_part_id')->unique();
-        $parts = $partIds->isEmpty() ? collect() : SparePart::whereIn('id', $partIds)->get()->keyBy('id');
-
-        $labourIds = collect($request->labours ?? [])->pluck('labour_master_id')->unique();
-        $labours = $labourIds->isEmpty() ? collect() : LabourMaster::whereIn('id', $labourIds)->get()->keyBy('id');
+        $labourIds = collect($labours)->pluck('labour_master_id')->unique();
+        $laboursByMaster = $labourIds->isEmpty() ? collect() : LabourMaster::whereIn('id', $labourIds)->get()->keyBy('id');
 
         $lines = [];
 
-        foreach ($request->parts ?? [] as $part) {
+        foreach ($parts as $part) {
             $underWarranty = isset($part['under_warranty']) && $part['under_warranty'];
             $lines[] = [
                 'line_total' => $underWarranty ? 0 : ($part['quantity'] * ($part['mrp'] + $part['labor_charge'])),
-                'gst_rate' => $parts[$part['spare_part_id']]->gst_rate ?? null,
+                'gst_rate' => $spareParts[$part['spare_part_id']]->gst_rate ?? null,
             ];
         }
 
-        foreach ($request->labours ?? [] as $labour) {
-            $master = $labours[$labour['labour_master_id']] ?? null;
+        foreach ($labours as $labour) {
+            $master = $laboursByMaster[$labour['labour_master_id']] ?? null;
             $lines[] = [
                 'line_total' => $labour['rate'] * $labour['qty'],
                 'gst_rate' => ($master && $master->taxable) ? $master->gst_rate : null,

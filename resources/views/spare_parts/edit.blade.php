@@ -40,6 +40,9 @@
                         <x-input name="current_stock_qty" label="Current Stock Qty" type="number" :value="$sparePart->current_stock_qty" />
                         <x-input name="reorder_level" label="Reorder Level" type="number" :value="$sparePart->reorder_level" />
                     </div>
+                    <p class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+                        Caution: manually editing stock while parts are reserved on in-progress job cards can cause a mismatch with the reserved quantities shown on those job cards.
+                    </p>
 
                     <div class="flex justify-end gap-3 pt-2">
                         <x-button variant="secondary" :href="route('spare-parts.index')">

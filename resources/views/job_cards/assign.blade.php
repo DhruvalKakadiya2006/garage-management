@@ -21,7 +21,7 @@
             'parts' => $jobCard->parts->map(fn($p) => [
                 'spare_part_id' => (int) $p->spare_part_id,
                 'quantity' => (int) $p->quantity,
-                'mrp' => (float) $p->mrp,
+                'mrp' => (float) ($spareParts->firstWhere('id', $p->spare_part_id)?->mrp ?? $p->mrp),
                 'labor_charge' => (float) $p->labor_charge,
                 'under_warranty' => (bool) $p->under_warranty,
                 'gstRate' => (float) ($spareParts->firstWhere('id', $p->spare_part_id)?->gst_rate ?? 0),
@@ -144,8 +144,9 @@
                                            placeholder="Qty" class="block w-full text-sm rounded-md border-gray-300 shadow-sm" required min="1">
                                 </div>
                                 <div class="col-span-2">
-                                    <input type="number" step="0.01" :name="`parts[${index}][mrp]`" x-model="part.mrp" @input="calculatePartLine(index)"
-                                           placeholder="MRP" class="block w-full text-sm rounded-md border-gray-300 shadow-sm" required min="0">
+                                    <input type="number" step="0.01" :name="`parts[${index}][mrp]`" x-model="part.mrp"
+                                           placeholder="MRP" readonly
+                                           class="block w-full text-sm rounded-md border-gray-300 bg-gray-100 shadow-sm cursor-not-allowed" title="MRP is set from the spare part master and cannot be edited">
                                 </div>
                                 <div class="col-span-2">
                                     <input type="number" step="0.01" :name="`parts[${index}][labor_charge]`" x-model="part.labor_charge" @input="calculatePartLine(index)"
@@ -281,6 +282,9 @@
                 roundOffAmount: 0,
 
                 init() {
+                    // Re-price every existing line from the master so the screen
+                    // always reflects what will be charged on save.
+                    this.parts.forEach((part, index) => this.calculatePartLine(index));
                     this.calculateTotals();
                 },
 

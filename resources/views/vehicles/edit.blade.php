@@ -20,7 +20,6 @@
         $currentModel = $currentModelId ? \App\Models\VehicleModel::find($currentModelId) : null;
 
         $initialData = [
-            'customer_id' => (string) old('customer_id', $vehicle->customer_id),
             'brand_id' => $currentModel ? (string) $currentModel->vehicle_brand_id : '',
             'model_id' => $currentModel ? (string) $currentModel->id : '',
             'is_non_rto' => (bool) old('is_non_rto', $vehicle->is_non_rto),
@@ -31,17 +30,17 @@
         <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
             <x-card>
                 <form action="{{ route('vehicles.update', $vehicle) }}" method="POST" class="space-y-4"
-                      x-data="vehicleForm(@json($brandsData), @json($initialData))">
+                      x-data='vehicleForm(@json($brandsData), @json($initialData))'>
                     @csrf
                     @method('PUT')
 
-                    <x-select name="customer_id" label="Customer" :required="true" placeholder="-- Select Customer --">
-                        @foreach ($customers as $customer)
-                            <option value="{{ $customer->id }}" {{ old('customer_id', $vehicle->customer_id) == $customer->id ? 'selected' : '' }}>
-                                {{ $customer->display_name }} — {{ $customer->mobile }}
-                            </option>
-                        @endforeach
-                    </x-select>
+                    <div class="space-y-1">
+                        <label class="block text-sm font-medium text-gray-700">Customer</label>
+                        <p class="block w-full rounded-md border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-900 cursor-not-allowed">
+                            {{ $vehicle->customer?->display_name }}<span class="text-gray-500"> — {{ $vehicle->customer?->mobile }}</span>
+                        </p>
+                        <p class="text-xs text-gray-500">A vehicle's owner cannot be changed from this form.</p>
+                    </div>
 
                     <div class="grid grid-cols-2 gap-4">
                         <div x-show="!isNonRto" x-transition.opacity.duration.150>

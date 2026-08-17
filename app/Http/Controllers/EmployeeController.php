@@ -30,7 +30,7 @@ class EmployeeController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'role' => 'required|in:' . implode(',', array_keys(config('garage.option_lists.employee_role'))),
-            'mobile' => 'required|string|max:20',
+            'mobile' => ['required', 'string', 'regex:/^[6-9]\d{9}$/'],
             'specialization' => 'nullable|in:' . implode(',', array_keys(config('garage.option_lists.employee_specialization'))),
             'active' => 'boolean',
             'join_date' => 'nullable|date',
@@ -54,7 +54,7 @@ class EmployeeController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'role' => 'required|in:' . implode(',', array_keys(config('garage.option_lists.employee_role'))),
-            'mobile' => 'required|string|max:20',
+            'mobile' => ['required', 'string', 'regex:/^[6-9]\d{9}$/'],
             'specialization' => 'nullable|in:' . implode(',', array_keys(config('garage.option_lists.employee_specialization'))),
             'active' => 'boolean',
             'join_date' => 'nullable|date',

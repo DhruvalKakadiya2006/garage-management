@@ -34,6 +34,11 @@ class LabourMasterController extends Controller
         // Ensure taxable is set (checkbox behavior)
         $validated['taxable'] = $request->has('taxable') ? true : false;
 
+        // A non-taxable service must not carry a GST rate
+        if (! $validated['taxable']) {
+            $validated['gst_rate'] = null;
+        }
+
         LabourMaster::create($validated);
 
         return redirect()->route('labour-masters.index')->with('success', 'Labour service added successfully.');
@@ -58,6 +63,11 @@ class LabourMasterController extends Controller
 
         // Ensure taxable is set (checkbox behavior)
         $validated['taxable'] = $request->has('taxable') ? true : false;
+
+        // A non-taxable service must not carry a GST rate
+        if (! $validated['taxable']) {
+            $validated['gst_rate'] = null;
+        }
 
         $labourMaster->update($validated);
 

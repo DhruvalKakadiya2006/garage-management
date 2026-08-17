@@ -30,7 +30,7 @@
                     <!-- Customer (Optional) -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Customer</label>
-                        <p class="text-xs text-gray-500 mb-2">Optional — select an existing customer, add walk-in details, or leave blank for a quick anonymous sale.</p>
+                        <p class="text-xs text-gray-500 mb-2">Select an existing customer or enter walk-in details. At least one is required.</p>
                         <div class="flex gap-4">
                             <label class="flex items-center">
                                 <input type="radio" name="customer_type" value="existing" x-model="customerType" class="mr-2">
@@ -86,8 +86,9 @@
                                            placeholder="Qty" class="block w-full text-sm rounded-md border-gray-300 shadow-sm" required min="1">
                                 </div>
                                 <div class="col-span-2">
-                                    <input type="number" step="0.01" :name="`items[${index}][mrp]`" x-model="item.mrp" @input="calculateItemLine(index)"
-                                           placeholder="MRP" class="block w-full text-sm rounded-md border-gray-300 shadow-sm" required min="0">
+                                    <input type="number" step="0.01" :name="`items[${index}][mrp]`" x-model="item.mrp"
+                                           placeholder="MRP" readonly
+                                           class="block w-full text-sm rounded-md border-gray-300 bg-gray-100 shadow-sm cursor-not-allowed" title="MRP is set from the spare part master and cannot be edited">
                                 </div>
                                 <div class="col-span-1">
                                     <input type="number" step="0.01" :name="`items[${index}][discount_percent]`" x-model="item.discount_percent" @input="calculateItemLine(index)"
@@ -162,6 +163,9 @@
                 roundOffAmount: 0,
 
                 init() {
+                    // Re-price every existing line from the master so the screen
+                    // always reflects what will be charged on save.
+                    this.items.forEach((item, index) => this.calculateItemLine(index));
                     this.calculateTotals();
                 },
 

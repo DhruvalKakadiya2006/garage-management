@@ -188,7 +188,7 @@ class ReportController extends Controller
 
         $totalPayments = round($payments->sum('amount'), 2);
 
-        $modeOrder = ['cash', 'upi', 'card', 'bank_transfer', 'cheque'];
+        $modeOrder = array_keys(config('garage.option_lists.payment_mode'));
         $paymentsByMode = collect($modeOrder)->mapWithKeys(function (string $mode) use ($payments) {
             $modePayments = $payments->where('payment_mode', $mode);
 

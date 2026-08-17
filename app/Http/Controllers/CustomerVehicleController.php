@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Customer;
 use App\Models\Vehicle;
 use App\Models\VehicleBrand;
+use App\Models\VehicleModel;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 
@@ -23,6 +24,7 @@ class CustomerVehicleController extends Controller
     {
         $validated = $request->validate([
             'customer_id' => 'required|exists:customers,id',
+            'brand_id' => 'required|exists:vehicle_brands,id',
             'vehicle_model_id' => 'required|exists:vehicle_models,id',
             'is_non_rto' => 'boolean',
             'registration_no' => 'nullable|required_unless:is_non_rto,1|string|max:50|unique:vehicles,registration_no',
@@ -32,6 +34,14 @@ class CustomerVehicleController extends Controller
             'color' => 'nullable|string|max:50',
             'remarks' => 'nullable|string',
         ]);
+
+        // The chosen model must actually belong to the chosen brand
+        $model = VehicleModel::find($validated['vehicle_model_id']);
+        if ($model->vehicle_brand_id != $validated['brand_id']) {
+            return back()->withErrors(['brand_id' => 'The selected model does not belong to the selected brand.'])->withInput();
+        }
+
+        unset($validated['brand_id']);
 
         $vehicle = Vehicle::create($validated);
 
@@ -48,8 +58,12 @@ class CustomerVehicleController extends Controller
 
     public function update(Request $request, Vehicle $vehicle)
     {
+        // Ownership is not reassignable from the edit form: customer_id is
+        // deliberately excluded here so a vehicle (and its job card history)
+        // can never be silently moved to another customer. Reassignment should
+        // be a deliberate separate action if ever needed.
         $validated = $request->validate([
-            'customer_id' => 'required|exists:customers,id',
+            'brand_id' => 'required|exists:vehicle_brands,id',
             'vehicle_model_id' => 'required|exists:vehicle_models,id',
             'is_non_rto' => 'boolean',
             'registration_no' => 'nullable|required_unless:is_non_rto,1|string|max:50|unique:vehicles,registration_no,' . $vehicle->id,
@@ -59,6 +73,14 @@ class CustomerVehicleController extends Controller
             'color' => 'nullable|string|max:50',
             'remarks' => 'nullable|string',
         ]);
+
+        // The chosen model must actually belong to the chosen brand
+        $model = VehicleModel::find($validated['vehicle_model_id']);
+        if ($model->vehicle_brand_id != $validated['brand_id']) {
+            return back()->withErrors(['brand_id' => 'The selected model does not belong to the selected brand.'])->withInput();
+        }
+
+        unset($validated['brand_id']);
 
         $vehicle->update($validated);
 

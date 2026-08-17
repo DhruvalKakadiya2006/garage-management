@@ -108,6 +108,7 @@ class StockIntegrityTest extends TestCase
         $this->actingAs($user)
             ->post(route('counter-invoices.store'), [
                 'invoice_date' => '2026-08-03',
+                'walkin_name' => 'Walk-in Buyer',
                 'items' => [
                     ['spare_part_id' => $part->id, 'quantity' => 3, 'mrp' => 50, 'discount_percent' => 0],
                 ],
@@ -164,6 +165,7 @@ class StockIntegrityTest extends TestCase
         $this->actingAs($user)
             ->post(route('counter-invoices.store'), [
                 'invoice_date' => '2026-08-03',
+                'walkin_name' => 'Walk-in Buyer',
                 'items' => [
                     ['spare_part_id' => $part->id, 'quantity' => 5, 'mrp' => 50, 'discount_percent' => 0],
                 ],
@@ -244,75 +246,6 @@ class StockIntegrityTest extends TestCase
         $this->assertEquals(4, (int) $partA->fresh()->current_stock_qty);
         $jobCard->refresh();
         $this->assertEquals(6, (int) $jobCard->parts->first()->quantity);
-    }
-
-    public function test_job_card_part_model_swap_moves_stock_between_parts()
-    {
-        $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
-        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
-        $partA = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 5);
-        $partB = $this->makePart('BAT-01', 'Battery Cell', 100, 20, 5);
-
-        $jobCard = $this->makeJobCard($customer, $vehicle);
-        $line = $jobCard->parts()->create([
-            'spare_part_id' => $partA->id,
-            'quantity' => 2,
-            'mrp' => 50,
-            'labor_charge' => 10,
-            'under_warranty' => false,
-            'line_total' => 120,
-        ]);
-
-        $this->assertEquals(3, (int) $partA->fresh()->current_stock_qty);
-
-        // Swap spare part from A to B and change quantity
-        $line->update([
-            'spare_part_id' => $partB->id,
-            'quantity' => 3,
-            'mrp' => 100,
-            'labor_charge' => 20,
-            'line_total' => 360,
-        ]);
-
-        $this->assertEquals(5, (int) $partA->fresh()->current_stock_qty);
-        $this->assertEquals(2, (int) $partB->fresh()->current_stock_qty);
-
-        // Quantity-only bump on the same part (3 -> 4): B stock 2 -> 1
-        $line->update(['quantity' => 4, 'line_total' => 480]);
-        $this->assertEquals(5, (int) $partA->fresh()->current_stock_qty);
-        $this->assertEquals(1, (int) $partB->fresh()->current_stock_qty);
-    }
-
-    public function test_counter_invoice_item_model_swap_moves_stock_between_parts()
-    {
-        $partA = $this->makePart('BRK-01', 'Brake Shoe', 50, 0, 5);
-        $partB = $this->makePart('BAT-01', 'Battery Cell', 100, 0, 5);
-
-        $invoice = CounterInvoice::create([
-            'invoice_date' => '2026-08-03',
-            'gst_applicable' => false,
-        ]);
-        $item = $invoice->items()->create([
-            'spare_part_id' => $partA->id,
-            'quantity' => 2,
-            'mrp' => 50,
-            'discount_percent' => 0,
-            'line_total' => 100,
-        ]);
-
-        $this->assertEquals(3, (int) $partA->fresh()->current_stock_qty);
-
-        // Swap spare part from A to B and change quantity
-        $item->update([
-            'spare_part_id' => $partB->id,
-            'quantity' => 3,
-            'mrp' => 100,
-            'discount_percent' => 0,
-            'line_total' => 300,
-        ]);
-
-        $this->assertEquals(5, (int) $partA->fresh()->current_stock_qty);
-        $this->assertEquals(2, (int) $partB->fresh()->current_stock_qty);
     }
 
     public function test_creating_guard_prevents_overselling_at_model_level()

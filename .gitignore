@@ -20,6 +20,15 @@
 /public/storage
 /storage/*.key
 /storage/pail
+# DomPDF font cache (regenerated on first render from the @font-face rules in
+# resources/views/pdf/job-card.blade.php; only the source OpenSans-*.ttf files
+# and LICENSE.txt in storage/fonts are tracked)
+/storage/fonts/installed-fonts.json
+/storage/fonts/Helvetica.afm.json
+/storage/fonts/Helvetica-Bold.afm.json
+/storage/fonts/*.ufm
+/storage/fonts/*.ufm.json
+/storage/fonts/open_sans_*.ttf
 /vendor
 _ide_helper.php
 Homestead.json

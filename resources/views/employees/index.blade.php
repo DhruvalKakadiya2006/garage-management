@@ -13,7 +13,7 @@
     </x-slot>
 
     <div class="py-6">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-full sm:px-6 lg:px-8">
 
             @if (session('success'))
                 <div class="mb-4 bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-md">
@@ -58,7 +58,7 @@
 
                 @foreach ($employees as $employee)
                     <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td class="px-6 py-4 whitespace-nowrap text-xs font-medium text-gray-900">
                             {{ $employee->name }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
@@ -72,10 +72,10 @@
                                 {{ ucwords(str_replace('_', ' ', $employee->role)) }}
                             </x-badge>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 capitalize">
+                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600 capitalize">
                             {{ $employee->specialization ? str_replace('_', ' ', $employee->specialization) : '-' }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600">
                             {{ $employee->mobile }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">

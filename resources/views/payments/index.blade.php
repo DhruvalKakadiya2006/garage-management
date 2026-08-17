@@ -7,7 +7,7 @@
     </x-slot>
 
     <div class="py-6">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-full sm:px-6 lg:px-8">
 
             @if (session('success'))
                 <div class="mb-4 bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-md">
@@ -47,10 +47,10 @@
                         $payable = $payment->payable;
                     @endphp
                     <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-900">
                             {{ $payment->payment_date->format('d M Y') }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <td class="px-6 py-4 whitespace-nowrap text-xs">
                             @if ($payable)
                                 <x-badge :color="$payable instanceof \App\Models\JobCard ? 'primary' : 'green'">
                                     @if ($payable instanceof \App\Models\JobCard)
@@ -64,14 +64,14 @@
                                 <span class="text-gray-400 italic">Deleted record</span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td class="px-6 py-4 whitespace-nowrap text-xs font-medium text-gray-900">
                             @if ($payable)
                                 {{ $payable instanceof \App\Models\JobCard ? $payable->job_card_no : $payable->invoice_no }}
                             @else
                                 <span class="text-gray-400 italic">Deleted record</span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-600">
+                        <td class="px-6 py-4 text-xs text-gray-600">
                             @if ($payable)
                                 @php
                                     if ($payable instanceof \App\Models\JobCard) {
@@ -87,27 +87,40 @@
                                 <span class="text-gray-400 italic">Deleted record</span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 capitalize">
+                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600 capitalize">
                             {{ str_replace('_', ' ', $payment->payment_mode) }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600">
                             {{ $payment->reference_no ?? '-' }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-900 text-right font-medium">
                             {{ config('garage.currency_symbol') }}{{ number_format($payment->amount, 2) }}
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-500">
+                        <td class="px-6 py-4 text-xs text-gray-500">
                             {{ $payment->notes ? \Illuminate\Support\Str::limit($payment->notes, 30) : '-' }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                            @if ($payable)
-                                <a href="{{ route($payable instanceof \App\Models\JobCard ? 'job-cards.show' : 'counter-invoices.show', $payable->id) }}"
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-xs">
+                            <div class="flex items-center justify-end gap-3">
+                                <a href="{{ route('payments.edit', $payment) }}"
                                    class="text-primary-600 hover:text-primary-800">
-                                    View Document
+                                    Edit
                                 </a>
-                            @else
-                                <span class="text-gray-400 italic">Deleted record</span>
-                            @endif
+                                @if ($payable)
+                                    <a href="{{ route($payable instanceof \App\Models\JobCard ? 'job-cards.show' : 'counter-invoices.show', $payable->id) }}"
+                                       class="text-primary-600 hover:text-primary-800">
+                                        View Document
+                                    </a>
+                                @endif
+                                <form action="{{ route('payments.destroy', $payment) }}" method="POST"
+                                      onsubmit="return confirm('Void (delete) this payment record? The linked document and its outstanding balance will be updated.');"
+                                      class="inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-red-600 hover:text-red-800">
+                                        Void
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 @endforeach

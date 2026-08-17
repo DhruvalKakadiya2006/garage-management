@@ -262,6 +262,7 @@
                                     <th class="px-4 py-2 text-left">Reference</th>
                                     <th class="px-4 py-2 text-right">Amount</th>
                                     <th class="px-4 py-2 text-left">Notes</th>
+                                    <th class="px-4 py-2 text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -272,6 +273,15 @@
                                     <td class="px-4 py-2">{{ $payment->reference_no ?? '-' }}</td>
                                     <td class="px-4 py-2 text-right font-medium">{{ config('garage.currency_symbol') }}{{ number_format($payment->amount, 2) }}</td>
                                     <td class="px-4 py-2 text-gray-600">{{ $payment->notes ?? '-' }}</td>
+                                    <td class="px-4 py-2 text-right text-sm whitespace-nowrap">
+                                        <a href="{{ route('payments.edit', $payment) }}" class="text-primary-600 hover:text-primary-800">Edit</a>
+                                        <form action="{{ route('payments.destroy', $payment) }}" method="POST"
+                                              onsubmit="return confirm('Void (delete) this payment record?');" class="inline ml-3">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-red-600 hover:text-red-800">Void</button>
+                                        </form>
+                                    </td>
                                 </tr>
                                 @endforeach
                             </tbody>

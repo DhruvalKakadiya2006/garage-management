@@ -28,13 +28,37 @@
     <meta charset="utf-8">
     <title>{{ $isInvoice ? 'TAX INVOICE' : 'ESTIMATE' }} — {{ $jobCard->job_card_no }}</title>
     <style>
+        @font-face {
+            font-family: 'Open Sans';
+            font-style: normal;
+            font-weight: 400;
+            src: url('storage/fonts/OpenSans-Regular.ttf') format('truetype');
+        }
+        @font-face {
+            font-family: 'Open Sans';
+            font-style: normal;
+            font-weight: 700;
+            src: url('storage/fonts/OpenSans-Bold.ttf') format('truetype');
+        }
+        @font-face {
+            font-family: 'Open Sans';
+            font-style: italic;
+            font-weight: 400;
+            src: url('storage/fonts/OpenSans-Italic.ttf') format('truetype');
+        }
+        @font-face {
+            font-family: 'Open Sans';
+            font-style: italic;
+            font-weight: 700;
+            src: url('storage/fonts/OpenSans-BoldItalic.ttf') format('truetype');
+        }
         @page {
             size: A4 portrait;
             margin: 14mm 14mm 18mm 14mm;
         }
         * { box-sizing: border-box; }
         body {
-            font-family: 'DejaVu Sans', sans-serif;
+            font-family: 'Open Sans', sans-serif;
             font-size: 10pt;
             color: #1f2937;
             margin: 0;

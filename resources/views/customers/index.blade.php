@@ -28,7 +28,7 @@
     @endphp
 
     <div class="py-6">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8" x-data="customerList()">
+        <div class="max-w-full sm:px-6 lg:px-8" x-data="customerList()">
 
             @if (session('success'))
                 <div class="mb-4 bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-md">
@@ -98,19 +98,19 @@
                             <input type="radio" name="customer" value="{{ $customer->id }}" x-model="selectedId"
                                    class="h-4 w-4 rounded-full border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer">
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <td class="px-6 py-4 whitespace-nowrap text-xs font-medium">
                             <a href="{{ route('customers.show', $customer) }}"
                                class="text-primary-600 hover:text-primary-800 transition-colors duration-150">
                                 {{ $customer->display_name }}
                             </a>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600">
                             {{ $customer->mobile }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm {{ $customer->outstanding > 0 ? 'font-medium text-red-600' : 'text-gray-600' }}">
+                        <td class="px-6 py-4 whitespace-nowrap text-xs {{ $customer->outstanding > 0 ? 'font-medium text-red-600' : 'text-gray-600' }}">
                             {{ config('garage.currency_symbol') }}{{ number_format($customer->outstanding, 2) }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600">
                             {{ $customer->job_cards_count + $customer->counter_invoices_count }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right">
@@ -132,17 +132,17 @@
                                     @if ($vehicle->is_non_rto)
                                         <x-badge color="amber">NON-RTO</x-badge>
                                     @else
-                                        <span class="text-sm font-medium text-gray-900">{{ $vehicle->registration_no }}</span>
+                                        <span class="text-xs font-medium text-gray-900">{{ $vehicle->registration_no }}</span>
                                     @endif
-                                    <span class="text-sm text-gray-600">
+                                    <span class="text-xs text-gray-600">
                                         {{ $vehicle->vehicleModel?->vehicleBrand?->name }} {{ $vehicle->vehicleModel?->name }}
                                     </span>
                                     @if ($vehicle->color)
-                                        <span class="text-sm text-gray-400">{{ $vehicle->color }}</span>
+                                        <span class="text-xs text-gray-400">{{ $vehicle->color }}</span>
                                     @endif
                                 </div>
                             @empty
-                                <div class="text-sm text-gray-500">No vehicles registered for this customer.</div>
+                                <div class="text-xs text-gray-500">No vehicles registered for this customer.</div>
                             @endforelse
                         </td>
                     </tr>

@@ -13,7 +13,7 @@
     </x-slot>
 
     <div class="py-6">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-full sm:px-6 lg:px-8">
             @if (session('success'))
                 <div class="mb-4 bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-md">
                     {{ session('success') }}
@@ -41,13 +41,13 @@
 
                 @foreach ($invoices as $invoice)
                     <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td class="px-6 py-4 whitespace-nowrap text-xs font-medium text-gray-900">
                             {{ $invoice->invoice_no }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600">
                             {{ $invoice->invoice_date->format('d M Y') }}
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-600">
+                        <td class="px-6 py-4 text-xs text-gray-600">
                             @if($invoice->customer_id)
                                 {{ $invoice->customer->display_name }}
                             @else
@@ -57,7 +57,7 @@
                                 @endif
                             @endif
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <td class="px-6 py-4 whitespace-nowrap text-xs">
                             <x-badge :color="match ($invoice->payment_status_label) {
                                 'paid' => 'green',
                                 'partially_paid' => 'amber',
@@ -76,7 +76,7 @@
                                 <div class="text-xs text-gray-500 mt-1">{{ ucfirst(str_replace('_', ' ', $invoice->payment_mode)) }}</div>
                             @endif
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-900 text-right font-medium">
                             {{ config('garage.currency_symbol') }}{{ number_format($invoice->grand_total, 2) }}
                         </td>
                         <x-data-table-actions

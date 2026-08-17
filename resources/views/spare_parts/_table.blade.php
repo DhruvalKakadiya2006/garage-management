@@ -42,25 +42,25 @@
 
     @foreach ($spareParts as $part)
         <tr>
-            <td class="px-6 py-4 text-sm font-medium text-gray-900">
+            <td class="px-6 py-4 text-xs font-medium text-gray-900">
                 {{ $part->part_name }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+            <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600">
                 {{ $part->part_code }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+            <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600">
                 {{ $part->category ?? '-' }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+            <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-900 text-right">
                 {{ config('garage.currency_symbol') }}{{ number_format($part->mrp, 2) }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+            <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-900 text-right">
                 {{ config('garage.currency_symbol') }}{{ number_format($part->labor_charge, 2) }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
+            <td class="px-6 py-4 whitespace-nowrap text-xs font-medium text-gray-900 text-right">
                 {{ config('garage.currency_symbol') }}{{ number_format($part->total_price, 2) }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+            <td class="px-6 py-4 whitespace-nowrap text-xs text-center">
                 @if ($part->current_stock_qty <= 0)
                     <x-badge color="red">{{ $part->current_stock_qty }}</x-badge>
                 @elseif ($part->current_stock_qty <= $part->reorder_level)

@@ -7,7 +7,10 @@ use App\Models\Customer;
 use App\Models\SparePart;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Services\GstCalculator;
+use App\Services\PartPriceResolver;
+use App\Services\StockValidator;
 
 class CounterInvoiceController extends Controller
 {
@@ -32,7 +35,7 @@ class CounterInvoiceController extends Controller
     {
         $validated = $request->validate([
             'invoice_date' => 'required|date',
-            'customer_id' => 'nullable|exists:customers,id',
+            'customer_id' => 'nullable|exists:customers,id|required_without_all:walkin_name,walkin_mobile',
             'walkin_name' => 'nullable|string|max:255',
             'walkin_mobile' => 'nullable|string|max:20',
             'payment_mode' => 'nullable|in:' . implode(',', array_keys(config('garage.option_lists.payment_mode'))),
@@ -42,20 +45,24 @@ class CounterInvoiceController extends Controller
             'items' => 'required|array|min:1',
             'items.*.spare_part_id' => 'required|exists:spare_parts,id',
             'items.*.quantity' => 'required|integer|min:1',
-            'items.*.mrp' => 'required|numeric|min:0',
             'items.*.discount_percent' => 'nullable|numeric|min:0|max:100',
+        ], [
+            'customer_id.required_without_all' => 'Select a customer or enter a walk-in name / mobile number.',
         ]);
 
         // Stock check before any writes so stock can never go negative
-        $stockErrors = $this->validateItemsStock($request, null);
+        $stockErrors = app(StockValidator::class)->validate($request->input('items', []), null, 'items');
         if (!empty($stockErrors)) {
             return back()->withErrors($stockErrors)->withInput();
         }
 
+        // MRP is always taken from the part master, never from the client submission
+        $items = app(PartPriceResolver::class)->priceLines($request->items ?? []);
+
         DB::beginTransaction();
         try {
             $calculations = app(GstCalculator::class)->calculate(
-                $this->buildGstLines($request),
+                $this->buildGstLines($items),
                 $request->has('gst_applicable'),
                 $request->discount_percent ?? 0,
                 $request->discount_amount ?? 0,
@@ -76,13 +83,14 @@ class CounterInvoiceController extends Controller
                 'grand_total' => $calculations['grand_total'],
             ]);
 
-            $this->createItems($invoice, $request->items);
+            $this->createItems($invoice, $items);
 
             DB::commit();
             return redirect()->route('counter-invoices.show', $invoice)->with('success', 'Counter Invoice created successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withInput()->withErrors(['error' => 'Failed to create invoice: ' . $e->getMessage()]);
+            Log::error($e);
+            return back()->withInput()->withErrors(['error' => 'Something went wrong saving this record. Please try again.']);
         }
     }
 
@@ -105,7 +113,7 @@ class CounterInvoiceController extends Controller
     {
         $validated = $request->validate([
             'invoice_date' => 'required|date',
-            'customer_id' => 'nullable|exists:customers,id',
+            'customer_id' => 'nullable|exists:customers,id|required_without_all:walkin_name,walkin_mobile',
             'walkin_name' => 'nullable|string|max:255',
             'walkin_mobile' => 'nullable|string|max:20',
             'payment_mode' => 'nullable|in:' . implode(',', array_keys(config('garage.option_lists.payment_mode'))),
@@ -115,20 +123,24 @@ class CounterInvoiceController extends Controller
             'items' => 'required|array|min:1',
             'items.*.spare_part_id' => 'required|exists:spare_parts,id',
             'items.*.quantity' => 'required|integer|min:1',
-            'items.*.mrp' => 'required|numeric|min:0',
             'items.*.discount_percent' => 'nullable|numeric|min:0|max:100',
+        ], [
+            'customer_id.required_without_all' => 'Select a customer or enter a walk-in name / mobile number.',
         ]);
 
         // Stock check accounting for quantity this invoice already reserves
-        $stockErrors = $this->validateItemsStock($request, $counterInvoice);
+        $stockErrors = app(StockValidator::class)->validate($request->input('items', []), $counterInvoice, 'items');
         if (!empty($stockErrors)) {
             return back()->withErrors($stockErrors)->withInput();
         }
 
+        // MRP is always taken from the part master, never from the client submission
+        $items = app(PartPriceResolver::class)->priceLines($request->items ?? []);
+
         DB::beginTransaction();
         try {
             $calculations = app(GstCalculator::class)->calculate(
-                $this->buildGstLines($request),
+                $this->buildGstLines($items),
                 $request->has('gst_applicable'),
                 $request->discount_percent ?? 0,
                 $request->discount_amount ?? 0,
@@ -154,13 +166,14 @@ class CounterInvoiceController extends Controller
                 $item->delete();
             }
 
-            $this->createItems($counterInvoice, $request->items);
+            $this->createItems($counterInvoice, $items);
 
             DB::commit();
             return redirect()->route('counter-invoices.show', $counterInvoice)->with('success', 'Counter Invoice updated successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withInput()->withErrors(['error' => 'Failed to update invoice: ' . $e->getMessage()]);
+            Log::error($e);
+            return back()->withInput()->withErrors(['error' => 'Something went wrong saving this record. Please try again.']);
         }
     }
 
@@ -181,45 +194,9 @@ class CounterInvoiceController extends Controller
             return redirect()->route('counter-invoices.index')->with('success', 'Counter Invoice deleted.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Failed to delete invoice: ' . $e->getMessage()]);
+            Log::error($e);
+            return back()->withErrors(['error' => 'Something went wrong deleting this record. Please try again.']);
         }
-    }
-
-    private function validateItemsStock(Request $request, ?CounterInvoice $counterInvoice): array
-    {
-        $errors = [];
-        $items = $request->input('items', []);
-
-        if (empty($items)) {
-            return $errors;
-        }
-
-        // Aggregate requested quantity per part across all lines in this request
-        $usageByPart = [];
-        foreach ($items as $index => $item) {
-            $partId = (int) $item['spare_part_id'];
-            $usageByPart[$partId] = ($usageByPart[$partId] ?? 0) + (int) $item['quantity'];
-        }
-
-        foreach ($usageByPart as $partId => $requestedQty) {
-            $sparePart = SparePart::find($partId);
-            if (!$sparePart) {
-                continue;
-            }
-
-            $available = (int) $sparePart->current_stock_qty;
-            if ($counterInvoice) {
-                // Quantity this invoice already reserves for the same part
-                $available += (int) $counterInvoice->items()->where('spare_part_id', $partId)->sum('quantity');
-            }
-
-            if ($requestedQty > $available) {
-                $index = collect($items)->search(fn ($item) => (int) $item['spare_part_id'] === $partId);
-                $errors["items.{$index}.quantity"] = "Insufficient stock for '{$sparePart->part_name}'. Requested {$requestedQty}, only {$available} available.";
-            }
-        }
-
-        return $errors;
     }
 
     private function createItems(CounterInvoice $invoice, array $items)
@@ -244,13 +221,13 @@ class CounterInvoiceController extends Controller
         }
     }
 
-    private function buildGstLines(Request $request): array
+    private function buildGstLines(array $items): array
     {
-        $partIds = collect($request->items ?? [])->pluck('spare_part_id')->unique();
+        $partIds = collect($items)->pluck('spare_part_id')->unique();
         $parts = $partIds->isEmpty() ? collect() : SparePart::whereIn('id', $partIds)->get()->keyBy('id');
 
         $lines = [];
-        foreach ($request->items ?? [] as $item) {
+        foreach ($items as $item) {
             $itemDiscount = (float) ($item['discount_percent'] ?? 0);
             $mrp = (float) $item['mrp'];
             $quantity = (int) $item['quantity'];

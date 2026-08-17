@@ -16,12 +16,12 @@
         $jobCardsData = $jobCards->getCollection()->map(fn ($jc) => [
             'id' => (string) $jc->id,
             'job_card_no' => $jc->job_card_no,
-            'has_line_items' => $jc->parts->count() + $jc->labours->count() > 0,
+            'has_line_items' => (bool) ($jc->parts_exists || $jc->labours_exists),
         ])->values();
     @endphp
 
     <div class="py-6">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-4" x-data="jobCardList()">
+        <div class="max-w-full sm:px-6 lg:px-8 space-y-4" x-data="jobCardList()">
 
             @if (session('success'))
                 <div class="bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-md">
@@ -32,6 +32,16 @@
             @if (session('error'))
                 <div class="bg-red-100 border border-red-300 text-red-800 px-4 py-3 rounded-md">
                     {{ session('error') }}
+                </div>
+            @endif
+
+            @if ($errors->any())
+                <div class="bg-red-100 border border-red-300 text-red-800 px-4 py-3 rounded-md">
+                    <ul class="list-disc list-inside text-sm">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
                 </div>
             @endif
 
@@ -160,31 +170,31 @@
                             <input type="radio" name="job_card" value="{{ $jc->id }}" x-model="selectedId"
                                    class="h-4 w-4 rounded-full border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer">
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <td class="px-6 py-4 whitespace-nowrap text-xs font-medium">
                             <a href="{{ route('job-cards.show', $jc) }}"
                                class="text-primary-600 hover:text-primary-800 transition-colors duration-150">
                                 {{ $jc->job_card_no }}
                             </a>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600">
                             {{ $jc->job_date->format('d M Y') }}
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-600">
+                        <td class="px-6 py-4 text-xs text-gray-600">
                             {{ $jc->customer->display_name ?? '-' }}
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-600">
+                        <td class="px-6 py-4 text-xs text-gray-600">
                             {{ $jc->vehicle?->vehicleModel?->vehicleBrand?->name ?? '-' }}
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-600">
+                        <td class="px-6 py-4 text-xs text-gray-600">
                             {{ $jc->vehicle?->vehicleModel?->name ?? '-' }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600">
                             {{ $jc->vehicle->color ?? '-' }}
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-600">
+                        <td class="px-6 py-4 text-xs text-gray-600">
                             {{ $jc->assignedTechnician->name ?? '-' }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <td class="px-6 py-4 whitespace-nowrap text-xs">
                             <x-badge :color="match ($jc->status) {
                                 'delivered' => 'green',
                                 'ready_for_delivery' => 'primary',
@@ -209,10 +219,10 @@
                                 {{ ucwords(str_replace('_', ' ', $jc->status)) }}
                             </x-badge>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-900 text-right font-medium">
                             {{ config('garage.currency_symbol') }}{{ number_format($jc->grand_total, 2) }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <td class="px-6 py-4 whitespace-nowrap text-xs">
                             <x-badge :color="match ($jc->payment_status_label) {
                                 'paid' => 'green',
                                 'partially_paid' => 'amber',

@@ -98,8 +98,9 @@ class JobCardCreateEditTest extends TestCase
             ->post(route('job-cards.assign-update', $jobCard), [
                 'assigned_technician_id' => $technician->id,
                 'parts' => [
-                    ['spare_part_id' => $partA->id, 'quantity' => 2, 'mrp' => 50, 'labor_charge' => 10],
-                    ['spare_part_id' => $partB->id, 'quantity' => 1, 'mrp' => 100, 'labor_charge' => 20, 'under_warranty' => '1'],
+                    // Client-submitted mrps (999) must be ignored in favour of the master prices
+                    ['spare_part_id' => $partA->id, 'quantity' => 2, 'mrp' => 999, 'labor_charge' => 10],
+                    ['spare_part_id' => $partB->id, 'quantity' => 1, 'mrp' => 999, 'labor_charge' => 20, 'under_warranty' => '1'],
                 ],
                 'labours' => [
                     ['labour_master_id' => $labour->id, 'technician_id' => $technician->id, 'rate' => 200, 'qty' => 1],
@@ -113,6 +114,10 @@ class JobCardCreateEditTest extends TestCase
         $this->assertEquals($technician->id, $jobCard->assigned_technician_id);
         $this->assertCount(2, $jobCard->parts);
         $this->assertCount(1, $jobCard->labours);
+
+        // MRP always comes from the part master, never from the client submission
+        $this->assertEquals(50, (float) $jobCard->parts->firstWhere('spare_part_id', $partA->id)->mrp);
+        $this->assertEquals(100, (float) $jobCard->parts->firstWhere('spare_part_id', $partB->id)->mrp);
 
         // Warranty part is not charged but still line item
         $this->assertEquals(0, (float) $jobCard->parts->firstWhere('spare_part_id', $partB->id)->line_total);
@@ -156,8 +161,9 @@ class JobCardCreateEditTest extends TestCase
             ->post(route('job-cards.assign-update', $jobCard), [
                 'assigned_technician_id' => $technician->id,
                 'parts' => [
-                    ['spare_part_id' => $partA->id, 'quantity' => 2, 'mrp' => 50, 'labor_charge' => 10],
-                    ['spare_part_id' => $partB->id, 'quantity' => 1, 'mrp' => 100, 'labor_charge' => 20, 'under_warranty' => '1'],
+                    // Client-submitted mrps (999) must be ignored in favour of the master prices
+                    ['spare_part_id' => $partA->id, 'quantity' => 2, 'mrp' => 999, 'labor_charge' => 10],
+                    ['spare_part_id' => $partB->id, 'quantity' => 1, 'mrp' => 999, 'labor_charge' => 20, 'under_warranty' => '1'],
                 ],
                 'labours' => [
                     ['labour_master_id' => $labour->id, 'technician_id' => $technician->id, 'rate' => 200, 'qty' => 1],
@@ -175,9 +181,9 @@ class JobCardCreateEditTest extends TestCase
                 'assigned_technician_id' => $technician->id,
                 'gst_applicable' => '1',
                 'parts' => [
-                    ['spare_part_id' => $partA->id, 'quantity' => 5, 'mrp' => 50, 'labor_charge' => 10],
-                    ['spare_part_id' => $partB->id, 'quantity' => 1, 'mrp' => 100, 'labor_charge' => 20, 'under_warranty' => '1'],
-                    ['spare_part_id' => $partC->id, 'quantity' => 3, 'mrp' => 30, 'labor_charge' => 5],
+                    ['spare_part_id' => $partA->id, 'quantity' => 5, 'mrp' => 999, 'labor_charge' => 10],
+                    ['spare_part_id' => $partB->id, 'quantity' => 1, 'mrp' => 999, 'labor_charge' => 20, 'under_warranty' => '1'],
+                    ['spare_part_id' => $partC->id, 'quantity' => 3, 'mrp' => 999, 'labor_charge' => 5],
                 ],
                 'labours' => [],
             ])
@@ -189,6 +195,8 @@ class JobCardCreateEditTest extends TestCase
         // Line items fully replaced: no duplicates, no leftovers
         $this->assertCount(3, $jobCard->parts);
         $this->assertCount(0, $jobCard->labours);
+        $this->assertEquals(50, (float) $jobCard->parts->firstWhere('spare_part_id', $partA->id)->mrp);
+        $this->assertEquals(30, (float) $jobCard->parts->firstWhere('spare_part_id', $partC->id)->mrp);
         $this->assertEquals(300, (float) $jobCard->parts->firstWhere('spare_part_id', $partA->id)->line_total);
         $this->assertEquals(0, (float) $jobCard->parts->firstWhere('spare_part_id', $partB->id)->line_total);
         $this->assertEquals(105, (float) $jobCard->parts->firstWhere('spare_part_id', $partC->id)->line_total);

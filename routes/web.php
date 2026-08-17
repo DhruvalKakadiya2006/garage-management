@@ -68,6 +68,9 @@ Route::middleware(['auth'])->group(function () {
     // Payments routes
     Route::get('payments', [PaymentController::class, 'index'])->name('payments.index');
     Route::post('payments', [PaymentController::class, 'store'])->name('payments.store');
+    Route::get('payments/{payment}/edit', [PaymentController::class, 'edit'])->name('payments.edit');
+    Route::put('payments/{payment}', [PaymentController::class, 'update'])->name('payments.update');
+    Route::delete('payments/{payment}', [PaymentController::class, 'destroy'])->name('payments.destroy');
     
     // Reports routes (read-only)
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');

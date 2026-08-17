@@ -44,7 +44,7 @@ class CounterInvoiceCreateEditTest extends TestCase
         ], $overrides);
     }
 
-    public function test_store_creates_anonymous_quick_sale_invoice()
+    public function test_store_creates_walkin_quick_sale_invoice_using_master_mrp()
     {
         $user = $this->makeUser();
         $partA = $this->makePart('BRK-01', 'Brake Shoe', 50, 20);
@@ -52,8 +52,10 @@ class CounterInvoiceCreateEditTest extends TestCase
         $this->actingAs($user)
             ->post(route('counter-invoices.store'), [
                 'invoice_date' => '2026-08-03',
+                'walkin_name' => 'Walk-in Buyer',
                 'items' => [
-                    ['spare_part_id' => $partA->id, 'quantity' => 2, 'mrp' => 50, 'discount_percent' => 0],
+                    // Client-submitted mrp (999) must be ignored in favour of the master price (50)
+                    ['spare_part_id' => $partA->id, 'quantity' => 2, 'mrp' => 999, 'discount_percent' => 0],
                 ],
             ])
             ->assertRedirect()
@@ -64,22 +66,42 @@ class CounterInvoiceCreateEditTest extends TestCase
         $this->assertNotNull($invoice);
         $this->assertStringStartsWith('CI-', $invoice->invoice_no);
         $this->assertNull($invoice->customer_id);
-        $this->assertNull($invoice->walkin_name);
-        $this->assertNull($invoice->walkin_mobile);
+        $this->assertEquals('Walk-in Buyer', $invoice->walkin_name);
 
         $this->assertCount(1, $invoice->items);
+        $this->assertEquals(50, (float) $invoice->items->first()->mrp);
         $this->assertEquals(100, (float) $invoice->items->sum('line_total'));
         $this->assertEquals(0, (float) $invoice->cgst_amount);
         $this->assertEqualsWithDelta(100, (float) $invoice->grand_total, 0.01);
         $this->assertEquals(18, (int) $partA->fresh()->current_stock_qty);
     }
 
-    public function test_store_accepts_radio_without_customer_selected()
+    public function test_store_rejects_fully_anonymous_invoice()
     {
         $user = $this->makeUser();
         $partA = $this->makePart('BRK-01', 'Brake Shoe', 50, 20);
 
-        // Radio toggle set to "existing" but no customer actually chosen -> still a valid anonymous sale
+        // No customer, no walk-in name, no walk-in mobile -> must be rejected
+        $this->actingAs($user)
+            ->post(route('counter-invoices.store'), [
+                'invoice_date' => '2026-08-03',
+                'items' => [
+                    ['spare_part_id' => $partA->id, 'quantity' => 1, 'mrp' => 50, 'discount_percent' => 0],
+                ],
+            ])
+            ->assertSessionHasErrors(['customer_id']);
+
+        $this->assertDatabaseCount('counter_invoices', 0);
+        $this->assertEquals(20, (int) $partA->fresh()->current_stock_qty);
+    }
+
+    public function test_store_rejects_radio_without_customer_selected()
+    {
+        $user = $this->makeUser();
+        $partA = $this->makePart('BRK-01', 'Brake Shoe', 50, 20);
+
+        // Radio toggle set to "existing" but no customer actually chosen -> no
+        // bill-to info at all, so the invoice must be rejected.
         $this->actingAs($user)
             ->post(route('counter-invoices.store'), [
                 'invoice_date' => '2026-08-03',
@@ -89,13 +111,9 @@ class CounterInvoiceCreateEditTest extends TestCase
                     ['spare_part_id' => $partA->id, 'quantity' => 1, 'mrp' => 50, 'discount_percent' => 0],
                 ],
             ])
-            ->assertRedirect()
-            ->assertSessionHasNoErrors();
+            ->assertSessionHasErrors(['customer_id']);
 
-        $invoice = CounterInvoice::first();
-        $this->assertNotNull($invoice);
-        $this->assertNull($invoice->customer_id);
-        $this->assertNull($invoice->walkin_name);
+        $this->assertDatabaseCount('counter_invoices', 0);
     }
 
     public function test_store_creates_invoice_for_existing_customer()
@@ -130,6 +148,7 @@ class CounterInvoiceCreateEditTest extends TestCase
         $this->actingAs($user)
             ->post(route('counter-invoices.store'), [
                 'invoice_date' => '2026-08-03',
+                'walkin_name' => 'Walk-in Buyer',
                 'gst_applicable' => '1',
                 'discount_percent' => '10',
                 'items' => [
@@ -159,6 +178,7 @@ class CounterInvoiceCreateEditTest extends TestCase
         $this->actingAs($user)
             ->post(route('counter-invoices.store'), [
                 'invoice_date' => '2026-08-03',
+                'walkin_name' => 'Walk-in Buyer',
                 'gst_applicable' => '1',
                 'discount_percent' => '10',
                 'items' => [
@@ -220,9 +240,11 @@ class CounterInvoiceCreateEditTest extends TestCase
         $this->actingAs($user)
             ->put(route('counter-invoices.update', $invoice), [
                 'invoice_date' => '2026-08-03',
+                'walkin_name' => 'Walk-in Buyer',
                 'items' => [
-                    ['spare_part_id' => $partA->id, 'quantity' => 2, 'mrp' => 50, 'discount_percent' => 0],
-                    ['spare_part_id' => $partB->id, 'quantity' => 1, 'mrp' => 100, 'discount_percent' => 10],
+                    // Client-submitted mrps (999) must be ignored in favour of the master prices
+                    ['spare_part_id' => $partA->id, 'quantity' => 2, 'mrp' => 999, 'discount_percent' => 0],
+                    ['spare_part_id' => $partB->id, 'quantity' => 1, 'mrp' => 999, 'discount_percent' => 10],
                 ],
             ])
             ->assertRedirect()
@@ -235,11 +257,12 @@ class CounterInvoiceCreateEditTest extends TestCase
         $this->actingAs($user)
             ->put(route('counter-invoices.update', $invoice), [
                 'invoice_date' => '2026-08-04',
+                'walkin_name' => 'Walk-in Buyer',
                 'gst_applicable' => '1',
                 'payment_mode' => 'cash',
                 'items' => [
-                    ['spare_part_id' => $partA->id, 'quantity' => 5, 'mrp' => 50, 'discount_percent' => 0],
-                    ['spare_part_id' => $partC->id, 'quantity' => 3, 'mrp' => 30, 'discount_percent' => 0],
+                    ['spare_part_id' => $partA->id, 'quantity' => 5, 'mrp' => 999, 'discount_percent' => 0],
+                    ['spare_part_id' => $partC->id, 'quantity' => 3, 'mrp' => 999, 'discount_percent' => 0],
                 ],
             ])
             ->assertRedirect()
@@ -249,6 +272,8 @@ class CounterInvoiceCreateEditTest extends TestCase
 
         $this->assertCount(2, $invoice->items);
         $this->assertSame([$partA->id, $partC->id], $invoice->items->pluck('spare_part_id')->sort()->values()->toArray());
+        $this->assertEquals(50, (float) $invoice->items->firstWhere('spare_part_id', $partA->id)->mrp);
+        $this->assertEquals(30, (float) $invoice->items->firstWhere('spare_part_id', $partC->id)->mrp);
         $this->assertEquals(250, (float) $invoice->items->firstWhere('spare_part_id', $partA->id)->line_total);
         $this->assertEquals(90, (float) $invoice->items->firstWhere('spare_part_id', $partC->id)->line_total);
 

@@ -37,6 +37,9 @@ class JobCardPart extends Model
                     "Insufficient stock for '{$sparePart->part_name}'. Requested {$jobCardPart->quantity}, only {$sparePart->current_stock_qty} available."
                 );
             }
+
+            // The price is always sourced from the part master; a client can never override it.
+            $jobCardPart->mrp = $sparePart->mrp;
         });
 
         // Deduct stock when created
@@ -45,51 +48,6 @@ class JobCardPart extends Model
             if ($sparePart) {
                 $sparePart->decrement('current_stock_qty', $jobCardPart->quantity);
             }
-        });
-
-        // Adjust stock when updated (handles both quantity and spare part changes)
-        static::updating(function ($jobCardPart) {
-            $oldPartId = (int) $jobCardPart->getOriginal('spare_part_id');
-            $newPartId = (int) $jobCardPart->spare_part_id;
-            $oldQuantity = (int) $jobCardPart->getOriginal('quantity');
-            $newQuantity = (int) $jobCardPart->quantity;
-
-            // Same part: only the quantity changed
-            if ($oldPartId === $newPartId) {
-                $difference = $newQuantity - $oldQuantity;
-                if ($difference === 0) {
-                    return;
-                }
-                $sparePart = SparePart::find($newPartId);
-                if (!$sparePart) {
-                    throw new \RuntimeException('Spare part not found for job card part.');
-                }
-                if ($difference > 0 && $difference > $sparePart->current_stock_qty) {
-                    throw new \RuntimeException(
-                        "Insufficient stock for '{$sparePart->part_name}'. Requested {$newQuantity}, only " . ($sparePart->current_stock_qty + $oldQuantity) . " available."
-                    );
-                }
-                if ($difference > 0) {
-                    $sparePart->decrement('current_stock_qty', $difference);
-                } else {
-                    $sparePart->increment('current_stock_qty', abs($difference));
-                }
-                return;
-            }
-
-            // Part swapped: return the old quantity to the old part, deduct from the new part
-            $oldPart = SparePart::find($oldPartId);
-            $newPart = SparePart::find($newPartId);
-            if (!$oldPart || !$newPart) {
-                throw new \RuntimeException('Spare part not found for job card part.');
-            }
-            if ($newQuantity > $newPart->current_stock_qty) {
-                throw new \RuntimeException(
-                    "Insufficient stock for '{$newPart->part_name}'. Requested {$newQuantity}, only {$newPart->current_stock_qty} available."
-                );
-            }
-            $oldPart->increment('current_stock_qty', $oldQuantity);
-            $newPart->decrement('current_stock_qty', $newQuantity);
         });
 
         // Return stock when deleted

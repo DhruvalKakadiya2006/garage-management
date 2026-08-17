@@ -65,8 +65,9 @@ class MixedGstRateTest extends TestCase
     {
         $payload = [
             'parts' => [
-                ['spare_part_id' => $partAId, 'quantity' => 2, 'mrp' => 100, 'labor_charge' => 0],
-                ['spare_part_id' => $partBId, 'quantity' => 1, 'mrp' => 50, 'labor_charge' => 0],
+                // Client-submitted mrps (999) must be ignored in favour of the master prices
+                ['spare_part_id' => $partAId, 'quantity' => 2, 'mrp' => 999, 'labor_charge' => 0],
+                ['spare_part_id' => $partBId, 'quantity' => 1, 'mrp' => 999, 'labor_charge' => 0],
             ],
             'labours' => [
                 ['labour_master_id' => $labour1Id, 'rate' => 100, 'qty' => 1],

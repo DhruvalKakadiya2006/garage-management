@@ -24,7 +24,7 @@
 
     @foreach ($labourMasters as $labour)
         <tr>
-            <td class="px-6 py-4 text-sm font-medium text-gray-900">
+            <td class="px-6 py-4 text-xs font-medium text-gray-900">
                 {{ $labour->service_name }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
@@ -38,7 +38,7 @@
                     {{ ucwords($labour->category) }}
                 </x-badge>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+            <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-900 text-right font-medium">
                 {{ config('garage.currency_symbol') }}{{ number_format($labour->standard_rate, 2) }}
             </td>
             <x-data-table-actions

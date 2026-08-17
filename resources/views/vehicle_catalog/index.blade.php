@@ -13,7 +13,7 @@
     </x-slot>
 
     <div class="py-6">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8" x-data="vehicleCatalog()">
+        <div class="max-w-full sm:px-6 lg:px-8" x-data="vehicleCatalog()">
 
             @if (session('success'))
                 <div class="mb-4 bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-md">
@@ -106,10 +106,10 @@
                                    @change="selectedModelId = ''"
                                    class="h-4 w-4 rounded-full border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer">
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td class="px-6 py-4 whitespace-nowrap text-xs font-medium text-gray-900">
                             {{ $brand->name }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600">
                             {{ $brand->models_count }} model(s)
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right">
