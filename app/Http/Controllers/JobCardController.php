@@ -9,6 +9,7 @@ use App\Models\LabourMaster;
 use App\Models\SparePart;
 use App\Models\Vehicle;
 use App\Models\VehicleBrand;
+use App\Rules\DiscountWithinSubtotal;
 use App\Services\GstCalculator;
 use App\Services\PartPriceResolver;
 use App\Services\StockValidator;
@@ -16,6 +17,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class JobCardController extends Controller
 {
@@ -228,10 +230,26 @@ class JobCardController extends Controller
         // MRP is always taken from the part master, never from the client submission
         $parts = app(PartPriceResolver::class)->priceLines($request->parts ?? []);
 
+        // The subtotal is only known once the lines are resolved. Reject a
+        // discount (percent-derived or flat amount) that would exceed it,
+        // otherwise GstCalculator yields a negative grand_total.
+        $lines = $this->buildGstLines($parts, $request->labours ?? []);
+        $subtotal = collect($lines)->sum('line_total');
+
+        $discountValidator = Validator::make(
+            ['discount_amount' => $request->discount_amount ?? 0],
+            ['discount_amount' => ['nullable', 'numeric', 'min:0', new DiscountWithinSubtotal($subtotal, (float) ($request->discount_percent ?? 0))]],
+            [],
+            ['discount_amount' => 'Discount Amount']
+        );
+        if ($discountValidator->fails()) {
+            return back()->withErrors($discountValidator)->withInput();
+        }
+
         DB::beginTransaction();
         try {
             $calculations = app(GstCalculator::class)->calculate(
-                $this->buildGstLines($parts, $request->labours ?? []),
+                $lines,
                 $request->has('gst_applicable'),
                 $request->discount_percent ?? 0,
                 $request->discount_amount ?? 0,

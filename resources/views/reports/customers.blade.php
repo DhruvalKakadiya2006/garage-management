@@ -38,18 +38,18 @@
                 @else
                     <div class="overflow-x-auto">
                         <table class="min-w-full text-sm">
-                            <thead class="bg-gray-50">
+                            <thead class="bg-muted/50">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Visits</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount Paid</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">#</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Customer</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Type</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Visits</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Amount Paid</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-100">
+                            <tbody class="divide-y divide-border">
                                 @foreach($customers as $index => $row)
-                                <tr>
+                                <tr class="hover:bg-muted/50">
                                     <td class="px-6 py-4 whitespace-nowrap text-gray-500">{{ $index + 1 }}</td>
                                     <td class="px-6 py-4">
                                         <div class="font-medium text-gray-900">{{ $row['customer']->display_name }}</div>

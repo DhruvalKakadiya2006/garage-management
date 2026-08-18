@@ -51,10 +51,15 @@ class CustomerVehicleController extends Controller
 
     public function edit(Vehicle $vehicle)
     {
-        $customers = Customer::orderBy('display_name')->get();
         $brands = VehicleBrand::with('models')->orderBy('name')->get();
 
-        return view('vehicles.edit', compact('vehicle', 'customers', 'brands'));
+        // Resolve the currently-selected model here (falling back to the old
+        // input when returning from a failed validation) so the template never
+        // has to query Eloquent directly.
+        $currentModelId = old('vehicle_model_id', $vehicle->vehicle_model_id);
+        $currentModel = $currentModelId ? VehicleModel::find($currentModelId) : null;
+
+        return view('vehicles.edit', compact('vehicle', 'brands', 'currentModel'));
     }
 
     public function update(Request $request, Vehicle $vehicle)

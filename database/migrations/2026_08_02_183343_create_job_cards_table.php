@@ -30,7 +30,7 @@ return new class extends Migration
             $table->boolean('gst_applicable')->default(false);
             $table->decimal('cgst_amount', 10, 2)->default(0);
             $table->decimal('sgst_amount', 10, 2)->default(0);
-            $table->decimal('grand_total', 10, 2)->default(0);
+            $table->decimal('grand_total', 10, 2)->nullable();
             $table->enum('payment_status', ['unpaid', 'partially_paid', 'paid'])->default('unpaid');
             $table->text('remarks')->nullable();
             $table->foreignId('source_estimate_id')->nullable()->constrained('estimates')->onDelete('set null');

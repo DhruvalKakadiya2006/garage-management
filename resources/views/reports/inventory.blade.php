@@ -59,20 +59,20 @@
                 @else
                     <div class="overflow-x-auto">
                         <table class="min-w-full text-sm">
-                            <thead class="bg-gray-50">
+                            <thead class="bg-muted/50">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Part</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">In Stock</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Reorder Level</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Cost ({{ config('garage.currency_symbol') }})</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Stock Value ({{ config('garage.currency_symbol') }})</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Units Used</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Part</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Category</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">In Stock</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Reorder Level</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Cost ({{ config('garage.currency_symbol') }})</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Stock Value ({{ config('garage.currency_symbol') }})</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Units Used</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-100">
+                            <tbody class="divide-y divide-border">
                                 @foreach($inventory as $part)
-                                <tr class="{{ $part['low_stock'] ? 'bg-red-50' : '' }}">
+                                <tr class="{{ $part['low_stock'] ? 'bg-red-50' : '' }} hover:bg-muted/50">
                                     <td class="px-6 py-4">
                                         <div class="font-medium text-gray-900">{{ $part['part_name'] }}</div>
                                         <div class="text-xs text-gray-500">{{ $part['part_code'] }}</div>

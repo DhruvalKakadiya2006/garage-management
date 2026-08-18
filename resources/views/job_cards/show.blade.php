@@ -138,19 +138,19 @@
             <div class="bg-white shadow-sm sm:rounded-lg p-6">
                 <h3 class="font-semibold text-gray-900 mb-3">Parts Used</h3>
                 <table class="min-w-full text-xs">
-                    <thead class="bg-gray-50">
+                    <thead class="bg-muted/50">
                         <tr>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Part</th>
-                            <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
-                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">MRP</th>
-                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Labor</th>
-                            <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Warranty</th>
-                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Line Total</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Part</th>
+                            <th class="px-4 py-2 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Qty</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">MRP</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Labor</th>
+                            <th class="px-4 py-2 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Warranty</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Line Total</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($jobCard->parts as $part)
-                        <tr class="border-t">
+                        <tr class="border-t hover:bg-muted/50">
                             <td class="px-4 py-2">{{ $part->sparePart->part_name }}</td>
                             <td class="px-4 py-2 text-center">{{ $part->quantity }}</td>
                             <td class="px-4 py-2 text-right">{{ config('garage.currency_symbol') }}{{ number_format($part->mrp, 2) }}</td>
@@ -169,18 +169,18 @@
             <div class="bg-white shadow-sm sm:rounded-lg p-6">
                 <h3 class="font-semibold text-gray-900 mb-3">Labour</h3>
                 <table class="min-w-full text-xs">
-                    <thead class="bg-gray-50">
+                    <thead class="bg-muted/50">
                         <tr>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Technician</th>
-                            <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
-                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Rate</th>
-                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Line Total</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Service</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Technician</th>
+                            <th class="px-4 py-2 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Qty</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Rate</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Line Total</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($jobCard->labours as $labour)
-                        <tr class="border-t">
+                        <tr class="border-t hover:bg-muted/50">
                             <td class="px-4 py-2">{{ $labour->labourMaster->service_name }}</td>
                             <td class="px-4 py-2">{{ $labour->technician->name ?? '-' }}</td>
                             <td class="px-4 py-2 text-center">{{ $labour->qty }}</td>
@@ -214,7 +214,7 @@
                     @endif
                     @php $roundOff = (float) $jobCard->round_off_amount; @endphp
                     <div class="flex justify-between"><span>Round Off:</span><span>{{ $roundOff > 0 ? '+' : '' }}{{ config('garage.currency_symbol') }}{{ number_format($roundOff, 2) }}</span></div>
-                    <div class="flex justify-between text-lg font-bold border-t pt-2"><span>Grand Total:</span><span>{{ config('garage.currency_symbol') }}{{ number_format($jobCard->grand_total, 2) }}</span></div>
+                    <div class="flex justify-between text-lg font-bold border-t pt-2"><span>Grand Total:</span><span>{{ config('garage.currency_symbol') }}{{ number_format((float) $jobCard->grand_total, 2) }}</span></div>
                 </div>
             </div>
 
@@ -237,7 +237,7 @@
                     <div class="grid grid-cols-3 gap-4 text-sm">
                         <div>
                             <span class="text-gray-600">Grand Total:</span>
-                            <span class="font-semibold text-lg ml-2">{{ config('garage.currency_symbol') }}{{ number_format($jobCard->grand_total, 2) }}</span>
+                            <span class="font-semibold text-lg ml-2">{{ config('garage.currency_symbol') }}{{ number_format((float) $jobCard->grand_total, 2) }}</span>
                         </div>
                         <div>
                             <span class="text-gray-600">Amount Paid:</span>
@@ -255,19 +255,19 @@
                     <div class="mb-6">
                         <h4 class="font-medium text-gray-900 mb-3">Payment History</h4>
                         <table class="min-w-full text-xs">
-                            <thead class="bg-gray-50">
+                            <thead class="bg-muted/50">
                                 <tr>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mode</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reference</th>
-                                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
-                                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Mode</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Reference</th>
+                                    <th class="px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Amount</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Notes</th>
+                                    <th class="px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($jobCard->payments as $payment)
-                                <tr class="border-t">
+                                <tr class="border-t hover:bg-muted/50">
                                     <td class="px-4 py-2">{{ $payment->payment_date->format('d M Y') }}</td>
                                     <td class="px-4 py-2 capitalize">{{ str_replace('_', ' ', $payment->payment_mode) }}</td>
                                     <td class="px-4 py-2">{{ $payment->reference_no ?? '-' }}</td>
@@ -292,7 +292,12 @@
                 @endif
 
                 <!-- Record Payment Form -->
-                @if($jobCard->outstanding > 0)
+                @if(! $jobCard->is_billed)
+                    <div class="inline-flex items-center py-4 text-gray-500 font-medium">
+                        <x-heroicon-o-inbox class="w-5 h-5 mr-1.5" />
+                        Not billed yet &mdash; add parts / labour to bill this card.
+                    </div>
+                @elseif($jobCard->outstanding > 0)
                     <div class="border-t pt-6">
                         <h4 class="font-medium text-gray-900 mb-3">Record New Payment</h4>
                         <form action="{{ route('payments.store') }}" method="POST" class="space-y-4">
@@ -344,10 +349,17 @@
                         </form>
                     </div>
                 @else
-                    <div class="inline-flex items-center text-center py-4 text-green-600 font-medium">
-                        <x-heroicon-o-check-circle class="w-5 h-5 mr-1.5" />
-                        Fully Paid
-                    </div>
+                    @if($jobCard->amount_paid > 0)
+                        <div class="inline-flex items-center text-center py-4 text-green-600 font-medium">
+                            <x-heroicon-o-check-circle class="w-5 h-5 mr-1.5" />
+                            Fully Paid
+                        </div>
+                    @else
+                        <div class="inline-flex items-center text-center py-4 text-gray-500 font-medium">
+                            <x-heroicon-o-check-circle class="w-5 h-5 mr-1.5" />
+                            No amount due on this job card.
+                        </div>
+                    @endif
                 @endif
             </div>
         </div>

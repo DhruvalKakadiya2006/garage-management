@@ -84,16 +84,16 @@
                 <x-slot name="header">
                     <tr>
                         <th class="w-10 px-6 py-3 text-left"></th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Display Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mobile</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Outstanding</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Visits</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Display Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Mobile</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Outstanding</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Visits</th>
                         <th class="w-10 px-6 py-3 text-right"></th>
                     </tr>
                 </x-slot>
 
                 @foreach ($customers as $customer)
-                    <tr class="group">
+                    <tr class="group hover:bg-muted/50">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <input type="radio" name="customer" value="{{ $customer->id }}" x-model="selectedId"
                                    class="h-4 w-4 rounded-full border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer">
@@ -124,7 +124,7 @@
                     </tr>
                     <tr x-show="expandedId === '{{ $customer->id }}'" class="bg-gray-50/60">
                         <td colspan="6" class="px-6 py-4">
-                            <div class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+                            <div class="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
                                 Vehicles ({{ $customer->vehicles->count() }})
                             </div>
                             @forelse ($customer->vehicles as $vehicle)

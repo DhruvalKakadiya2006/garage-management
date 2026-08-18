@@ -3,8 +3,8 @@
 @php
 $baseClasses = 'group flex items-center mx-2 my-0.5 py-2 rounded-lg text-sm transition duration-150 ease-in-out focus:outline-none';
 $stateClasses = ($active ?? false)
-    ? 'bg-primary-50 text-primary-700 font-medium'
-    : 'text-gray-600 hover:bg-primary-50 hover:text-primary-800 focus:text-primary-800 focus:bg-primary-50';
+    ? 'bg-accent text-accent-foreground font-medium'
+    : 'text-gray-600 hover:bg-accent hover:text-accent-foreground focus:text-accent-foreground focus:bg-accent';
 @endphp
 
 @if ($collapsible)

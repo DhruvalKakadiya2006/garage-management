@@ -5,12 +5,12 @@ namespace Tests\Feature;
 use App\Models\CounterInvoice;
 use App\Models\Customer;
 use App\Models\JobCard;
-use App\Models\LabourMaster;
 use App\Models\SparePart;
 use App\Models\User;
 use App\Models\Vehicle;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\Concerns\SeedsVehicleCatalog;
 use Tests\TestCase;
 
@@ -325,5 +325,27 @@ class StockIntegrityTest extends TestCase
         $this->assertDatabaseHas('job_cards', ['id' => $jobCard->id]);
         $this->assertDatabaseHas('job_card_parts', ['job_card_id' => $jobCard->id]);
         $this->assertEquals(8, (int) $part->fresh()->current_stock_qty);
+    }
+
+    public function test_database_rejects_negative_stock_when_application_validation_is_bypassed()
+    {
+        $part = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 0);
+
+        // Bypass the application layer entirely (no StockValidator, no model
+        // creating hook) and force stock below zero directly on the database.
+        // The CHECK constraint must reject the write.
+        try {
+            DB::table('spare_parts')->where('id', $part->id)->update(['current_stock_qty' => -1]);
+            $this->fail('Expected QueryException when stock is forced below zero at the database level.');
+        } catch (QueryException $e) {
+            $this->assertStringContainsString('CHECK', $e->getMessage());
+        }
+
+        // The rejected write left the row untouched
+        $this->assertEquals(0, (int) $part->fresh()->current_stock_qty);
+
+        // A zero-value write is still allowed
+        DB::table('spare_parts')->where('id', $part->id)->update(['current_stock_qty' => 0]);
+        $this->assertEquals(0, (int) $part->fresh()->current_stock_qty);
     }
 }

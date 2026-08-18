@@ -313,4 +313,55 @@ class CounterInvoiceCreateEditTest extends TestCase
 
         $this->actingAs($user)->get(route('counter-invoices.edit', $invoice))->assertOk();
     }
+
+    public function test_store_rejects_discount_amount_exceeding_subtotal()
+    {
+        $user = $this->makeUser();
+        $partA = $this->makePart('BRK-01', 'Brake Shoe', 50, 20);
+
+        // Subtotal 2 * 50 = 100; a ₹150 discount must be rejected
+        $this->actingAs($user)
+            ->post(route('counter-invoices.store'), [
+                'invoice_date' => '2026-08-03',
+                'walkin_name' => 'Walk-in Buyer',
+                'discount_amount' => '150',
+                'items' => [
+                    ['spare_part_id' => $partA->id, 'quantity' => 2, 'mrp' => 999, 'discount_percent' => 0],
+                ],
+            ])
+            ->assertSessionHasErrors(['discount_amount']);
+
+        // Rejected before any writes: no invoice, no stock movement
+        $this->assertDatabaseCount('counter_invoices', 0);
+        $this->assertEquals(20, (int) $partA->fresh()->current_stock_qty);
+    }
+
+    public function test_update_rejects_discount_amount_exceeding_subtotal()
+    {
+        $user = $this->makeUser();
+        $partA = $this->makePart('BRK-01', 'Brake Shoe', 50, 20);
+
+        $invoice = CounterInvoice::create([
+            'invoice_date' => '2026-08-03',
+            'walkin_name' => 'Walk-in Buyer',
+            'gst_applicable' => false,
+        ]);
+
+        // Subtotal 2 * 50 = 100; a ₹150 discount must be rejected on edit too
+        $this->actingAs($user)
+            ->put(route('counter-invoices.update', $invoice), [
+                'invoice_date' => '2026-08-03',
+                'walkin_name' => 'Walk-in Buyer',
+                'discount_amount' => '150',
+                'items' => [
+                    ['spare_part_id' => $partA->id, 'quantity' => 2, 'mrp' => 999, 'discount_percent' => 0],
+                ],
+            ])
+            ->assertSessionHasErrors(['discount_amount']);
+
+        // Rejected before any writes: no items, no stock movement
+        $invoice->refresh();
+        $this->assertCount(0, $invoice->items);
+        $this->assertEquals(20, (int) $partA->fresh()->current_stock_qty);
+    }
 }

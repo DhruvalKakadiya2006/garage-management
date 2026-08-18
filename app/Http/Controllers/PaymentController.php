@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Payment;
-use App\Models\JobCard;
 use App\Models\CounterInvoice;
+use App\Models\JobCard;
+use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -33,7 +33,7 @@ class PaymentController extends Controller
             'payable_type' => 'required|in:App\Models\JobCard,App\Models\CounterInvoice',
             'payable_id' => 'required|integer',
             'amount' => 'required|numeric|min:0.01',
-            'payment_mode' => 'required|in:' . implode(',', array_keys(config('garage.option_lists.payment_mode'))),
+            'payment_mode' => 'required|in:'.implode(',', array_keys(config('garage.option_lists.payment_mode'))),
             'payment_date' => 'required|date',
             'reference_no' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
@@ -51,19 +51,30 @@ class PaymentController extends Controller
             // (no "does this user own this record" check) — this is a deliberate,
             // permissive design for a single-trusted-user application, so complex
             // ownership logic does not apply here.
-            if (!$payable instanceof JobCard && !$payable instanceof CounterInvoice) {
+            if (! $payable instanceof JobCard && ! $payable instanceof CounterInvoice) {
                 DB::rollBack();
+
                 return back()->withErrors(['payable_type' => 'Invalid payment target.'])->withInput();
+            }
+
+            // Payments can only be recorded once a document is billed
+            if ($payable instanceof JobCard && ! $payable->is_billed) {
+                DB::rollBack();
+
+                return back()->withErrors([
+                    'amount' => 'This job card has not been billed yet. Add parts / labour before recording a payment.',
+                ])->withInput();
             }
 
             // Validate that payment doesn't exceed outstanding amount
             $currentAmountPaid = $payable->amount_paid;
             $newTotal = $currentAmountPaid + $validated['amount'];
-            
+
             if ($newTotal > $payable->grand_total) {
                 DB::rollBack();
+
                 return back()->withErrors([
-                    'amount' => 'Payment amount exceeds outstanding balance. Outstanding: ' . config('garage.currency_symbol') . number_format($payable->outstanding, 2)
+                    'amount' => 'Payment amount exceeds outstanding balance. Outstanding: '.config('garage.currency_symbol').number_format($payable->outstanding, 2),
                 ])->withInput();
             }
 
@@ -76,6 +87,7 @@ class PaymentController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error($e);
+
             return back()->withErrors(['error' => 'Something went wrong saving this record. Please try again.'])->withInput();
         }
     }
@@ -99,7 +111,7 @@ class PaymentController extends Controller
     {
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0.01',
-            'payment_mode' => 'required|in:' . implode(',', array_keys(config('garage.option_lists.payment_mode'))),
+            'payment_mode' => 'required|in:'.implode(',', array_keys(config('garage.option_lists.payment_mode'))),
             'payment_date' => 'required|date',
             'reference_no' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
@@ -117,8 +129,9 @@ class PaymentController extends Controller
 
                 if ($newTotal > $payable->grand_total) {
                     DB::rollBack();
+
                     return back()->withErrors([
-                        'amount' => 'Payment amount exceeds outstanding balance. Outstanding: ' . config('garage.currency_symbol') . number_format($payable->outstanding, 2)
+                        'amount' => 'Payment amount exceeds outstanding balance. Outstanding: '.config('garage.currency_symbol').number_format($payable->outstanding, 2),
                     ])->withInput();
                 }
             }
@@ -131,6 +144,7 @@ class PaymentController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error($e);
+
             return back()->withErrors(['error' => 'Something went wrong saving this record. Please try again.'])->withInput();
         }
     }
@@ -144,9 +158,11 @@ class PaymentController extends Controller
     {
         try {
             $payment->delete();
+
             return redirect()->route('payments.index')->with('success', 'Payment record deleted.');
         } catch (\Exception $e) {
             Log::error($e);
+
             return back()->withErrors(['error' => 'Something went wrong deleting this record. Please try again.']);
         }
     }

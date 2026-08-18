@@ -36,10 +36,21 @@ class JobCard extends Model
     protected static function boot()
     {
         parent::boot();
-        
+
         static::creating(function ($jobCard) {
             if (empty($jobCard->job_card_no)) {
                 $jobCard->job_card_no = self::generateJobCardNo();
+            }
+
+            // Defensive default: never persist NULL money fields, even if a
+            // future code path explicitly passes null at creation time. The
+            // migration already defaults these to 0; this guards the model too.
+            // grand_total is deliberately excluded — it stays NULL until the
+            // card is billed, which is what makes is_billed / 'unbilled' work.
+            foreach (['discount_amount', 'cgst_amount', 'sgst_amount', 'round_off_amount'] as $moneyField) {
+                if ($jobCard->{$moneyField} === null) {
+                    $jobCard->{$moneyField} = 0;
+                }
             }
         });
 
@@ -52,7 +63,8 @@ class JobCard extends Model
     {
         $latest = self::orderBy('id', 'desc')->first();
         $number = $latest ? (int) substr($latest->job_card_no, 3) + 1 : 1;
-        return 'JC-' . str_pad($number, 4, '0', STR_PAD_LEFT);
+
+        return 'JC-'.str_pad($number, 4, '0', STR_PAD_LEFT);
     }
 
     public function customer()
@@ -113,10 +125,26 @@ class JobCard extends Model
 
     /**
      * Get the outstanding amount (remaining balance).
+     *
+     * grand_total is NULL until the card is billed, which coerces to 0 — an
+     * un-billed card simply owes nothing yet.
      */
     public function getOutstandingAttribute()
     {
-        return max(0, $this->grand_total - $this->amount_paid);
+        return max(0, (float) $this->grand_total - $this->amount_paid);
+    }
+
+    /**
+     * Determine whether the card has been billed.
+     *
+     * grand_total stays NULL until updateAssign computes and persists the
+     * document totals, so a non-null grand_total is the single source of truth
+     * for "billed" — a card can carry a total (and payments) without any line
+     * rows, and vice-versa is impossible in the normal flow.
+     */
+    public function getIsBilledAttribute()
+    {
+        return $this->grand_total !== null;
     }
 
     /**
@@ -124,11 +152,16 @@ class JobCard extends Model
      */
     public function getPaymentStatusLabelAttribute()
     {
+        if (! $this->is_billed) {
+            return 'unbilled';
+        }
+
         if ($this->outstanding == 0 && $this->amount_paid > 0) {
             return 'paid';
         } elseif ($this->amount_paid > 0 && $this->outstanding > 0) {
             return 'partially_paid';
         }
+
         return 'unpaid';
     }
 }

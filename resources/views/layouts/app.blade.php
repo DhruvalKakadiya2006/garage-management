@@ -23,10 +23,10 @@
                  :class="collapsed ? 'md:ml-20' : 'md:ml-64'">
 
                 <!-- Slim top bar: page title only -->
-                <header class="sticky top-0 z-20 bg-white border-b border-gray-100">
+                <header class="sticky top-0 z-20 bg-background border-b border-border">
                     <div class="flex items-center px-4 sm:px-6 lg:px-8 min-h-[3.5rem]">
                         <button type="button" @click="openMobile()"
-                                class="me-3 -ms-2 inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 md:hidden focus:outline-none focus:bg-gray-100 focus:text-gray-700 transition duration-150 ease-in-out">
+                                class="me-3 -ms-2 inline-flex items-center justify-center p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent md:hidden focus:outline-none focus:bg-accent focus:text-foreground transition duration-150 ease-in-out">
                             <x-heroicon-o-bars-3 class="w-6 h-6" />
                         </button>
 

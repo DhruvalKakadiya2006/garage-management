@@ -106,25 +106,25 @@
             {{-- Summary --}}
             <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
                 <x-card class="!p-5">
-                    <div class="text-xs font-medium text-gray-500 uppercase tracking-wider">Outstanding</div>
+                    <div class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Outstanding</div>
                     <div class="mt-1 text-lg font-semibold {{ $customer->outstanding > 0 ? 'text-red-600' : 'text-gray-900' }}">
                         {{ $money($customer->outstanding) }}
                     </div>
                 </x-card>
                 <x-card class="!p-5">
-                    <div class="text-xs font-medium text-gray-500 uppercase tracking-wider">Total Paid</div>
+                    <div class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Paid</div>
                     <div class="mt-1 text-lg font-semibold text-green-600">{{ $money($customer->paid) }}</div>
                 </x-card>
                 <x-card class="!p-5">
-                    <div class="text-xs font-medium text-gray-500 uppercase tracking-wider">Job Cards</div>
+                    <div class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Job Cards</div>
                     <div class="mt-1 text-lg font-semibold text-gray-900">{{ $customer->job_cards_count }}</div>
                 </x-card>
                 <x-card class="!p-5">
-                    <div class="text-xs font-medium text-gray-500 uppercase tracking-wider">Invoices</div>
+                    <div class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Invoices</div>
                     <div class="mt-1 text-lg font-semibold text-gray-900">{{ $customer->counter_invoices_count }}</div>
                 </x-card>
                 <x-card class="!p-5">
-                    <div class="text-xs font-medium text-gray-500 uppercase tracking-wider">Vehicles</div>
+                    <div class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Vehicles</div>
                     <div class="mt-1 text-lg font-semibold text-gray-900">{{ $customer->vehicles_count }}</div>
                 </x-card>
             </div>
@@ -160,20 +160,20 @@
                             <p class="text-sm text-gray-500">No vehicles registered for this customer.</p>
                         @else
                             <div class="overflow-x-auto">
-                                <table class="min-w-full divide-y divide-gray-100">
-                                    <thead class="bg-gray-50">
+                                <table class="min-w-full divide-y divide-border">
+                                    <thead class="bg-muted/50">
                                         <tr>
-                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registration No.</th>
-                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vehicle</th>
-                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Battery</th>
-                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Color</th>
-                                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Odometer</th>
-                                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Registration No.</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Vehicle</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Battery</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Color</th>
+                                            <th class="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Odometer</th>
+                                            <th class="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-gray-100">
+                                    <tbody class="divide-y divide-border">
                                         @foreach ($customer->vehicles as $vehicle)
-                                            <tr>
+                                            <tr class="hover:bg-muted/50">
                                                 <td class="px-4 py-3 whitespace-nowrap text-xs text-gray-900">
                                                     <div class="flex items-center gap-2">
                                                         <span class="font-medium">{{ $vehicle->registration_no ?? '—' }}</span>
@@ -218,18 +218,18 @@
                     >
                         <x-slot name="header">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Job Card</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vehicle</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Billed</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Paid</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Outstanding</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Job Card</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Vehicle</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Type</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Billed</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Paid</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Outstanding</th>
                             </tr>
                         </x-slot>
                         @foreach ($jobCards as $jobCard)
-                            <tr>
+                            <tr class="hover:bg-muted/50">
                                 <td class="px-6 py-4 whitespace-nowrap text-xs font-medium">
                                     <a href="{{ route('job-cards.show', $jobCard) }}" class="text-primary-600 hover:text-primary-800">
                                         {{ $jobCard->job_card_no }}
@@ -273,15 +273,15 @@
                     >
                         <x-slot name="header">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice No.</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Billed</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Paid</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Outstanding</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Invoice No.</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Billed</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Paid</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Outstanding</th>
                             </tr>
                         </x-slot>
                         @foreach ($counterInvoices as $invoice)
-                            <tr>
+                            <tr class="hover:bg-muted/50">
                                 <td class="px-6 py-4 whitespace-nowrap text-xs font-medium">
                                     <a href="{{ route('counter-invoices.show', $invoice) }}" class="text-primary-600 hover:text-primary-800">
                                         {{ $invoice->invoice_no }}
@@ -305,11 +305,11 @@
                     >
                         <x-slot name="header">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Document</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mode</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reference</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Document</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Mode</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Reference</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Amount</th>
                             </tr>
                         </x-slot>
                         @foreach ($payments as $payment)
@@ -322,7 +322,7 @@
                                     ? route('job-cards.show', $payable)
                                     : ($payable ? route('counter-invoices.show', $payable) : null);
                             @endphp
-                            <tr>
+                            <tr class="hover:bg-muted/50">
                                 <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-900">{{ $payment->payment_date->format('d M Y') }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-xs font-medium">
                                     @if ($docRoute)

@@ -151,7 +151,7 @@
                     @if ($recentJobCards->isEmpty())
                         <p class="text-sm text-gray-500">No job cards yet. Create one from Quick Actions.</p>
                     @else
-                        <ul class="divide-y divide-gray-100">
+                        <ul class="divide-y divide-border">
                             @foreach ($recentJobCards as $jc)
                                 <li class="flex items-center justify-between gap-3 py-3">
                                     <div class="flex items-center gap-3 min-w-0">

@@ -299,7 +299,7 @@ class JobCardCreateEditTest extends TestCase
 
         $response = $this->get(route('job-cards.edit', $jobCard));
         $response->assertOk();
-        $response->assertSee('Edit Job Card ' . $jobCard->job_card_no);
+        $response->assertSee('Edit Job Card '.$jobCard->job_card_no);
         $response->assertSee('jobCardForm');
         $response->assertSee('Brake noise');
 
@@ -308,5 +308,215 @@ class JobCardCreateEditTest extends TestCase
         $response->assertSee('Assign & Bill', false);
         $response->assertSee('Brake Shoe');
         $response->assertSee('Ramesh');
+    }
+
+    public function test_assign_rejects_discount_amount_exceeding_subtotal()
+    {
+        $user = $this->makeUser();
+        $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
+        $partA = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 20);
+
+        $jobCard = JobCard::create([
+            'job_date' => '2026-08-03',
+            'customer_id' => $customer->id,
+            'vehicle_id' => $vehicle->id,
+            'job_type' => 'paid_service',
+            'status' => 'received',
+            'gst_applicable' => false,
+        ]);
+
+        // Subtotal 2 * (50 + 10) = 120; a ₹150 discount must be rejected
+        $this->actingAs($user)
+            ->post(route('job-cards.assign-update', $jobCard), [
+                'assigned_technician_id' => $this->makeTechnician()->id,
+                'discount_amount' => '150',
+                'parts' => [
+                    ['spare_part_id' => $partA->id, 'quantity' => 2, 'mrp' => 999, 'labor_charge' => 10],
+                ],
+                'labours' => [],
+            ])
+            ->assertSessionHasErrors(['discount_amount']);
+
+        // Rejected before any writes: no line items, no stock movement
+        $jobCard->refresh();
+        $this->assertCount(0, $jobCard->parts);
+        $this->assertCount(0, $jobCard->labours);
+        $this->assertEquals(20, (int) $partA->fresh()->current_stock_qty);
+    }
+
+    public function test_assign_allows_discount_amount_equal_to_subtotal()
+    {
+        $user = $this->makeUser();
+        $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
+        $partA = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 20);
+
+        $jobCard = JobCard::create([
+            'job_date' => '2026-08-03',
+            'customer_id' => $customer->id,
+            'vehicle_id' => $vehicle->id,
+            'job_type' => 'paid_service',
+            'status' => 'received',
+            'gst_applicable' => false,
+        ]);
+
+        // Discount exactly matching the subtotal is allowed and yields ₹0.00
+        $this->actingAs($user)
+            ->post(route('job-cards.assign-update', $jobCard), [
+                'assigned_technician_id' => $this->makeTechnician()->id,
+                'discount_amount' => '120',
+                'parts' => [
+                    ['spare_part_id' => $partA->id, 'quantity' => 2, 'mrp' => 999, 'labor_charge' => 10],
+                ],
+                'labours' => [],
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $jobCard->refresh();
+        $this->assertEquals(0, (float) $jobCard->grand_total);
+    }
+
+    public function test_assign_enforces_discount_percent_cap()
+    {
+        $user = $this->makeUser();
+        $technician = $this->makeTechnician();
+        $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
+        $partA = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 20);
+
+        $jobCard = JobCard::create([
+            'job_date' => '2026-08-03',
+            'customer_id' => $customer->id,
+            'vehicle_id' => $vehicle->id,
+            'job_type' => 'paid_service',
+            'status' => 'received',
+            'gst_applicable' => false,
+        ]);
+
+        $payload = fn (string $percent) => [
+            'assigned_technician_id' => $technician->id,
+            'discount_percent' => $percent,
+            'parts' => [
+                ['spare_part_id' => $partA->id, 'quantity' => 2, 'mrp' => 999, 'labor_charge' => 10],
+            ],
+            'labours' => [],
+        ];
+
+        // 100% is the ceiling: fully discounted, grand total is exactly ₹0.00
+        $this->actingAs($user)
+            ->post(route('job-cards.assign-update', $jobCard), $payload('100'))
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $jobCard->refresh();
+        $this->assertEquals(0, (float) $jobCard->grand_total);
+
+        // Anything above 100% must be rejected by validation
+        $this->actingAs($user)
+            ->post(route('job-cards.assign-update', $jobCard), $payload('150'))
+            ->assertSessionHasErrors(['discount_percent']);
+    }
+
+    public function test_show_page_for_unbilled_job_card_does_not_claim_fully_paid()
+    {
+        $user = $this->makeUser();
+        $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
+
+        $jobCard = JobCard::create([
+            'job_date' => '2026-08-03',
+            'customer_id' => $customer->id,
+            'vehicle_id' => $vehicle->id,
+            'job_type' => 'paid_service',
+            'status' => 'received',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('job-cards.show', $jobCard));
+        $response->assertOk();
+
+        // grand_total is NULL until billed: must render ₹0.00 without a
+        // number_format(null) deprecation, and must NOT claim the card is paid.
+        $response->assertSee('₹0.00');
+        $response->assertSee('Not billed yet');
+        $response->assertDontSee('Fully Paid');
+    }
+
+    public function test_index_page_labels_unbilled_job_card_correctly()
+    {
+        $user = $this->makeUser();
+        $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
+
+        JobCard::create([
+            'job_date' => '2026-08-03',
+            'customer_id' => $customer->id,
+            'vehicle_id' => $vehicle->id,
+            'job_type' => 'paid_service',
+            'status' => 'received',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('job-cards.index'));
+        $response->assertOk();
+        $response->assertSee('Unbilled');
+        $response->assertSee('₹0.00');
+    }
+
+    public function test_payment_on_unbilled_job_card_is_rejected()
+    {
+        $user = $this->makeUser();
+        $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
+
+        $jobCard = JobCard::create([
+            'job_date' => '2026-08-03',
+            'customer_id' => $customer->id,
+            'vehicle_id' => $vehicle->id,
+            'job_type' => 'paid_service',
+            'status' => 'received',
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('payments.store'), [
+                'payable_type' => 'App\Models\JobCard',
+                'payable_id' => $jobCard->id,
+                'amount' => '100',
+                'payment_mode' => 'cash',
+                'payment_date' => '2026-08-03',
+            ])
+            ->assertSessionHasErrors(['amount']);
+
+        $this->assertStringContainsString('not been billed yet', session('errors')->first('amount'));
+        $this->assertDatabaseCount('payments', 0);
+    }
+
+    public function test_creating_hook_never_persists_null_money_fields_but_keeps_grand_total_null()
+    {
+        $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
+
+        $jobCard = JobCard::create([
+            'job_date' => '2026-08-03',
+            'customer_id' => $customer->id,
+            'vehicle_id' => $vehicle->id,
+            'job_type' => 'paid_service',
+            'status' => 'received',
+            // Explicitly attempt to sneak NULL money fields through — the
+            // creating hook must normalise these to 0 as a defensive default.
+            'discount_amount' => null,
+            'cgst_amount' => null,
+            'sgst_amount' => null,
+            'round_off_amount' => null,
+        ]);
+
+        $this->assertEquals(0, (float) $jobCard->fresh()->discount_amount);
+        $this->assertEquals(0, (float) $jobCard->fresh()->cgst_amount);
+        $this->assertEquals(0, (float) $jobCard->fresh()->sgst_amount);
+        $this->assertEquals(0, (float) $jobCard->fresh()->round_off_amount);
+
+        // grand_total is deliberately left NULL — a fresh card is unbilled.
+        $this->assertNull($jobCard->fresh()->grand_total);
+        $this->assertFalse($jobCard->fresh()->is_billed);
     }
 }

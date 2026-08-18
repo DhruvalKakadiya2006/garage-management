@@ -19,10 +19,10 @@ $userInitials = collect(explode(' ', trim((string) Auth::user()->name)))
 @endphp
 
 <!-- Desktop Sidebar -->
-<aside class="fixed inset-y-0 left-0 z-30 hidden md:flex flex-col bg-white border-r border-gray-100 transition-all duration-300 ease-in-out"
+<aside class="fixed inset-y-0 left-0 z-30 hidden md:flex flex-col bg-background border-r border-border transition-all duration-300 ease-in-out"
        :class="collapsed ? 'w-20' : 'w-64'">
     <!-- Sidebar Header -->
-    <div class="flex items-center justify-center h-16 shrink-0 border-b border-gray-100 overflow-hidden">
+    <div class="flex items-center justify-center h-16 shrink-0 border-b border-border overflow-hidden">
         <a href="{{ route('dashboard') }}" class="flex items-center justify-center" :class="collapsed ? 'h-4' : 'h-9'">
             <x-application-logo class="h-full w-auto" />
         </a>
@@ -34,12 +34,12 @@ $userInitials = collect(explode(' ', trim((string) Auth::user()->name)))
     </nav>
 
     <!-- Footer: collapse toggle + user dropdown -->
-    <div class="p-2 border-t border-gray-100 space-y-2">
+    <div class="p-2 border-t border-border space-y-2">
         <!-- Collapse toggle -->
         <div class="flex justify-center">
             <button type="button" @click="toggleCollapsed()"
                     :title="collapsed ? 'Expand sidebar' : 'Collapse sidebar'"
-                    class="inline-flex items-center justify-center w-10 h-10 rounded-md bg-gray-100 text-gray-600 hover:bg-primary-50 hover:text-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 transition duration-150 ease-in-out">
+                    class="inline-flex items-center justify-center w-10 h-10 rounded-md bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 transition duration-150 ease-in-out">
                 <x-heroicon-o-chevron-left x-show="!collapsed" class="w-5 h-5" />
                 <x-heroicon-o-chevron-right x-show="collapsed" class="w-5 h-5" />
             </button>
@@ -48,7 +48,7 @@ $userInitials = collect(explode(' ', trim((string) Auth::user()->name)))
         <x-dropdown align="left" width="56" direction="up">
             <x-slot name="trigger">
                 <button type="button"
-                        class="w-full flex items-center px-2 py-2 rounded-lg text-gray-700 hover:bg-primary-50 focus:outline-none transition duration-150 ease-in-out"
+                        class="w-full flex items-center px-2 py-2 rounded-lg text-gray-700 hover:bg-accent focus:outline-none transition duration-150 ease-in-out"
                         :class="collapsed ? 'justify-center px-0' : ''">
                     <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary-600 text-white text-sm font-semibold shrink-0">
                         {{ $userInitials }}
@@ -86,16 +86,16 @@ $userInitials = collect(explode(' ', trim((string) Auth::user()->name)))
 </aside>
 
 <!-- Mobile Drawer -->
-<aside class="fixed inset-y-0 left-0 z-40 w-64 flex flex-col bg-white border-r border-gray-100 shadow-xl md:hidden transition-transform duration-300 ease-in-out"
+<aside class="fixed inset-y-0 left-0 z-40 w-64 flex flex-col bg-background border-r border-border shadow-xl md:hidden transition-transform duration-300 ease-in-out"
        :class="mobileOpen ? 'translate-x-0' : '-translate-x-full'">
     <!-- Drawer Header -->
-    <div class="flex items-center justify-between h-16 px-4 shrink-0 border-b border-gray-100">
+    <div class="flex items-center justify-between h-16 px-4 shrink-0 border-b border-border">
         <a href="{{ route('dashboard') }}" class="flex items-center">
             <x-application-logo class="w-auto h-8" />
         </a>
 
         <button type="button" @click="closeMobile()"
-                class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out">
+                class="inline-flex items-center justify-center p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent focus:outline-none focus:bg-accent focus:text-foreground transition duration-150 ease-in-out">
             <x-heroicon-o-x-mark class="w-6 h-6" />
         </button>
     </div>
@@ -106,11 +106,11 @@ $userInitials = collect(explode(' ', trim((string) Auth::user()->name)))
     </nav>
 
     <!-- Footer: user dropdown -->
-    <div class="p-2 border-t border-gray-100">
+    <div class="p-2 border-t border-border">
         <x-dropdown align="left" width="56" direction="up">
             <x-slot name="trigger">
                 <button type="button"
-                        class="w-full flex items-center px-2 py-2 rounded-lg text-gray-700 hover:bg-primary-50 focus:outline-none transition duration-150 ease-in-out">
+                        class="w-full flex items-center px-2 py-2 rounded-lg text-gray-700 hover:bg-accent focus:outline-none transition duration-150 ease-in-out">
                     <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary-600 text-white text-sm font-semibold shrink-0">
                         {{ $userInitials }}
                     </span>

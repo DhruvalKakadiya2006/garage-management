@@ -7,6 +7,25 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Performance / Daily Use
+
+- **SQLite WAL mode** is enabled for the default connection
+  (`'journal_mode' => 'wal'` in `config/database.php`). WAL significantly
+  improves write concurrency and read/write performance over SQLite's default
+  journal mode. No action is needed; the driver applies it on every connection
+  automatically.
+- **Cache resolved icon components** so Blade icon lookups (sidebar, action
+  rows, buttons) do not re-discover the icon set on every render:
+
+  ```bash
+  php artisan icons:cache
+  ```
+
+  Run this before daily use and again **after any change to icon usage** (new
+  `<x-heroicon-* />` components, package upgrades, or new icon packages), so the
+  generated manifest stays in sync. Use `php artisan icons:clear` to remove the
+  cached manifest.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

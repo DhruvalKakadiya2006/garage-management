@@ -146,21 +146,21 @@
                 <x-slot name="header">
                     <tr>
                         <th class="w-10 px-6 py-3 text-left"></th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Job No.</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Brand</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Model</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Color</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Technician</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Grand Total</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Job No.</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Customer</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Brand</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Model</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Color</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Technician</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Grand Total</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Payment</th>
                     </tr>
                 </x-slot>
 
                 @foreach ($jobCards as $jc)
-                    <tr class="group">
+                    <tr class="group hover:bg-muted/50">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <input type="radio" name="job_card" value="{{ $jc->id }}" x-model="selectedId"
                                    class="h-4 w-4 rounded-full border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer">
@@ -215,18 +215,21 @@
                             </x-badge>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-900 text-right font-medium">
-                            {{ config('garage.currency_symbol') }}{{ number_format($jc->grand_total, 2) }}
+                            {{ config('garage.currency_symbol') }}{{ number_format((float) $jc->grand_total, 2) }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-xs">
                             <x-badge :color="match ($jc->payment_status_label) {
                                 'paid' => 'green',
                                 'partially_paid' => 'amber',
+                                'unbilled' => 'gray',
                                 default => 'red',
                             }">
                                 @if($jc->payment_status_label === 'paid')
                                     <x-heroicon-o-check-circle class="w-3.5 h-3.5 mr-1" />
                                 @elseif($jc->payment_status_label === 'partially_paid')
                                     <x-heroicon-o-clock class="w-3.5 h-3.5 mr-1" />
+                                @elseif($jc->payment_status_label === 'unbilled')
+                                    <x-heroicon-o-inbox class="w-3.5 h-3.5 mr-1" />
                                 @else
                                     <x-heroicon-o-x-circle class="w-3.5 h-3.5 mr-1" />
                                 @endif

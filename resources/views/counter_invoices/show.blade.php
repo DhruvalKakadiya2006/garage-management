@@ -68,18 +68,18 @@
             <div class="bg-white shadow-sm sm:rounded-lg p-6">
                 <h3 class="font-semibold text-gray-900 mb-3">Items</h3>
                 <table class="min-w-full text-xs">
-                    <thead class="bg-gray-50">
+                    <thead class="bg-muted/50">
                         <tr>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Part</th>
-                            <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
-                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">MRP</th>
-                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Discount %</th>
-                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Line Total</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Part</th>
+                            <th class="px-4 py-2 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Qty</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">MRP</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Discount %</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Line Total</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($counterInvoice->items as $item)
-                        <tr class="border-t">
+                        <tr class="border-t hover:bg-muted/50">
                             <td class="px-4 py-2">{{ $item->sparePart->part_name }}</td>
                             <td class="px-4 py-2 text-center">{{ $item->quantity }}</td>
                             <td class="px-4 py-2 text-right">{{ config('garage.currency_symbol') }}{{ number_format($item->mrp, 2) }}</td>
@@ -156,19 +156,19 @@
                     <div class="mb-6">
                         <h4 class="font-medium text-gray-900 mb-3">Payment History</h4>
                         <table class="min-w-full text-xs">
-                            <thead class="bg-gray-50">
+                            <thead class="bg-muted/50">
                                 <tr>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mode</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reference</th>
-                                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
-                                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Mode</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Reference</th>
+                                    <th class="px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Amount</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Notes</th>
+                                    <th class="px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($counterInvoice->payments as $payment)
-                                <tr class="border-t">
+                                <tr class="border-t hover:bg-muted/50">
                                     <td class="px-4 py-2">{{ $payment->payment_date->format('d M Y') }}</td>
                                     <td class="px-4 py-2 capitalize">{{ str_replace('_', ' ', $payment->payment_mode) }}</td>
                                     <td class="px-4 py-2">{{ $payment->reference_no ?? '-' }}</td>

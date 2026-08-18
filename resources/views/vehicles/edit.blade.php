@@ -16,9 +16,6 @@
             ])->values(),
         ])->values();
 
-        $currentModelId = old('vehicle_model_id', $vehicle->vehicle_model_id);
-        $currentModel = $currentModelId ? \App\Models\VehicleModel::find($currentModelId) : null;
-
         $initialData = [
             'brand_id' => $currentModel ? (string) $currentModel->vehicle_brand_id : '',
             'model_id' => $currentModel ? (string) $currentModel->id : '',
