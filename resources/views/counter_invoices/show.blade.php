@@ -67,14 +67,14 @@
             <!-- Items -->
             <div class="bg-white shadow-sm sm:rounded-lg p-6">
                 <h3 class="font-semibold text-gray-900 mb-3">Items</h3>
-                <table class="min-w-full text-sm">
+                <table class="min-w-full text-xs">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-4 py-2 text-left">Part</th>
-                            <th class="px-4 py-2 text-center">Qty</th>
-                            <th class="px-4 py-2 text-right">MRP</th>
-                            <th class="px-4 py-2 text-right">Discount %</th>
-                            <th class="px-4 py-2 text-right">Line Total</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Part</th>
+                            <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">MRP</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Discount %</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Line Total</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -155,15 +155,15 @@
                 @if($counterInvoice->payments->count() > 0)
                     <div class="mb-6">
                         <h4 class="font-medium text-gray-900 mb-3">Payment History</h4>
-                        <table class="min-w-full text-sm">
+                        <table class="min-w-full text-xs">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="px-4 py-2 text-left">Date</th>
-                                    <th class="px-4 py-2 text-left">Mode</th>
-                                    <th class="px-4 py-2 text-left">Reference</th>
-                                    <th class="px-4 py-2 text-right">Amount</th>
-                                    <th class="px-4 py-2 text-left">Notes</th>
-                                    <th class="px-4 py-2 text-right">Actions</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mode</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reference</th>
+                                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+                                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -174,7 +174,7 @@
                                     <td class="px-4 py-2">{{ $payment->reference_no ?? '-' }}</td>
                                     <td class="px-4 py-2 text-right font-medium">{{ config('garage.currency_symbol') }}{{ number_format($payment->amount, 2) }}</td>
                                     <td class="px-4 py-2 text-gray-600">{{ $payment->notes ?? '-' }}</td>
-                                    <td class="px-4 py-2 text-right text-sm whitespace-nowrap">
+                                    <td class="px-4 py-2 text-right text-xs whitespace-nowrap">
                                         <a href="{{ route('payments.edit', $payment) }}" class="text-primary-600 hover:text-primary-800">Edit</a>
                                         <form action="{{ route('payments.destroy', $payment) }}" method="POST"
                                               onsubmit="return confirm('Void (delete) this payment record?');" class="inline ml-3">

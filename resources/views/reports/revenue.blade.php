@@ -24,7 +24,7 @@
             />
 
             <!-- Total Revenue Card -->
-            <div class="bg-gradient-to-r from-green-500 to-green-600 shadow-lg sm:rounded-lg p-8 text-white">
+            <div class="bg-gradient-to-r from-green-500 to-green-600 shadow-lg rounded-xl p-8 text-white">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-green-100 text-sm uppercase tracking-wide mb-2">Total Revenue</p>
@@ -43,7 +43,7 @@
 
             <!-- Revenue Breakdown by Source -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-white shadow-sm sm:rounded-lg p-6">
+                <div class="bg-white shadow-sm rounded-xl p-6">
                     <h3 class="font-semibold text-gray-900 mb-4 flex items-center">
                         <span class="text-primary-500 mr-2">
                             <x-heroicon-o-wrench-screwdriver class="w-5 h-5" />
@@ -61,7 +61,7 @@
                     </p>
                 </div>
 
-                <div class="bg-white shadow-sm sm:rounded-lg p-6">
+                <div class="bg-white shadow-sm rounded-xl p-6">
                     <h3 class="font-semibold text-gray-900 mb-4 flex items-center">
                         <span class="text-green-500 mr-2">
                             <x-heroicon-o-shopping-cart class="w-5 h-5" />
@@ -82,7 +82,7 @@
 
             <!-- Revenue by Job Type -->
             @if($revenueByJobType->count() > 0)
-            <div class="bg-white shadow-sm sm:rounded-lg p-6">
+            <div class="bg-white shadow-sm rounded-xl p-6">
                 <h3 class="font-semibold text-gray-900 mb-4">Revenue Breakdown by Job Type</h3>
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">
@@ -93,7 +93,7 @@
                                 <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">% of Job Cards</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200">
+                        <tbody class="divide-y divide-gray-100">
                             @foreach($revenueByJobType as $item)
                             <tr>
                                 <td class="px-6 py-4 whitespace-nowrap capitalize">
@@ -119,7 +119,7 @@
             @endif
 
             <!-- Revenue by Day Chart -->
-            <div class="bg-white shadow-sm sm:rounded-lg p-6">
+            <div class="bg-white shadow-sm rounded-xl p-6">
                 <h3 class="font-semibold text-gray-900 mb-4">Daily Revenue Trend</h3>
                 <div class="mb-4 text-sm text-gray-600">
                     <p>Visualizing revenue (Job Cards + Counter Invoices) for each day in the selected range.</p>

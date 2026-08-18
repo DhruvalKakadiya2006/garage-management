@@ -22,17 +22,17 @@
             @endif
 
             <!-- Filter Toggle -->
-            <div class="mb-4 flex gap-2">
+            <div class="mb-4 flex flex-wrap gap-2">
                 <a href="{{ route('employees.index') }}"
-                   class="px-3 py-1.5 text-sm rounded-md {{ !request()->has('active') ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
+                   class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-150 {{ !request()->has('active') ? 'bg-primary-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50' }}">
                     All
                 </a>
                 <a href="{{ route('employees.index', ['active' => '1']) }}"
-                   class="px-3 py-1.5 text-sm rounded-md {{ request('active') === '1' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
+                   class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-150 {{ request('active') === '1' ? 'bg-primary-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50' }}">
                     Active Only
                 </a>
                 <a href="{{ route('employees.index', ['active' => '0']) }}"
-                   class="px-3 py-1.5 text-sm rounded-md {{ request('active') === '0' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
+                   class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-150 {{ request('active') === '0' ? 'bg-primary-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50' }}">
                     Inactive Only
                 </a>
             </div>
@@ -64,7 +64,7 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             <x-badge :color="match ($employee->role) {
                                 'technician' => 'primary',
-                                'supervisor' => 'blue',
+                                'supervisor' => 'purple',
                                 'front_desk' => 'purple',
                                 'admin' => 'red',
                                 default => 'gray',

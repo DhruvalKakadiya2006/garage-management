@@ -24,7 +24,7 @@
                 
                 <!-- Revenue Report Card -->
                 <a href="{{ route('reports.revenue') }}" 
-                   class="block bg-white shadow-sm hover:shadow-md transition-shadow sm:rounded-lg p-6 border-l-4 border-green-500">
+                   class="block bg-white shadow-sm hover:shadow-md transition-shadow rounded-xl p-6 border-l-4 border-green-500">
                     <div class="flex items-start justify-between">
                         <div class="flex-1">
                             <h3 class="text-lg font-semibold text-gray-900 mb-2">Revenue Report</h3>
@@ -52,7 +52,7 @@
 
                 <!-- Job Cards Report Card -->
                 <a href="{{ route('reports.job_cards') }}" 
-                   class="block bg-white shadow-sm hover:shadow-md transition-shadow sm:rounded-lg p-6 border-l-4 border-primary-500">
+                   class="block bg-white shadow-sm hover:shadow-md transition-shadow rounded-xl p-6 border-l-4 border-primary-500">
                     <div class="flex items-start justify-between">
                         <div class="flex-1">
                             <h3 class="text-lg font-semibold text-gray-900 mb-2">Job Cards Report</h3>
@@ -79,7 +79,7 @@
 
                 <!-- Inventory Report Card -->
                 <a href="{{ route('reports.inventory') }}" 
-                   class="block bg-white shadow-sm hover:shadow-md transition-shadow sm:rounded-lg p-6 border-l-4 border-amber-500">
+                   class="block bg-white shadow-sm hover:shadow-md transition-shadow rounded-xl p-6 border-l-4 border-amber-500">
                     <div class="flex items-start justify-between">
                         <div class="flex-1">
                             <h3 class="text-lg font-semibold text-gray-900 mb-2">Inventory Report</h3>
@@ -107,7 +107,7 @@
 
                 <!-- Payments Report Card -->
                 <a href="{{ route('reports.payments') }}" 
-                   class="block bg-white shadow-sm hover:shadow-md transition-shadow sm:rounded-lg p-6 border-l-4 border-purple-500">
+                   class="block bg-white shadow-sm hover:shadow-md transition-shadow rounded-xl p-6 border-l-4 border-purple-500">
                     <div class="flex items-start justify-between">
                         <div class="flex-1">
                             <h3 class="text-lg font-semibold text-gray-900 mb-2">Payments Report</h3>
@@ -134,7 +134,7 @@
 
                 <!-- Customers Report Card -->
                 <a href="{{ route('reports.customers') }}" 
-                   class="block bg-white shadow-sm hover:shadow-md transition-shadow sm:rounded-lg p-6 border-l-4 border-pink-500">
+                   class="block bg-white shadow-sm hover:shadow-md transition-shadow rounded-xl p-6 border-l-4 border-pink-500">
                     <div class="flex items-start justify-between">
                         <div class="flex-1">
                             <h3 class="text-lg font-semibold text-gray-900 mb-2">Customers Report</h3>
@@ -159,7 +159,7 @@
                 </a>
 
                 <!-- Placeholder for future reports -->
-                <div class="bg-gray-50 shadow-sm sm:rounded-lg p-6 border-l-4 border-gray-300 flex items-center justify-center">
+                <div class="bg-gray-50 shadow-sm rounded-xl p-6 border-l-4 border-gray-300 flex items-center justify-center">
                     <div class="text-center text-gray-400">
                         <div class="mb-2 flex justify-center text-gray-300">
                             <x-heroicon-o-plus class="w-10 h-10" />
@@ -170,7 +170,7 @@
 
             </div>
 
-            <div class="mt-8 bg-white shadow-sm sm:rounded-lg p-6">
+            <div class="mt-8 bg-white shadow-sm rounded-xl p-6">
                 <h3 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                     <x-heroicon-o-document-text class="w-5 h-5 text-gray-500" />
                     Report Features

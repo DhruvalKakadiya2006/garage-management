@@ -34,13 +34,16 @@
                       x-data='vehicleForm(@json($brandsData), @json($initialData))'>
                     @csrf
 
-                    <x-select name="customer_id" label="Customer" :required="true" placeholder="-- Select Customer --">
-                        @foreach ($customers as $customer)
-                            <option value="{{ $customer->id }}" {{ old('customer_id', $selectedCustomerId ?? null) == $customer->id ? 'selected' : '' }}>
-                                {{ $customer->display_name }} — {{ $customer->mobile }}
-                            </option>
-                        @endforeach
-                    </x-select>
+                    <div class="space-y-1">
+                        <label class="block text-sm font-medium text-gray-700">Customer *</label>
+                        <x-searchable-combobox
+                            name="customer_id"
+                            endpoint="{{ route('customers.search') }}"
+                            :initial-id="$initialCustomer?->id"
+                            :initial-label="$initialCustomerText"
+                            placeholder="Search customer by name or mobile…" />
+                        @error('customer_id') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
+                    </div>
 
                     <div class="grid grid-cols-2 gap-4">
                         <div x-show="!isNonRto" x-transition.opacity.duration.150>

@@ -52,38 +52,33 @@
                     <span class="text-primary-500">Selected:</span>
                     <span x-text="selectedCard ? selectedCard.job_card_no : ''" class="font-semibold"></span>
                 </span>
-                <a x-bind:href="assignBase + '/' + selectedId + '/assign'"
-                   class="inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium text-sm transition-colors duration-150 bg-primary-600 hover:bg-primary-700 text-white shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2">
+                <x-button x-bind:href="assignBase + '/' + selectedId + '/assign'">
                     <x-heroicon-o-wrench-screwdriver class="w-4 h-4 mr-1.5" />
                     Assign / Add Items
-                </a>
-                <a x-bind:href="editBase + '/' + selectedId + '/edit'"
-                   class="inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium text-sm transition-colors duration-150 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2">
+                </x-button>
+                <x-button variant="secondary" x-bind:href="editBase + '/' + selectedId + '/edit'">
                     <x-heroicon-o-pencil-square class="w-4 h-4 mr-1.5" />
                     Edit
-                </a>
-                <button type="button" @click="goToDocument('invoice')" x-bind:disabled="!hasLineItems"
-                        x-bind:title="hasLineItems ? 'Download TAX INVOICE PDF' : 'Add at least one part or labour line to generate'"
-                        class="inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium text-sm transition-colors duration-150 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                </x-button>
+                <x-button variant="secondary" type="button" @click="goToDocument('invoice')" x-bind:disabled="!hasLineItems"
+                        x-bind:title="hasLineItems ? 'Download TAX INVOICE PDF' : 'Add at least one part or labour line to generate'">
                     <x-heroicon-o-document-text class="w-4 h-4 mr-1.5" />
                     Generate Invoice
-                </button>
-                <button type="button" @click="goToDocument('estimate')" x-bind:disabled="!hasLineItems"
-                        x-bind:title="hasLineItems ? 'Download ESTIMATE PDF' : 'Add at least one part or labour line to generate'"
-                        class="inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium text-sm transition-colors duration-150 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                </x-button>
+                <x-button variant="secondary" type="button" @click="goToDocument('estimate')" x-bind:disabled="!hasLineItems"
+                        x-bind:title="hasLineItems ? 'Download ESTIMATE PDF' : 'Add at least one part or labour line to generate'">
                     <x-heroicon-o-document-chart-bar class="w-4 h-4 mr-1.5" />
                     Generate Estimate
-                </button>
+                </x-button>
                 <form :action="'{{ url('job-cards') }}' + '/' + selectedId" method="POST"
                       onsubmit="return confirm('Delete this job card? Parts stock will be returned and related payments will be removed.');"
                       class="inline">
                     @csrf
                     @method('DELETE')
-                    <button type="submit"
-                            class="inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium text-sm transition-colors duration-150 bg-red-600 hover:bg-red-700 text-white shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2">
+                    <x-button variant="danger" type="submit">
                         <x-heroicon-o-trash class="w-4 h-4 mr-1.5" />
                         Delete
-                    </button>
+                    </x-button>
                 </form>
             </div>
 
@@ -134,7 +129,7 @@
                                class="block w-full rounded-md border-gray-300 shadow-sm text-sm">
                     </div>
                     <div class="flex gap-2">
-                        <button type="submit" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded-md">Filter</button>
+                        <button type="submit" class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-md">Filter</button>
                         <a href="{{ route('job-cards.index') }}" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm rounded-md">Clear</a>
                     </div>
                 </form>

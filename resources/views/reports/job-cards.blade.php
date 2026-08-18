@@ -24,7 +24,7 @@
             />
 
             <!-- Summary -->
-            <div class="bg-gradient-to-r from-primary-500 to-primary-600 shadow-lg sm:rounded-lg p-8 text-white">
+            <div class="bg-gradient-to-r from-primary-500 to-primary-600 shadow-lg rounded-xl p-8 text-white">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-primary-100 text-sm uppercase tracking-wide mb-2">Job Cards Created</p>
@@ -42,7 +42,7 @@
             </div>
 
             <!-- By Status -->
-            <div class="bg-white shadow-sm sm:rounded-lg p-6">
+            <div class="bg-white shadow-sm rounded-xl p-6">
                 <h3 class="font-semibold text-gray-900 mb-4">By Status</h3>
                 @if($statusCounts->isEmpty())
                     <p class="text-sm text-gray-500">No job cards found in this date range.</p>
@@ -56,7 +56,7 @@
                                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">% of Total</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200">
+                            <tbody class="divide-y divide-gray-100">
                                 @foreach($statusCounts as $item)
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap capitalize">
@@ -82,7 +82,7 @@
             </div>
 
             <!-- By Job Type -->
-            <div class="bg-white shadow-sm sm:rounded-lg p-6">
+            <div class="bg-white shadow-sm rounded-xl p-6">
                 <h3 class="font-semibold text-gray-900 mb-4">By Job Type</h3>
                 @if($jobTypeCounts->isEmpty())
                     <p class="text-sm text-gray-500">No job cards found in this date range.</p>
@@ -96,7 +96,7 @@
                                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">% of Total</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200">
+                            <tbody class="divide-y divide-gray-100">
                                 @foreach($jobTypeCounts as $item)
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap capitalize">

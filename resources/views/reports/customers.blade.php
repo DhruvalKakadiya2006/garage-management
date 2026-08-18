@@ -23,7 +23,7 @@
                 :action="route('reports.customers')" 
             />
 
-            <div class="bg-white shadow-sm sm:rounded-lg p-6">
+            <div class="bg-white shadow-sm rounded-xl p-6">
                 <h3 class="font-semibold text-gray-900 mb-1">Customers Ranked by Amount Paid</h3>
                 <p class="text-xs text-gray-500 mb-4">
                     Based on Job Cards and Counter Invoices created between 
@@ -47,7 +47,7 @@
                                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount Paid</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200">
+                            <tbody class="divide-y divide-gray-100">
                                 @foreach($customers as $index => $row)
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap text-gray-500">{{ $index + 1 }}</td>

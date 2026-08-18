@@ -25,27 +25,27 @@
 
             <!-- Summary Cards -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div class="bg-white shadow-sm sm:rounded-lg p-5">
+                <div class="bg-white shadow-sm rounded-xl p-5">
                     <p class="text-xs uppercase tracking-wide text-gray-500 mb-1">Total Parts</p>
                     <p class="text-2xl font-bold text-gray-900">{{ $inventory->count() }}</p>
                 </div>
-                <div class="bg-white shadow-sm sm:rounded-lg p-5 border-l-4 border-red-500">
+                <div class="bg-white shadow-sm rounded-xl p-5 border-l-4 border-red-500">
                     <p class="text-xs uppercase tracking-wide text-gray-500 mb-1">Low Stock Alerts</p>
                     <p class="text-2xl font-bold {{ $lowStockCount > 0 ? 'text-red-600' : 'text-gray-900' }}">{{ $lowStockCount }}</p>
                     <p class="text-xs text-gray-500 mt-1">At or below reorder level</p>
                 </div>
-                <div class="bg-white shadow-sm sm:rounded-lg p-5">
+                <div class="bg-white shadow-sm rounded-xl p-5">
                     <p class="text-xs uppercase tracking-wide text-gray-500 mb-1">Total Units in Stock</p>
                     <p class="text-2xl font-bold text-gray-900">{{ number_format($totalUnits) }}</p>
                 </div>
-                <div class="bg-white shadow-sm sm:rounded-lg p-5">
+                <div class="bg-white shadow-sm rounded-xl p-5">
                     <p class="text-xs uppercase tracking-wide text-gray-500 mb-1">Stock Value (at cost)</p>
                     <p class="text-2xl font-bold text-gray-900">{{ config('garage.currency_symbol') }}{{ number_format($totalStockValue, 2) }}</p>
                 </div>
             </div>
 
             <!-- Parts table, sorted by times used (fast movers first) -->
-            <div class="bg-white shadow-sm sm:rounded-lg p-6">
+            <div class="bg-white shadow-sm rounded-xl p-6">
                 <h3 class="font-semibold text-gray-900 mb-1">Stock Levels & Usage</h3>
                 <p class="text-xs text-gray-500 mb-4">
                     Parts used between 
@@ -70,7 +70,7 @@
                                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Units Used</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200">
+                            <tbody class="divide-y divide-gray-100">
                                 @foreach($inventory as $part)
                                 <tr class="{{ $part['low_stock'] ? 'bg-red-50' : '' }}">
                                     <td class="px-6 py-4">

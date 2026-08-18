@@ -24,7 +24,7 @@
                     @endif
 
                     <div class="grid grid-cols-2 gap-4">
-                        <x-input name="invoice_date" label="Invoice Date" :required="true" type="date" :value="date('Y-m-d')" />
+                        <x-input name="invoice_date" label="Invoice Date" :required="true" type="date" :value="old('invoice_date', date('Y-m-d'))" />
                     </div>
 
                     <!-- Customer (Optional) -->
@@ -45,20 +45,19 @@
 
                     <!-- Existing Customer -->
                     <div x-show="customerType === 'existing'" class="border-l-4 border-primary-400 pl-4">
-                        <x-select name="customer_id" label="Select Customer" placeholder="-- Select Customer --">
-                            @foreach ($customers as $customer)
-                                <option value="{{ $customer->id }}" {{ old('customer_id') == $customer->id ? 'selected' : '' }}>
-                                    {{ $customer->display_name }} — {{ $customer->mobile }}
-                                </option>
-                            @endforeach
-                        </x-select>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Select Customer</label>
+                        <x-searchable-combobox
+                            name="customer_id"
+                            endpoint="{{ route('customers.search') }}"
+                            placeholder="Search customer by name or mobile…" />
+                        @error('customer_id') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     <!-- Walk-in Customer -->
                     <div x-show="customerType === 'walkin'" class="border-l-4 border-green-400 pl-4 space-y-4">
                         <div class="grid grid-cols-2 gap-4">
-                            <x-input name="walkin_name" label="Walk-in Name" />
-                            <x-input name="walkin_mobile" label="Walk-in Mobile" />
+                            <x-input name="walkin_name" label="Walk-in Name" :value="old('walkin_name')" />
+                            <x-input name="walkin_mobile" label="Walk-in Mobile" :value="old('walkin_mobile')" />
                         </div>
                     </div>
 
@@ -71,15 +70,23 @@
                         <template x-for="(item, index) in items" :key="index">
                             <div class="grid grid-cols-12 gap-2 mb-2 items-end">
                                 <div class="col-span-5">
-                                    <select :name="`items[${index}][spare_part_id]`" x-model="item.spare_part_id" @change="autofillPrice(index, $event)"
-                                            class="block w-full text-sm rounded-md border-gray-300 shadow-sm" required>
-                                        <option value="">-- Select Part --</option>
-                                        @foreach ($spareParts as $part)
-                                            <option value="{{ $part->id }}" data-mrp="{{ $part->mrp }}" data-gst="{{ $part->gst_rate }}">
-                                                {{ $part->part_name }} ({{ $part->part_code }})
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                    <input type="hidden" :name="`items[${index}][spare_part_id]`" :value="item.spare_part_id">
+                                    <template x-if="!item.spare_part_id">
+                                        <x-searchable-combobox
+                                            bare
+                                            :endpoint="route('spare-parts.search')"
+                                            placeholder="-- Search part --"
+                                            @combobox-selected="autofillPrice(index, $event.detail)" />
+                                    </template>
+                                    <template x-if="item.spare_part_id">
+                                        <div class="flex items-center justify-between gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 shadow-sm">
+                                            <span class="truncate text-sm text-gray-800" x-text="item.itemLabel"></span>
+                                            <button type="button" @click="clearItem(index)" title="Change item"
+                                                    class="inline-flex shrink-0 items-center rounded-md p-1 text-gray-400 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500">
+                                                <x-heroicon-o-x-mark class="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                    </template>
                                 </div>
                                 <div class="col-span-2">
                                     <input type="number" :name="`items[${index}][quantity]`" x-model="item.quantity" @input="calculateItemLine(index)"
@@ -109,20 +116,20 @@
                     <div class="border-t pt-4">
                         <div class="max-w-md ml-auto space-y-3">
                             <div class="flex justify-between text-sm"><span>Subtotal:</span><span x-text="'{{ config('garage.currency_symbol') }}' + subtotal.toFixed(2)"></span></div>
-                            
+
                             <div class="grid grid-cols-2 gap-2">
                                 <input type="number" step="0.01" name="discount_percent" x-model="discountPercent" @input="calculateTotals()"
                                        placeholder="Invoice Discount %" class="text-sm rounded-md border-gray-300 shadow-sm" min="0" max="100">
                                 <input type="number" step="0.01" name="discount_amount" x-model="discountAmount" @input="discountPercent=0; calculateTotals()"
                                        placeholder="Invoice Discount {{ config('garage.currency_symbol') }}" class="text-sm rounded-md border-gray-300 shadow-sm" min="0">
                             </div>
-                            
+
                             <div class="flex items-center">
                                 <input type="checkbox" name="gst_applicable" x-model="gstApplicable" @change="calculateTotals()"
                                        class="rounded border-gray-300 text-primary-600 shadow-sm">
                                 <span class="ml-2 text-sm">GST Applicable</span>
                             </div>
-                            
+
                             <div class="flex justify-between text-sm"><span>Round Off:</span><span x-text="(roundOffAmount > 0 ? '+' : '') + '{{ config('garage.currency_symbol') }}' + roundOffAmount.toFixed(2)"></span></div>
                             <div class="flex justify-between text-lg font-bold border-t pt-2"><span>Grand Total:</span><span x-text="'{{ config('garage.currency_symbol') }}' + grandTotal.toFixed(2)"></span></div>
                         </div>
@@ -131,6 +138,7 @@
                     <div class="grid grid-cols-2 gap-4 border-t pt-4">
                         <div>
                             <x-select name="payment_mode" label="Payment Mode (Optional)" placeholder="-- Not Paid Yet --"
+                                      :value="old('payment_mode')"
                                       :options="config('garage.option_lists.payment_mode')" />
                             <p class="text-xs text-gray-500 mt-1">Leave blank if unpaid. Use the Record Payment section after saving to track payments.</p>
                         </div>
@@ -170,7 +178,7 @@
                 },
 
                 addItem() {
-                    this.items.push({spare_part_id: '', quantity: 1, mrp: 0, discount_percent: 0, gstRate: 0, lineTotal: 0});
+                    this.items.push({spare_part_id: '', itemLabel: '', quantity: 1, mrp: 0, discount_percent: 0, gstRate: 0, lineTotal: 0});
                 },
 
                 removeItem(index) {
@@ -178,10 +186,19 @@
                     this.calculateTotals();
                 },
 
-                autofillPrice(index, event) {
-                    const option = event.target.selectedOptions[0];
-                    this.items[index].mrp = parseFloat(option.dataset.mrp || 0);
-                    this.items[index].gstRate = parseFloat(option.dataset.gst || 0);
+                autofillPrice(index, record) {
+                    this.items[index].spare_part_id = record.id;
+                    this.items[index].itemLabel = record.label;
+                    this.items[index].mrp = parseFloat(record.mrp || 0);
+                    this.items[index].gstRate = parseFloat(record.gst_rate || 0);
+                    this.calculateItemLine(index);
+                },
+
+                clearItem(index) {
+                    this.items[index].spare_part_id = '';
+                    this.items[index].itemLabel = '';
+                    this.items[index].mrp = 0;
+                    this.items[index].gstRate = 0;
                     this.calculateItemLine(index);
                 },
 

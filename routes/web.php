@@ -25,7 +25,14 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
     ->name('dashboard');
 
 Route::middleware(['auth'])->group(function () {
+    // Lightweight JSON lookups for the searchable comboboxes. These are
+    // deliberately registered BEFORE the resource route so the literal
+    // "search" segment is not captured by the {customer} wildcard.
+    Route::get('customers/search', [CustomerController::class, 'search'])->name('customers.search');
+    Route::get('customers/{customer}/vehicles', [CustomerController::class, 'vehicles'])->name('customers.vehicles');
+
     Route::resource('customers', CustomerController::class);
+    Route::get('customers/{customer}/statement', [CustomerController::class, 'statement'])->name('customers.statement');
 
     // Customer-owned vehicles (managed from the Customers page; the standalone
     // Vehicles list page was replaced by the Vehicle Catalog master data page).
@@ -50,6 +57,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('employees', EmployeeController::class);
     Route::resource('labour-masters', LabourMasterController::class);
+    Route::get('spare-parts/search', [SparePartController::class, 'search'])->name('spare-parts.search');
     Route::resource('spare-parts', SparePartController::class);
     Route::get('inventory', [InventoryController::class, 'index'])->name('inventory.index');
     Route::get('job-cards', [JobCardController::class, 'index'])->name('job-cards.index');

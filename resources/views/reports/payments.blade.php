@@ -24,7 +24,7 @@
             />
 
             <!-- Total Collected -->
-            <div class="bg-gradient-to-r from-purple-500 to-purple-600 shadow-lg sm:rounded-lg p-8 text-white">
+            <div class="bg-gradient-to-r from-purple-500 to-purple-600 shadow-lg rounded-xl p-8 text-white">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-purple-100 text-sm uppercase tracking-wide mb-2">Total Payments Collected</p>
@@ -42,12 +42,11 @@
             </div>
 
             <!-- Breakdown by Payment Mode -->
-            <div class="bg-white shadow-sm sm:rounded-lg p-6">
+            <div class="bg-white shadow-sm rounded-xl p-6">
                 <h3 class="font-semibold text-gray-900 mb-4">Breakdown by Payment Mode</h3>
                 <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                     @php
                         $modeLabels = ['cash' => 'Cash', 'upi' => 'UPI', 'card' => 'Card', 'bank_transfer' => 'Bank Transfer', 'cheque' => 'Cheque'];
-                        $modeColors = ['cash' => 'green', 'upi' => 'primary', 'card' => 'purple', 'bank_transfer' => 'amber', 'cheque' => 'blue'];
                     @endphp
                     @foreach($paymentsByMode as $mode => $summary)
                         <div class="text-center p-4 bg-gray-50 rounded-lg">
@@ -60,7 +59,7 @@
             </div>
 
             <!-- Individual Payments -->
-            <div class="bg-white shadow-sm sm:rounded-lg p-6">
+            <div class="bg-white shadow-sm rounded-xl p-6">
                 <h3 class="font-semibold text-gray-900 mb-4">Payments Received</h3>
                 @if($payments->isEmpty())
                     <p class="text-sm text-gray-500">No payments recorded in this date range.</p>
@@ -78,7 +77,7 @@
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200">
+                            <tbody class="divide-y divide-gray-100">
                                 @foreach ($payments as $payment)
                                     @php
                                         $payable = $payment->payable;

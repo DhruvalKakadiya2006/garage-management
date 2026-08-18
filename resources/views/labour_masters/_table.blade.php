@@ -30,7 +30,7 @@
             <td class="px-6 py-4 whitespace-nowrap">
                 <x-badge :color="match ($labour->category) {
                     'battery' => 'green',
-                    'motor' => 'blue',
+                    'motor' => 'primary',
                     'brakes' => 'red',
                     'electrical' => 'purple',
                     default => 'gray',

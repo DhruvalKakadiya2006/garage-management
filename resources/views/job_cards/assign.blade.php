@@ -19,12 +19,15 @@
             'discount_amount' => (float) $jobCard->discount_amount,
             'gst_applicable' => (bool) $jobCard->gst_applicable,
             'parts' => $jobCard->parts->map(fn($p) => [
-                'spare_part_id' => (int) $p->spare_part_id,
+                'spare_part_id' => (string) $p->spare_part_id,
+                'partLabel' => $p->sparePart
+                    ? $p->sparePart->part_name.' ('.$p->sparePart->part_code.')'
+                    : (string) $p->spare_part_id,
                 'quantity' => (int) $p->quantity,
-                'mrp' => (float) ($spareParts->firstWhere('id', $p->spare_part_id)?->mrp ?? $p->mrp),
+                'mrp' => (float) $p->mrp,
                 'labor_charge' => (float) $p->labor_charge,
                 'under_warranty' => (bool) $p->under_warranty,
-                'gstRate' => (float) ($spareParts->firstWhere('id', $p->spare_part_id)?->gst_rate ?? 0),
+                'gstRate' => (float) ($p->sparePart?->gst_rate ?? 0),
                 'lineTotal' => (float) $p->line_total,
             ])->values(),
             'labours' => $jobCard->labours->map(fn($l) => [
@@ -129,15 +132,23 @@
                         <template x-for="(part, index) in parts" :key="index">
                             <div class="grid grid-cols-12 gap-2 mb-2 items-end">
                                 <div class="col-span-3">
-                                    <select :name="`parts[${index}][spare_part_id]`" x-model="part.spare_part_id" @change="autofillPart(index, $event)"
-                                            class="block w-full text-sm rounded-md border-gray-300 shadow-sm" required>
-                                        <option value="">-- Select Part --</option>
-                                        @foreach ($spareParts as $sp)
-                                            <option value="{{ $sp->id }}" data-mrp="{{ $sp->mrp }}" data-labor="{{ $sp->labor_charge }}" data-gst="{{ $sp->gst_rate }}">
-                                                {{ $sp->part_name }} ({{ $sp->part_code }})
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                    <input type="hidden" :name="`parts[${index}][spare_part_id]`" :value="part.spare_part_id">
+                                    <template x-if="!part.spare_part_id">
+                                        <x-searchable-combobox
+                                            bare
+                                            :endpoint="route('spare-parts.search')"
+                                            placeholder="-- Search part --"
+                                            @combobox-selected="autofillPart(index, $event.detail)" />
+                                    </template>
+                                    <template x-if="part.spare_part_id">
+                                        <div class="flex items-center justify-between gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 shadow-sm">
+                                            <span class="truncate text-sm text-gray-800" x-text="part.partLabel"></span>
+                                            <button type="button" @click="clearPart(index)" title="Change part"
+                                                    class="inline-flex shrink-0 items-center rounded-md p-1 text-gray-400 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500">
+                                                <x-heroicon-o-x-mark class="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                    </template>
                                 </div>
                                 <div class="col-span-1">
                                     <input type="number" :name="`parts[${index}][quantity]`" x-model="part.quantity" @input="calculatePartLine(index)"
@@ -289,7 +300,7 @@
                 },
 
                 addPart() {
-                    this.parts.push({spare_part_id: '', quantity: 1, mrp: 0, labor_charge: 0, under_warranty: false, gstRate: 0, lineTotal: 0});
+                    this.parts.push({spare_part_id: '', partLabel: '', quantity: 1, mrp: 0, labor_charge: 0, under_warranty: false, gstRate: 0, lineTotal: 0});
                     this.calculateTotals();
                 },
 
@@ -298,11 +309,21 @@
                     this.calculateTotals();
                 },
 
-                autofillPart(index, event) {
-                    const option = event.target.selectedOptions[0];
-                    this.parts[index].mrp = parseFloat(option.dataset.mrp || 0);
-                    this.parts[index].labor_charge = parseFloat(option.dataset.labor || 0);
-                    this.parts[index].gstRate = parseFloat(option.dataset.gst || 0);
+                autofillPart(index, record) {
+                    this.parts[index].spare_part_id = record.id;
+                    this.parts[index].partLabel = record.label;
+                    this.parts[index].mrp = parseFloat(record.mrp || 0);
+                    this.parts[index].labor_charge = parseFloat(record.labor_charge || 0);
+                    this.parts[index].gstRate = parseFloat(record.gst_rate || 0);
+                    this.calculatePartLine(index);
+                },
+
+                clearPart(index) {
+                    this.parts[index].spare_part_id = '';
+                    this.parts[index].partLabel = '';
+                    this.parts[index].mrp = 0;
+                    this.parts[index].labor_charge = 0;
+                    this.parts[index].gstRate = 0;
                     this.calculatePartLine(index);
                 },
 

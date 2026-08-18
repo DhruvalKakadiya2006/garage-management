@@ -3,14 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\CounterInvoice;
-use App\Models\Customer;
 use App\Models\SparePart;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use App\Services\GstCalculator;
 use App\Services\PartPriceResolver;
 use App\Services\StockValidator;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CounterInvoiceController extends Controller
 {
@@ -20,15 +19,13 @@ class CounterInvoiceController extends Controller
             ->withSum('payments', 'amount')
             ->latest()
             ->paginate(15);
+
         return view('counter_invoices.index', compact('invoices'));
     }
 
     public function create()
     {
-        $customers = Customer::orderBy('display_name')->get();
-        $spareParts = SparePart::orderBy('part_name')->get();
-        
-        return view('counter_invoices.create', compact('customers', 'spareParts'));
+        return view('counter_invoices.create');
     }
 
     public function store(Request $request)
@@ -38,7 +35,7 @@ class CounterInvoiceController extends Controller
             'customer_id' => 'nullable|exists:customers,id|required_without_all:walkin_name,walkin_mobile',
             'walkin_name' => 'nullable|string|max:255',
             'walkin_mobile' => 'nullable|string|max:20',
-            'payment_mode' => 'nullable|in:' . implode(',', array_keys(config('garage.option_lists.payment_mode'))),
+            'payment_mode' => 'nullable|in:'.implode(',', array_keys(config('garage.option_lists.payment_mode'))),
             'discount_percent' => 'nullable|numeric|min:0|max:100',
             'discount_amount' => 'nullable|numeric|min:0',
             'gst_applicable' => 'boolean',
@@ -52,7 +49,7 @@ class CounterInvoiceController extends Controller
 
         // Stock check before any writes so stock can never go negative
         $stockErrors = app(StockValidator::class)->validate($request->input('items', []), null, 'items');
-        if (!empty($stockErrors)) {
+        if (! empty($stockErrors)) {
             return back()->withErrors($stockErrors)->withInput();
         }
 
@@ -67,7 +64,7 @@ class CounterInvoiceController extends Controller
                 $request->discount_percent ?? 0,
                 $request->discount_amount ?? 0,
             );
-            
+
             $invoice = CounterInvoice::create([
                 'invoice_date' => $validated['invoice_date'],
                 'customer_id' => $validated['customer_id'] ?? null,
@@ -86,10 +83,12 @@ class CounterInvoiceController extends Controller
             $this->createItems($invoice, $items);
 
             DB::commit();
+
             return redirect()->route('counter-invoices.show', $invoice)->with('success', 'Counter Invoice created successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error($e);
+
             return back()->withInput()->withErrors(['error' => 'Something went wrong saving this record. Please try again.']);
         }
     }
@@ -97,16 +96,15 @@ class CounterInvoiceController extends Controller
     public function show(CounterInvoice $counterInvoice)
     {
         $counterInvoice->load(['customer', 'items.sparePart']);
+
         return view('counter_invoices.show', compact('counterInvoice'));
     }
 
     public function edit(CounterInvoice $counterInvoice)
     {
-        $counterInvoice->load('items');
-        $customers = Customer::orderBy('display_name')->get();
-        $spareParts = SparePart::orderBy('part_name')->get();
-        
-        return view('counter_invoices.edit', compact('counterInvoice', 'customers', 'spareParts'));
+        $counterInvoice->load(['customer', 'items.sparePart']);
+
+        return view('counter_invoices.edit', compact('counterInvoice'));
     }
 
     public function update(Request $request, CounterInvoice $counterInvoice)
@@ -116,7 +114,7 @@ class CounterInvoiceController extends Controller
             'customer_id' => 'nullable|exists:customers,id|required_without_all:walkin_name,walkin_mobile',
             'walkin_name' => 'nullable|string|max:255',
             'walkin_mobile' => 'nullable|string|max:20',
-            'payment_mode' => 'nullable|in:' . implode(',', array_keys(config('garage.option_lists.payment_mode'))),
+            'payment_mode' => 'nullable|in:'.implode(',', array_keys(config('garage.option_lists.payment_mode'))),
             'discount_percent' => 'nullable|numeric|min:0|max:100',
             'discount_amount' => 'nullable|numeric|min:0',
             'gst_applicable' => 'boolean',
@@ -130,7 +128,7 @@ class CounterInvoiceController extends Controller
 
         // Stock check accounting for quantity this invoice already reserves
         $stockErrors = app(StockValidator::class)->validate($request->input('items', []), $counterInvoice, 'items');
-        if (!empty($stockErrors)) {
+        if (! empty($stockErrors)) {
             return back()->withErrors($stockErrors)->withInput();
         }
 
@@ -169,10 +167,12 @@ class CounterInvoiceController extends Controller
             $this->createItems($counterInvoice, $items);
 
             DB::commit();
+
             return redirect()->route('counter-invoices.show', $counterInvoice)->with('success', 'Counter Invoice updated successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error($e);
+
             return back()->withInput()->withErrors(['error' => 'Something went wrong saving this record. Please try again.']);
         }
     }
@@ -191,10 +191,12 @@ class CounterInvoiceController extends Controller
             $counterInvoice->delete();
 
             DB::commit();
+
             return redirect()->route('counter-invoices.index')->with('success', 'Counter Invoice deleted.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error($e);
+
             return back()->withErrors(['error' => 'Something went wrong deleting this record. Please try again.']);
         }
     }

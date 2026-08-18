@@ -13,14 +13,19 @@
 
     @php
         $customerType = old('customer_type', $counterInvoice->customer_id ? 'existing' : ($counterInvoice->walkin_name || $counterInvoice->walkin_mobile ? 'walkin' : ''));
+        $initialCustomer = $counterInvoice->customer;
+        $initialCustomerText = $initialCustomer ? $initialCustomer->display_name.' — '.$initialCustomer->mobile : '';
         $initialData = [
             'customerType' => $customerType,
             'items' => $counterInvoice->items->map(fn($item) => [
-                'spare_part_id' => (int) $item->spare_part_id,
+                'spare_part_id' => (string) $item->spare_part_id,
+                'itemLabel' => $item->sparePart
+                    ? $item->sparePart->part_name.' ('.$item->sparePart->part_code.')'
+                    : (string) $item->spare_part_id,
                 'quantity' => (int) $item->quantity,
-                'mrp' => (float) ($spareParts->firstWhere('id', $item->spare_part_id)?->mrp ?? $item->mrp),
+                'mrp' => (float) $item->mrp,
                 'discount_percent' => (float) $item->discount_percent,
-                'gstRate' => (float) ($spareParts->firstWhere('id', $item->spare_part_id)?->gst_rate ?? 0),
+                'gstRate' => (float) ($item->sparePart?->gst_rate ?? 0),
                 'lineTotal' => (float) $item->line_total,
             ])->values(),
             'discountPercent' => (float) $counterInvoice->discount_percent,
@@ -70,13 +75,14 @@
 
                     <!-- Existing Customer -->
                     <div x-show="customerType === 'existing'" class="border-l-4 border-primary-400 pl-4">
-                        <x-select name="customer_id" label="Select Customer" placeholder="-- Select Customer --">
-                            @foreach ($customers as $customer)
-                                <option value="{{ $customer->id }}" {{ old('customer_id', $counterInvoice->customer_id) == $customer->id ? 'selected' : '' }}>
-                                    {{ $customer->display_name }} — {{ $customer->mobile }}
-                                </option>
-                            @endforeach
-                        </x-select>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Select Customer</label>
+                        <x-searchable-combobox
+                            name="customer_id"
+                            endpoint="{{ route('customers.search') }}"
+                            :initial-id="$initialCustomer?->id"
+                            :initial-label="$initialCustomerText"
+                            placeholder="Search customer by name or mobile…" />
+                        @error('customer_id') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     <!-- Walk-in Customer -->
@@ -96,15 +102,23 @@
                         <template x-for="(item, index) in items" :key="index">
                             <div class="grid grid-cols-12 gap-2 mb-2 items-end">
                                 <div class="col-span-5">
-                                    <select :name="`items[${index}][spare_part_id]`" x-model="item.spare_part_id" @change="autofillPrice(index, $event)"
-                                            class="block w-full text-sm rounded-md border-gray-300 shadow-sm" required>
-                                        <option value="">-- Select Part --</option>
-                                        @foreach ($spareParts as $part)
-                                            <option value="{{ $part->id }}" data-mrp="{{ $part->mrp }}" data-gst="{{ $part->gst_rate }}">
-                                                {{ $part->part_name }} ({{ $part->part_code }})
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                    <input type="hidden" :name="`items[${index}][spare_part_id]`" :value="item.spare_part_id">
+                                    <template x-if="!item.spare_part_id">
+                                        <x-searchable-combobox
+                                            bare
+                                            :endpoint="route('spare-parts.search')"
+                                            placeholder="-- Search part --"
+                                            @combobox-selected="autofillPrice(index, $event.detail)" />
+                                    </template>
+                                    <template x-if="item.spare_part_id">
+                                        <div class="flex items-center justify-between gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 shadow-sm">
+                                            <span class="truncate text-sm text-gray-800" x-text="item.itemLabel"></span>
+                                            <button type="button" @click="clearItem(index)" title="Change item"
+                                                    class="inline-flex shrink-0 items-center rounded-md p-1 text-gray-400 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500">
+                                                <x-heroicon-o-x-mark class="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                    </template>
                                 </div>
                                 <div class="col-span-2">
                                     <input type="number" :name="`items[${index}][quantity]`" x-model="item.quantity" @input="calculateItemLine(index)"
@@ -196,7 +210,7 @@
                 },
 
                 addItem() {
-                    this.items.push({spare_part_id: '', quantity: 1, mrp: 0, discount_percent: 0, gstRate: 0, lineTotal: 0});
+                    this.items.push({spare_part_id: '', itemLabel: '', quantity: 1, mrp: 0, discount_percent: 0, gstRate: 0, lineTotal: 0});
                 },
 
                 removeItem(index) {
@@ -204,10 +218,19 @@
                     this.calculateTotals();
                 },
 
-                autofillPrice(index, event) {
-                    const option = event.target.selectedOptions[0];
-                    this.items[index].mrp = parseFloat(option.dataset.mrp || 0);
-                    this.items[index].gstRate = parseFloat(option.dataset.gst || 0);
+                autofillPrice(index, record) {
+                    this.items[index].spare_part_id = record.id;
+                    this.items[index].itemLabel = record.label;
+                    this.items[index].mrp = parseFloat(record.mrp || 0);
+                    this.items[index].gstRate = parseFloat(record.gst_rate || 0);
+                    this.calculateItemLine(index);
+                },
+
+                clearItem(index) {
+                    this.items[index].spare_part_id = '';
+                    this.items[index].itemLabel = '';
+                    this.items[index].mrp = 0;
+                    this.items[index].gstRate = 0;
                     this.calculateItemLine(index);
                 },
 

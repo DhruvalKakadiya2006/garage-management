@@ -2,20 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\JobCard;
 use App\Models\Customer;
+use App\Models\Employee;
+use App\Models\JobCard;
+use App\Models\LabourMaster;
+use App\Models\SparePart;
 use App\Models\Vehicle;
 use App\Models\VehicleBrand;
-use App\Models\Employee;
-use App\Models\SparePart;
-use App\Models\LabourMaster;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use App\Services\GstCalculator;
 use App\Services\PartPriceResolver;
 use App\Services\StockValidator;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class JobCardController extends Controller
 {
@@ -48,10 +48,10 @@ class JobCardController extends Controller
         }
 
         // Filter by date range
-        if (!empty($validated['from_date'])) {
+        if (! empty($validated['from_date'])) {
             $query->whereDate('job_date', '>=', $validated['from_date']);
         }
-        if (!empty($validated['to_date'])) {
+        if (! empty($validated['to_date'])) {
             $query->whereDate('job_date', '<=', $validated['to_date']);
         }
 
@@ -64,21 +64,24 @@ class JobCardController extends Controller
 
     public function create(Request $request)
     {
-        $customers = Customer::orderBy('display_name')->get();
-        $vehicles = Vehicle::with(['vehicleModel.vehicleBrand'])->orderBy('registration_no')->get();
+        // No full-table downloads: the customer is picked through a searchable
+        // combobox hitting customers/search, and only the selected customer's
+        // vehicles are loaded.
+        $customerId = $request->old('customer_id', $request->integer('customer_id')) ?: null;
+        $vehicleId = $request->old('vehicle_id', $request->integer('vehicle_id')) ?: null;
 
-        $customerId = $request->integer('customer_id') ?: null;
-        $vehicleId = $request->integer('vehicle_id') ?: null;
+        $initialCustomer = $customerId ? Customer::find($customerId) : null;
+        $initialVehicles = collect();
 
-        // Only pre-select a vehicle that actually belongs to the given customer.
-        if ($customerId && $vehicleId) {
-            $vehicleBelongsToCustomer = Vehicle::where('id', $vehicleId)
-                ->where('customer_id', $customerId)
-                ->exists();
-
-            if (! $vehicleBelongsToCustomer) {
+        if ($initialCustomer) {
+            // Only pre-select a vehicle that actually belongs to the given customer.
+            if ($vehicleId && ! Vehicle::where('id', $vehicleId)->where('customer_id', $initialCustomer->id)->exists()) {
                 $vehicleId = null;
             }
+            $initialVehicles = $initialCustomer->vehicles()
+                ->with(['vehicleModel.vehicleBrand'])
+                ->orderBy('registration_no')
+                ->get();
         }
 
         $initialData = [
@@ -87,7 +90,7 @@ class JobCardController extends Controller
             'complaints' => [],
         ];
 
-        return view('job_cards.create', compact('customers', 'vehicles', 'initialData'));
+        return view('job_cards.create', compact('initialCustomer', 'initialVehicles', 'initialData'));
     }
 
     public function store(Request $request)
@@ -97,7 +100,7 @@ class JobCardController extends Controller
             'customer_id' => 'required|exists:customers,id',
             'vehicle_id' => 'required|exists:vehicles,id',
             'odometer_reading_km' => 'nullable|integer|min:0',
-            'job_type' => 'required|in:' . implode(',', array_keys(config('garage.option_lists.job_type'))),
+            'job_type' => 'required|in:'.implode(',', array_keys(config('garage.option_lists.job_type'))),
             'promised_delivery_date' => 'nullable|date',
             'promised_delivery_time' => 'nullable',
             'remarks' => 'nullable|string',
@@ -125,7 +128,7 @@ class JobCardController extends Controller
             'remarks' => $validated['remarks'] ?? null,
         ]);
 
-        if (!empty($request->complaints)) {
+        if (! empty($request->complaints)) {
             foreach ($request->complaints as $complaint) {
                 $jobCard->complaints()->create([
                     'description' => $complaint['description'],
@@ -134,13 +137,14 @@ class JobCardController extends Controller
         }
 
         return redirect()->route('job-cards.assign', $jobCard)
-            ->with('success', 'Job Card ' . $jobCard->job_card_no . ' created. Assign a technician and add parts / labour to bill.');
+            ->with('success', 'Job Card '.$jobCard->job_card_no.' created. Assign a technician and add parts / labour to bill.');
     }
 
     public function show(JobCard $jobCard)
     {
         $jobCard->load(['customer', 'vehicle.vehicleModel.vehicleBrand', 'assignedTechnician', 'supervisor',
-                        'complaints', 'parts.sparePart', 'labours.labourMaster', 'labours.technician', 'payments']);
+            'complaints', 'parts.sparePart', 'labours.labourMaster', 'labours.technician', 'payments']);
+
         return view('job_cards.show', compact('jobCard'));
     }
 
@@ -170,15 +174,15 @@ class JobCardController extends Controller
         }
 
         $jobCard->load(['customer', 'vehicle', 'assignedTechnician', 'supervisor',
-                        'complaints', 'parts.sparePart', 'labours.labourMaster', 'labours.technician']);
+            'complaints', 'parts.sparePart', 'labours.labourMaster', 'labours.technician']);
 
         $jobCard->update([
             $documentType === 'invoice' ? 'invoice_generated_at' : 'estimate_generated_at' => now(),
         ]);
 
         $filename = $documentType === 'invoice'
-            ? 'TAX-INVOICE-' . $jobCard->job_card_no . '.pdf'
-            : 'ESTIMATE-' . $jobCard->job_card_no . '.pdf';
+            ? 'TAX-INVOICE-'.$jobCard->job_card_no.'.pdf'
+            : 'ESTIMATE-'.$jobCard->job_card_no.'.pdf';
 
         $pdf = Pdf::setBasePath(base_path())
             ->loadView('pdf.job-card', compact('jobCard', 'documentType'));
@@ -190,10 +194,9 @@ class JobCardController extends Controller
     {
         $jobCard->load(['customer', 'vehicle', 'complaints', 'parts.sparePart', 'labours.labourMaster']);
         $employees = Employee::active()->orderBy('name')->get();
-        $spareParts = SparePart::orderBy('part_name')->get();
         $labourMasters = LabourMaster::orderBy('service_name')->get();
 
-        return view('job_cards.assign', compact('jobCard', 'employees', 'spareParts', 'labourMasters'));
+        return view('job_cards.assign', compact('jobCard', 'employees', 'labourMasters'));
     }
 
     public function updateAssign(Request $request, JobCard $jobCard)
@@ -218,7 +221,7 @@ class JobCardController extends Controller
 
         // Stock check accounting for quantity this job card already reserves
         $stockErrors = app(StockValidator::class)->validate($request->input('parts', []), $jobCard, 'parts');
-        if (!empty($stockErrors)) {
+        if (! empty($stockErrors)) {
             return back()->withErrors($stockErrors)->withInput();
         }
 
@@ -254,7 +257,7 @@ class JobCardController extends Controller
             ]);
 
             // Save parts (stock deduction happens in model boot)
-            if (!empty($parts)) {
+            if (! empty($parts)) {
                 foreach ($parts as $part) {
                     $underWarranty = isset($part['under_warranty']) && $part['under_warranty'];
                     $lineTotal = $underWarranty ? 0 : ($part['quantity'] * ($part['mrp'] + $part['labor_charge']));
@@ -271,7 +274,7 @@ class JobCardController extends Controller
             }
 
             // Save labours
-            if (!empty($request->labours)) {
+            if (! empty($request->labours)) {
                 foreach ($request->labours as $labour) {
                     $lineTotal = $labour['rate'] * $labour['qty'];
                     $jobCard->labours()->create([
@@ -285,21 +288,26 @@ class JobCardController extends Controller
             }
 
             DB::commit();
+
             return redirect()->route('job-cards.show', $jobCard)->with('success', 'Job Card assigned and billed.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error($e);
+
             return back()->withInput()->withErrors(['error' => 'Something went wrong saving this record. Please try again.']);
         }
     }
 
     public function edit(JobCard $jobCard)
     {
-        $jobCard->load(['complaints']);
-        $customers = Customer::orderBy('display_name')->get();
-        $vehicles = Vehicle::with(['vehicleModel.vehicleBrand'])->orderBy('registration_no')->get();
+        $jobCard->load(['customer', 'complaints']);
 
-        return view('job_cards.edit', compact('jobCard', 'customers', 'vehicles'));
+        $initialCustomer = $jobCard->customer;
+        $initialVehicles = $initialCustomer
+            ? $initialCustomer->vehicles()->with(['vehicleModel.vehicleBrand'])->orderBy('registration_no')->get()
+            : collect();
+
+        return view('job_cards.edit', compact('jobCard', 'initialCustomer', 'initialVehicles'));
     }
 
     public function update(Request $request, JobCard $jobCard)
@@ -309,10 +317,10 @@ class JobCardController extends Controller
             'customer_id' => 'required|exists:customers,id',
             'vehicle_id' => 'required|exists:vehicles,id',
             'odometer_reading_km' => 'nullable|integer|min:0',
-            'job_type' => 'required|in:' . implode(',', array_keys(config('garage.option_lists.job_type'))),
+            'job_type' => 'required|in:'.implode(',', array_keys(config('garage.option_lists.job_type'))),
             'promised_delivery_date' => 'nullable|date',
             'promised_delivery_time' => 'nullable',
-            'status' => 'required|in:' . implode(',', array_keys(config('garage.option_lists.job_card_status'))),
+            'status' => 'required|in:'.implode(',', array_keys(config('garage.option_lists.job_card_status'))),
             'remarks' => 'nullable|string',
             'complaints' => 'nullable|array',
             'complaints.*.description' => 'required|string',
@@ -339,7 +347,7 @@ class JobCardController extends Controller
         ]);
 
         $jobCard->complaints()->delete();
-        if (!empty($request->complaints)) {
+        if (! empty($request->complaints)) {
             foreach ($request->complaints as $complaint) {
                 $jobCard->complaints()->create([
                     'description' => $complaint['description'],
@@ -364,10 +372,12 @@ class JobCardController extends Controller
             $jobCard->delete();
 
             DB::commit();
+
             return redirect()->route('job-cards.index')->with('success', 'Job Card deleted.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error($e);
+
             return back()->withErrors(['error' => 'Something went wrong deleting this record. Please try again.']);
         }
     }

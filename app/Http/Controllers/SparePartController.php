@@ -13,12 +13,46 @@ class SparePartController extends Controller
         $lowStock = $request->boolean('low_stock');
 
         $spareParts = SparePart::when($lowStock, function ($query) {
-                $query->whereColumn('current_stock_qty', '<=', 'reorder_level');
-            })
+            $query->whereColumn('current_stock_qty', '<=', 'reorder_level');
+        })
             ->latest()
             ->paginate(15);
 
         return view('spare_parts.index', compact('spareParts', 'lowStock'));
+    }
+
+    /**
+     * Search spare parts by name or code for the Assign & Bill / Counter
+     * Invoice line pickers. Returns a small bounded result set so pages never
+     * embed the entire parts catalog; empty queries return nothing.
+     */
+    public function search(Request $request)
+    {
+        $q = trim((string) $request->query('q'));
+
+        if ($q === '') {
+            return response()->json([]);
+        }
+
+        $parts = SparePart::query()
+            ->where(function ($query) use ($q) {
+                $query->where('part_name', 'like', "%{$q}%")
+                    ->orWhere('part_code', 'like', "%{$q}%");
+            })
+            ->orderBy('part_name')
+            ->limit(20)
+            ->get();
+
+        return response()->json($parts->map(fn ($part) => [
+            'id' => (string) $part->id,
+            'part_name' => $part->part_name,
+            'part_code' => $part->part_code,
+            'mrp' => (float) $part->mrp,
+            'labor_charge' => (float) $part->labor_charge,
+            'gst_rate' => (float) $part->gst_rate,
+            'current_stock_qty' => (int) $part->current_stock_qty,
+            'label' => $part->part_name.' ('.$part->part_code.')',
+        ]));
     }
 
     public function create()
@@ -33,7 +67,7 @@ class SparePartController extends Controller
             'part_code' => 'required|string|max:100|unique:spare_parts,part_code',
             'category' => 'nullable|string|max:100',
             'compatible_vehicle_brand' => 'nullable|string|max:100',
-            'unit' => 'required|in:' . implode(',', array_keys(config('garage.option_lists.spare_part_unit'))),
+            'unit' => 'required|in:'.implode(',', array_keys(config('garage.option_lists.spare_part_unit'))),
             'purchase_price' => 'required|numeric|min:0',
             'mrp' => 'required|numeric|min:0',
             'labor_charge' => 'nullable|numeric|min:0',
@@ -62,10 +96,10 @@ class SparePartController extends Controller
     {
         $validated = $request->validate([
             'part_name' => 'required|string|max:255',
-            'part_code' => 'required|string|max:100|unique:spare_parts,part_code,' . $sparePart->id,
+            'part_code' => 'required|string|max:100|unique:spare_parts,part_code,'.$sparePart->id,
             'category' => 'nullable|string|max:100',
             'compatible_vehicle_brand' => 'nullable|string|max:100',
-            'unit' => 'required|in:' . implode(',', array_keys(config('garage.option_lists.spare_part_unit'))),
+            'unit' => 'required|in:'.implode(',', array_keys(config('garage.option_lists.spare_part_unit'))),
             'purchase_price' => 'required|numeric|min:0',
             'mrp' => 'required|numeric|min:0',
             'labor_charge' => 'nullable|numeric|min:0',
@@ -89,6 +123,7 @@ class SparePartController extends Controller
     {
         try {
             $sparePart->delete();
+
             return redirect()->route('spare-parts.index')->with('success', 'Spare part deleted.');
         } catch (QueryException $e) {
             return back()->with('error', 'Cannot delete — this part has existing job cards or invoices linked to it.');

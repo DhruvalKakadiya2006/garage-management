@@ -13,11 +13,12 @@ class CustomerVehicleController extends Controller
 {
     public function create(Request $request)
     {
-        $customers = Customer::orderBy('display_name')->get();
         $brands = VehicleBrand::with('models')->orderBy('name')->get();
-        $selectedCustomerId = $request->integer('customer_id') ?: null;
+        $selectedCustomerId = old('customer_id', $request->integer('customer_id')) ?: null;
+        $initialCustomer = $selectedCustomerId ? Customer::find($selectedCustomerId) : null;
+        $initialCustomerText = $initialCustomer ? $initialCustomer->display_name.' — '.$initialCustomer->mobile : '';
 
-        return view('vehicles.create', compact('customers', 'brands', 'selectedCustomerId'));
+        return view('vehicles.create', compact('brands', 'selectedCustomerId', 'initialCustomer', 'initialCustomerText'));
     }
 
     public function store(Request $request)
@@ -66,7 +67,7 @@ class CustomerVehicleController extends Controller
             'brand_id' => 'required|exists:vehicle_brands,id',
             'vehicle_model_id' => 'required|exists:vehicle_models,id',
             'is_non_rto' => 'boolean',
-            'registration_no' => 'nullable|required_unless:is_non_rto,1|string|max:50|unique:vehicles,registration_no,' . $vehicle->id,
+            'registration_no' => 'nullable|required_unless:is_non_rto,1|string|max:50|unique:vehicles,registration_no,'.$vehicle->id,
             'chassis_no' => 'nullable|string|max:100',
             'motor_battery_serial_no' => 'nullable|string|max:100',
             'current_odometer_km' => 'nullable|integer|min:0',
@@ -91,6 +92,7 @@ class CustomerVehicleController extends Controller
     {
         try {
             $vehicle->delete();
+
             return redirect()->route('customers.index')->with('success', 'Vehicle deleted.');
         } catch (QueryException $e) {
             return back()->with('error', 'Cannot delete — this vehicle has existing job cards or invoices linked to it.');

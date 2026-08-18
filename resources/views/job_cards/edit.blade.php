@@ -7,24 +7,30 @@
     </x-slot>
 
     @php
+        $initialCustomerText = $initialCustomer
+            ? $initialCustomer->display_name.' — '.$initialCustomer->mobile
+            : '';
+
+        $initialVehiclesData = $initialVehicles->map(fn ($v) => [
+            'id' => (string) $v->id,
+            'customer_id' => (string) $v->customer_id,
+            'registration_no' => $v->registration_no,
+            'is_non_rto' => (bool) $v->is_non_rto,
+            'brand' => $v->vehicleModel?->vehicleBrand?->name,
+            'model' => $v->vehicleModel?->name,
+            'label' => trim(($v->registration_no ?? 'NON-RTO').' — '.($v->vehicleModel?->vehicleBrand?->name ?? '').' '.($v->vehicleModel?->name ?? '')),
+        ])->values();
+
         $initialData = [
-            'customer_id' => $jobCard->customer_id,
-            'vehicle_id' => $jobCard->vehicle_id,
-            'complaints' => $jobCard->complaints->map(fn($c) => [
+            'customer_id' => old('customer_id') !== null ? (string) old('customer_id') : (string) $jobCard->customer_id,
+            'vehicle_id' => old('vehicle_id') !== null ? (string) old('vehicle_id') : (string) $jobCard->vehicle_id,
+            'complaints' => old('complaints') ?? $jobCard->complaints->map(fn ($c) => [
                 'description' => $c->description,
             ])->values(),
         ];
-
-        $vehicleData = $vehicles->map(fn($v) => [
-            'id' => $v->id,
-            'customer_id' => $v->customer_id,
-            'registration_no' => $v->registration_no,
-            'brand' => $v->vehicleModel?->vehicleBrand?->name,
-            'model' => $v->vehicleModel?->name,
-        ])->values();
     @endphp
 
-    <div class="py-6" x-data="jobCardForm()">
+    <div class="py-6" x-data="jobCardForm(@json($initialData), @json($initialVehiclesData))">
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white shadow-sm sm:rounded-lg p-6">
 
@@ -45,49 +51,56 @@
                     <!-- Header Fields -->
                     <div class="grid grid-cols-2 gap-4">
                         <x-input name="job_date" label="Job Date" :required="true" type="date"
-                                 :value="$jobCard->job_date->format('Y-m-d')" />
+                                 :value="old('job_date', $jobCard->job_date->format('Y-m-d'))" />
                         <x-input name="odometer_reading_km" label="Odometer Reading (km)" type="number" min="0"
-                                 :value="$jobCard->odometer_reading_km" />
+                                 :value="old('odometer_reading_km', $jobCard->odometer_reading_km)" />
                     </div>
 
+                    <!-- Customer & Vehicle -->
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Customer *</label>
-                            <select name="customer_id" x-model="selectedCustomer" @change="filterVehicles()"
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                                <option value="">-- Select Customer --</option>
-                                @foreach ($customers as $customer)
-                                    <option value="{{ $customer->id }}">{{ $customer->display_name }} — {{ $customer->mobile }}</option>
-                                @endforeach
-                            </select>
+                            <x-searchable-combobox
+                                name="customer_id"
+                                endpoint="{{ route('customers.search') }}"
+                                :initial-id="$initialCustomer?->id"
+                                :initial-label="$initialCustomerText"
+                                placeholder="Search customer by name or mobile…"
+                                @combobox-selected="onCustomerSelected($event.detail)"
+                                @combobox-cleared="onCustomerCleared()" />
                             @error('customer_id') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Vehicle *</label>
-                            <select name="vehicle_id" x-model="vehicleId" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                            <select name="vehicle_id" x-model="vehicleId"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
                                 <option value="">-- Select Vehicle --</option>
-                                <template x-for="vehicle in filteredVehicles" :key="vehicle.id">
-                                    <option :value="vehicle.id" x-text="`${vehicle.registration_no} - ${vehicle.brand} ${vehicle.model}`"></option>
+                                <template x-for="vehicle in vehicles" :key="vehicle.id">
+                                    <option :value="vehicle.id" x-text="vehicle.label"></option>
                                 </template>
                             </select>
+                            <p class="text-xs text-gray-500 mt-1" x-show="vehiclesLoading">Loading vehicles…</p>
+                            <p class="text-xs text-amber-600 mt-1" x-show="selectedCustomer && !vehiclesLoading && vehicles.length === 0">
+                                No vehicles for this customer yet.
+                            </p>
                             @error('vehicle_id') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
                         </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <x-select name="job_type" label="Job Type" :required="true" :value="$jobCard->job_type"
+                            <x-select name="job_type" label="Job Type" :required="true" :value="old('job_type', $jobCard->job_type)"
                                       :options="config('garage.option_lists.job_type')" />
                         </div>
-                        <x-select name="status" label="Status" :required="true" :value="$jobCard->status"
+                        <x-select name="status" label="Status" :required="true" :value="old('status', $jobCard->status)"
                                   :options="config('garage.option_lists.job_card_status')" />
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
                         <x-input name="promised_delivery_date" label="Promised Delivery Date" type="date"
-                                 :value="$jobCard->promised_delivery_date?->format('Y-m-d')" />
+                                 :value="old('promised_delivery_date', $jobCard->promised_delivery_date?->format('Y-m-d'))" />
                         <x-input name="promised_delivery_time" label="Promised Delivery Time" type="time"
-                                 :value="$jobCard->promised_delivery_time ? substr($jobCard->promised_delivery_time, 0, 5) : ''" />
+                                 :value="old('promised_delivery_time', $jobCard->promised_delivery_time ? substr($jobCard->promised_delivery_time, 0, 5) : '')" />
                     </div>
 
                     <!-- Complaints Section -->
@@ -117,7 +130,7 @@
                     </div>
 
                     <div>
-                        <x-input name="remarks" label="Remarks" type="textarea" rows="3" :value="$jobCard->remarks" />
+                        <x-input name="remarks" label="Remarks" type="textarea" rows="3" :value="old('remarks', $jobCard->remarks)" />
                     </div>
 
                     <div class="flex justify-end gap-3 pt-2">
@@ -135,22 +148,53 @@
     </div>
 
     <script>
-        function jobCardForm(initial = @json($initialData)) {
-            const allVehicles = @json($vehicleData);
+        function jobCardForm(initial = @json($initialData), initialVehicles = []) {
+            const vehiclesBase = @js(url('customers'));
 
             return {
-                allVehicles: allVehicles,
                 selectedCustomer: initial.customer_id || '',
-                filteredVehicles: [],
+                vehicles: initialVehicles || [],
                 vehicleId: initial.vehicle_id || '',
+                vehiclesLoading: false,
                 complaints: initial.complaints || [],
 
                 init() {
-                    this.filterVehicles();
+                    // Auto-select the only vehicle when the customer has exactly one.
+                    if (this.vehicles.length === 1 && !this.vehicleId) {
+                        this.vehicleId = this.vehicles[0].id;
+                    }
                 },
 
-                filterVehicles() {
-                    this.filteredVehicles = this.allVehicles.filter(v => v.customer_id == this.selectedCustomer);
+                onCustomerSelected(record) {
+                    this.selectedCustomer = record.id;
+                    this.vehicleId = '';
+                    this.loadVehicles(record.id);
+                },
+
+                onCustomerCleared() {
+                    this.selectedCustomer = '';
+                    this.vehicles = [];
+                    this.vehicleId = '';
+                },
+
+                async loadVehicles(customerId) {
+                    this.vehiclesLoading = true;
+                    this.vehicles = [];
+                    this.vehicleId = '';
+                    try {
+                        const res = await fetch(`${vehiclesBase}/${customerId}/vehicles`, {
+                            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                        });
+                        if (!res.ok) throw new Error('Request failed');
+                        this.vehicles = await res.json();
+                        if (this.vehicles.length === 1) {
+                            this.vehicleId = this.vehicles[0].id;
+                        }
+                    } catch (e) {
+                        this.vehicles = [];
+                    } finally {
+                        this.vehiclesLoading = false;
+                    }
                 },
 
                 addComplaint() {

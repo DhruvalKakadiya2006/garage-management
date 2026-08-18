@@ -5,10 +5,6 @@
                 <x-heroicon-o-cube class="w-6 h-6 text-primary-600" />
                 Spare Parts
             </h2>
-            <x-button variant="success" :href="route('counter-invoices.create')">
-                <x-heroicon-o-plus class="w-4 h-4 mr-1.5" />
-                New Counter Invoice
-            </x-button>
         </div>
     </x-slot>
 
