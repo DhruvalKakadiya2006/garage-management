@@ -2,11 +2,11 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <h2 class="flex items-center gap-2 font-semibold text-xl text-gray-800 leading-tight">
-                <x-heroicon-o-receipt-percent class="w-6 h-6 text-primary-600" />
+                <x-heroicon-o-receipt-percent class="w-6 h-6 text-primary" />
                 Counter Invoices
             </h2>
             <x-button :href="route('counter-invoices.create')">
-                <x-heroicon-o-plus class="w-4 h-4 mr-1.5" />
+                <x-heroicon-o-plus class="w-4 h-4" />
                 New Counter Invoice
             </x-button>
         </div>
@@ -41,13 +41,13 @@
 
                 @foreach ($invoices as $invoice)
                     <tr class="hover:bg-muted/50">
-                        <td class="px-6 py-4 whitespace-nowrap text-xs font-medium text-gray-900">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {{ $invoice->invoice_no }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                             {{ $invoice->invoice_date->format('d M Y') }}
                         </td>
-                        <td class="px-6 py-4 text-xs text-gray-600">
+                        <td class="px-6 py-4 text-sm text-gray-600">
                             @if($invoice->customer_id)
                                 {{ $invoice->customer->display_name }}
                             @else
@@ -64,11 +64,11 @@
                                 default => 'red',
                             }">
                                 @if ($invoice->payment_status_label === 'paid')
-                                    <x-heroicon-o-check-circle class="w-3.5 h-3.5 mr-1" />
+                                    <x-heroicon-o-check-circle class="w-3.5 h-3.5" />
                                 @elseif ($invoice->payment_status_label === 'partially_paid')
-                                    <x-heroicon-o-clock class="w-3.5 h-3.5 mr-1" />
+                                    <x-heroicon-o-clock class="w-3.5 h-3.5" />
                                 @else
-                                    <x-heroicon-o-x-circle class="w-3.5 h-3.5 mr-1" />
+                                    <x-heroicon-o-x-circle class="w-3.5 h-3.5" />
                                 @endif
                                 {{ ucwords(str_replace('_', ' ', $invoice->payment_status_label)) }}
                             </x-badge>
@@ -76,7 +76,7 @@
                                 <div class="text-xs text-gray-500 mt-1">{{ ucfirst(str_replace('_', ' ', $invoice->payment_mode)) }}</div>
                             @endif
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-900 text-right font-medium">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
                             {{ config('garage.currency_symbol') }}{{ number_format($invoice->grand_total, 2) }}
                         </td>
                         <x-data-table-actions

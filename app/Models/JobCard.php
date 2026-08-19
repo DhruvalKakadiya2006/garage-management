@@ -15,7 +15,7 @@ class JobCard extends Model
         'promised_delivery_date', 'promised_delivery_time', 'status',
         'discount_percent', 'discount_amount', 'gst_applicable',
         'cgst_amount', 'sgst_amount', 'round_off_amount', 'grand_total',
-        'remarks', 'invoice_generated_at', 'estimate_generated_at',
+        'remarks', 'invoice_generated_at', 'estimate_generated_at', 'external_ref',
     ];
 
     protected $casts = [

@@ -2,13 +2,55 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <h2 class="flex items-center gap-2 font-semibold text-xl text-gray-800 leading-tight">
-                <x-heroicon-o-users class="w-6 h-6 text-primary-600" />
+                <x-heroicon-o-users class="w-6 h-6 text-primary" />
                 Customers
             </h2>
-            <x-button :href="route('customers.create')">
-                <x-heroicon-o-plus class="w-4 h-4 mr-1.5" />
-                Add Customer
-            </x-button>
+            <div class="flex items-center gap-2">
+                <x-button variant="secondary" :href="route('import-export.index', ['entity' => 'customers'])">
+                    <x-heroicon-o-arrow-up-tray class="w-4 h-4" />
+                    Import
+                </x-button>
+                <x-dropdown align="left" width="56">
+                    <x-slot name="trigger">
+                        <x-button variant="secondary" type="button">
+                            <x-heroicon-o-arrow-down-tray class="w-4 h-4" />
+                            Export
+                            <x-heroicon-o-chevron-down class="w-4 h-4" />
+                        </x-button>
+                    </x-slot>
+                    <x-slot name="content">
+                        <x-dropdown-link :href="route('import-export.export', ['entity' => 'customers', 'format' => 'csv'])">
+                            <span class="inline-flex items-center gap-2">
+                                <x-heroicon-o-document-text class="w-4 h-4" />
+                                Export CSV
+                            </span>
+                        </x-dropdown-link>
+                        <x-dropdown-link :href="route('import-export.export', ['entity' => 'customers', 'format' => 'xlsx'])">
+                            <span class="inline-flex items-center gap-2">
+                                <x-heroicon-o-document-text class="w-4 h-4" />
+                                Export Excel
+                            </span>
+                        </x-dropdown-link>
+                        <div class="my-1 border-t border-border"></div>
+                        <x-dropdown-link :href="route('import-export.template', ['entity' => 'customers', 'format' => 'csv'])">
+                            <span class="inline-flex items-center gap-2">
+                                <x-heroicon-o-clipboard-document-list class="w-4 h-4" />
+                                Download Import Template (CSV)
+                            </span>
+                        </x-dropdown-link>
+                        <x-dropdown-link :href="route('import-export.template', ['entity' => 'customers', 'format' => 'xlsx'])">
+                            <span class="inline-flex items-center gap-2">
+                                <x-heroicon-o-clipboard-document-list class="w-4 h-4" />
+                                Download Import Template (Excel)
+                            </span>
+                        </x-dropdown-link>
+                    </x-slot>
+                </x-dropdown>
+                <x-button :href="route('customers.create')">
+                    <x-heroicon-o-plus class="w-4 h-4" />
+                    Add Customer
+                </x-button>
+            </div>
         </div>
     </x-slot>
 
@@ -46,19 +88,19 @@
             <div x-show="selectedId" x-transition.opacity.duration.150
                  class="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-primary-200 bg-primary-50 px-4 py-3 shadow-sm">
                 <span class="text-sm font-medium text-primary-800 mr-auto">
-                    <span class="text-primary-500">Selected:</span>
+                    <span class="text-primary">Selected:</span>
                     <span x-text="selectedCustomer ? selectedCustomer.display_name : ''" class="font-semibold"></span>
                 </span>
                 <x-button type="button" @click="createJobCard()">
-                    <x-heroicon-o-wrench-screwdriver class="w-4 h-4 mr-1.5" />
+                    <x-heroicon-o-wrench-screwdriver class="w-4 h-4" />
                     Create Job Card
                 </x-button>
                 <x-button variant="secondary" type="button" @click="addVehicle()">
-                    <x-heroicon-o-plus class="w-4 h-4 mr-1.5" />
+                    <x-heroicon-o-plus class="w-4 h-4" />
                     Add Vehicle
                 </x-button>
                 <x-button variant="secondary" type="button" @click="editSelected()">
-                    <x-heroicon-o-pencil-square class="w-4 h-4 mr-1.5" />
+                    <x-heroicon-o-pencil-square class="w-4 h-4" />
                     Edit
                 </x-button>
                 <form :action="'{{ url('customers') }}' + '/' + selectedId" method="POST"
@@ -67,7 +109,7 @@
                     @csrf
                     @method('DELETE')
                     <x-button variant="danger" type="submit">
-                        <x-heroicon-o-trash class="w-4 h-4 mr-1.5" />
+                        <x-heroicon-o-trash class="w-4 h-4" />
                         Delete
                     </x-button>
                 </form>
@@ -96,39 +138,39 @@
                     <tr class="group hover:bg-muted/50">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <input type="radio" name="customer" value="{{ $customer->id }}" x-model="selectedId"
-                                   class="h-4 w-4 rounded-full border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer">
+                                   class="h-4 w-4 rounded-full border-input text-primary focus:ring-ring cursor-pointer">
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-xs font-medium">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <a href="{{ route('customers.show', $customer) }}"
-                               class="text-primary-600 hover:text-primary-800 transition-colors duration-150">
+                               class="text-primary hover:text-primary-700 transition-colors duration-150">
                                 {{ $customer->display_name }}
                             </a>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                             {{ $customer->mobile }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-xs {{ $customer->outstanding > 0 ? 'font-medium text-red-600' : 'text-gray-600' }}">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm {{ $customer->outstanding > 0 ? 'font-medium text-red-600' : 'text-gray-600' }}">
                             {{ config('garage.currency_symbol') }}{{ number_format($customer->outstanding, 2) }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                             {{ $customer->job_cards_count + $customer->counter_invoices_count }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right">
                             <button type="button" @click="toggleExpand('{{ $customer->id }}')"
                                     title="{{ $customer->vehicles->count() }} vehicle(s)"
-                                    class="inline-flex items-center justify-center rounded-md p-2 text-gray-500 transition-colors duration-150 hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2">
+                                    class="inline-flex items-center justify-center rounded-md p-2 text-gray-500 transition-colors duration-150 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                                 <x-heroicon-o-chevron-down class="w-5 h-5 transition-transform duration-150"
                                                            x-bind:class="expandedId === '{{ $customer->id }}' ? 'rotate-180' : ''" />
                             </button>
                         </td>
                     </tr>
-                    <tr x-show="expandedId === '{{ $customer->id }}'" class="bg-gray-50/60">
+                    <tr x-show="expandedId === '{{ $customer->id }}'" class="bg-muted/60">
                         <td colspan="6" class="px-6 py-4">
                             <div class="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
                                 Vehicles ({{ $customer->vehicles->count() }})
                             </div>
                             @forelse ($customer->vehicles as $vehicle)
-                                <div class="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
+                                <div class="flex items-center gap-3 py-2 border-b border-border last:border-0">
                                     @if ($vehicle->is_non_rto)
                                         <x-badge color="amber">NON-RTO</x-badge>
                                     @else
@@ -160,7 +202,7 @@
                     <div class="space-y-2">
                         <template x-for="v in (selectedCustomer ? selectedCustomer.vehicles : [])" :key="v.id">
                             <button type="button" @click="goToJobCard(v.id)"
-                                    class="w-full flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 text-left text-sm transition-colors duration-150 hover:border-primary-400 hover:bg-primary-50">
+                                    class="w-full flex items-center justify-between rounded-lg border border-border px-4 py-3 text-left text-sm transition-colors duration-150 hover:border-primary hover:bg-accent">
                                 <span class="flex items-center gap-2">
                                     <span class="font-medium text-gray-900" x-text="v.registration_no || 'NON-RTO'"></span>
                                     <template x-if="v.is_non_rto">

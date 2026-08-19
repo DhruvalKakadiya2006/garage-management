@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <h2 class="flex items-center gap-2 font-semibold text-xl text-gray-800 leading-tight">
-                <x-heroicon-o-receipt-percent class="w-6 h-6 text-primary-600" />
+                <x-heroicon-o-receipt-percent class="w-6 h-6 text-primary" />
                 Counter Invoice {{ $counterInvoice->invoice_no }}
             </h2>
             <x-button variant="secondary" :href="route('counter-invoices.index')">
@@ -35,11 +35,11 @@
                                     default => 'red',
                                 }">
                                     @if ($counterInvoice->payment_status_label === 'paid')
-                                        <x-heroicon-o-check-circle class="w-3.5 h-3.5 mr-1" />
+                                        <x-heroicon-o-check-circle class="w-3.5 h-3.5" />
                                     @elseif ($counterInvoice->payment_status_label === 'partially_paid')
-                                        <x-heroicon-o-clock class="w-3.5 h-3.5 mr-1" />
+                                        <x-heroicon-o-clock class="w-3.5 h-3.5" />
                                     @else
-                                        <x-heroicon-o-x-circle class="w-3.5 h-3.5 mr-1" />
+                                        <x-heroicon-o-x-circle class="w-3.5 h-3.5" />
                                     @endif
                                     {{ ucwords(str_replace('_', ' ', $counterInvoice->payment_status_label)) }}
                                 </x-badge>
@@ -134,19 +134,19 @@
                 @endif
 
                 <!-- Payment Summary -->
-                <div class="mb-6 p-4 bg-gray-50 rounded-lg">
-                    <div class="grid grid-cols-3 gap-4 text-sm">
-                        <div>
+                <div class="mb-6 p-4 bg-muted rounded-lg">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                        <div class="flex flex-wrap items-baseline gap-2">
                             <span class="text-gray-600">Grand Total:</span>
-                            <span class="font-semibold text-lg ml-2">{{ config('garage.currency_symbol') }}{{ number_format($counterInvoice->grand_total, 2) }}</span>
+                            <span class="font-semibold text-lg">{{ config('garage.currency_symbol') }}{{ number_format($counterInvoice->grand_total, 2) }}</span>
                         </div>
-                        <div>
+                        <div class="flex flex-wrap items-baseline gap-2">
                             <span class="text-gray-600">Amount Paid:</span>
-                            <span class="font-semibold text-lg ml-2 text-green-600">{{ config('garage.currency_symbol') }}{{ number_format($counterInvoice->amount_paid, 2) }}</span>
+                            <span class="font-semibold text-lg text-green-600">{{ config('garage.currency_symbol') }}{{ number_format($counterInvoice->amount_paid, 2) }}</span>
                         </div>
-                        <div>
+                        <div class="flex flex-wrap items-baseline gap-2">
                             <span class="text-gray-600">Outstanding:</span>
-                            <span class="font-semibold text-lg ml-2 {{ $counterInvoice->outstanding > 0 ? 'text-red-600' : 'text-gray-600' }}">{{ config('garage.currency_symbol') }}{{ number_format($counterInvoice->outstanding, 2) }}</span>
+                            <span class="font-semibold text-lg {{ $counterInvoice->outstanding > 0 ? 'text-red-600' : 'text-gray-600' }}">{{ config('garage.currency_symbol') }}{{ number_format($counterInvoice->outstanding, 2) }}</span>
                         </div>
                     </div>
                 </div>
@@ -175,13 +175,15 @@
                                     <td class="px-4 py-2 text-right font-medium">{{ config('garage.currency_symbol') }}{{ number_format($payment->amount, 2) }}</td>
                                     <td class="px-4 py-2 text-gray-600">{{ $payment->notes ?? '-' }}</td>
                                     <td class="px-4 py-2 text-right text-xs whitespace-nowrap">
-                                        <a href="{{ route('payments.edit', $payment) }}" class="text-primary-600 hover:text-primary-800">Edit</a>
-                                        <form action="{{ route('payments.destroy', $payment) }}" method="POST"
-                                              onsubmit="return confirm('Void (delete) this payment record?');" class="inline ml-3">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-800">Void</button>
-                                        </form>
+                                        <div class="inline-flex items-center gap-3">
+                                            <a href="{{ route('payments.edit', $payment) }}" class="text-primary hover:text-primary-700">Edit</a>
+                                            <form action="{{ route('payments.destroy', $payment) }}" method="POST"
+                                                  onsubmit="return confirm('Void (delete) this payment record?');" class="inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-red-600 hover:text-red-800">Void</button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                                 @endforeach
@@ -206,12 +208,12 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Amount *</label>
                                     <input type="number" step="0.01" name="amount" max="{{ $counterInvoice->outstanding }}"
                                            value="{{ old('amount', $counterInvoice->outstanding) }}"
-                                           class="block w-full rounded-md border-gray-300 shadow-sm text-sm" required>
+                                           class="block w-full rounded-md border-input shadow-sm text-sm" required>
                                     <p class="text-xs text-gray-500 mt-1">Max: {{ config('garage.currency_symbol') }}{{ number_format($counterInvoice->outstanding, 2) }}</p>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Payment Mode *</label>
-                                    <select name="payment_mode" class="block w-full rounded-md border-gray-300 shadow-sm text-sm" required>
+                                    <select name="payment_mode" class="block w-full rounded-md border-input shadow-sm text-sm" required>
                                         <option value="">-- Select --</option>
                                         @foreach (config('garage.option_lists.payment_mode') as $value => $label)
                                             <option value="{{ $value }}">{{ $label }}</option>
@@ -221,19 +223,19 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Payment Date *</label>
                                     <input type="date" name="payment_date" value="{{ old('payment_date', date('Y-m-d')) }}"
-                                           class="block w-full rounded-md border-gray-300 shadow-sm text-sm" required>
+                                           class="block w-full rounded-md border-input shadow-sm text-sm" required>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Reference No</label>
                                     <input type="text" name="reference_no" value="{{ old('reference_no') }}"
-                                           class="block w-full rounded-md border-gray-300 shadow-sm text-sm"
+                                           class="block w-full rounded-md border-input shadow-sm text-sm"
                                            placeholder="Txn ID / Cheque No">
                                 </div>
                             </div>
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                                <textarea name="notes" rows="2" class="block w-full rounded-md border-gray-300 shadow-sm text-sm"
+                                <textarea name="notes" rows="2" class="block w-full rounded-md border-input shadow-sm text-sm"
                                           placeholder="Optional payment notes">{{ old('notes') }}</textarea>
                             </div>
 
@@ -245,8 +247,8 @@
                         </form>
                     </div>
                 @else
-                    <div class="inline-flex items-center text-center py-4 text-green-600 font-medium">
-                        <x-heroicon-o-check-circle class="w-5 h-5 mr-1.5" />
+                    <div class="inline-flex items-center gap-1.5 text-center py-4 text-green-600 font-medium">
+                        <x-heroicon-o-check-circle class="w-5 h-5" />
                         Fully Paid
                     </div>
                 @endif

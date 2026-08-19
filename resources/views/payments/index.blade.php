@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="flex items-center gap-2 font-semibold text-xl text-gray-800 leading-tight">
-            <x-heroicon-o-banknotes class="w-6 h-6 text-primary-600" />
+            <x-heroicon-o-banknotes class="w-6 h-6 text-primary" />
             All Payments
         </h2>
     </x-slot>
@@ -15,7 +15,7 @@
                 </div>
             @endif
 
-            <div class="mb-4 bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3">
+            <div class="mb-4 bg-white rounded-xl border border-border shadow-sm px-4 py-3">
                 <p class="text-sm text-gray-600">
                     <strong>Note:</strong> This is a read-only view of all payments across Job Cards and Counter Invoices, most recent first.
                     Useful for daily cash reconciliation and payment tracking.
@@ -47,16 +47,16 @@
                         $payable = $payment->payable;
                     @endphp
                     <tr class="hover:bg-muted/50">
-                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-900">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {{ $payment->payment_date->format('d M Y') }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-xs">
                             @if ($payable)
                                 <x-badge :color="$payable instanceof \App\Models\JobCard ? 'primary' : 'green'">
                                     @if ($payable instanceof \App\Models\JobCard)
-                                        <x-heroicon-o-wrench-screwdriver class="w-3.5 h-3.5 mr-1" />
+                                        <x-heroicon-o-wrench-screwdriver class="w-3.5 h-3.5" />
                                     @else
-                                        <x-heroicon-o-receipt-percent class="w-3.5 h-3.5 mr-1" />
+                                        <x-heroicon-o-receipt-percent class="w-3.5 h-3.5" />
                                     @endif
                                     {{ $payable instanceof \App\Models\JobCard ? 'Job Card' : 'Counter Invoice' }}
                                 </x-badge>
@@ -64,14 +64,14 @@
                                 <span class="text-gray-400 italic">Deleted record</span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-xs font-medium text-gray-900">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             @if ($payable)
                                 {{ $payable instanceof \App\Models\JobCard ? $payable->job_card_no : $payable->invoice_no }}
                             @else
                                 <span class="text-gray-400 italic">Deleted record</span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 text-xs text-gray-600">
+                        <td class="px-6 py-4 text-sm text-gray-600">
                             @if ($payable)
                                 @php
                                     if ($payable instanceof \App\Models\JobCard) {
@@ -87,27 +87,27 @@
                                 <span class="text-gray-400 italic">Deleted record</span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600 capitalize">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 capitalize">
                             {{ str_replace('_', ' ', $payment->payment_mode) }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                             {{ $payment->reference_no ?? '-' }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-900 text-right font-medium">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
                             {{ config('garage.currency_symbol') }}{{ number_format($payment->amount, 2) }}
                         </td>
-                        <td class="px-6 py-4 text-xs text-gray-500">
+                        <td class="px-6 py-4 text-sm text-gray-500">
                             {{ $payment->notes ? \Illuminate\Support\Str::limit($payment->notes, 30) : '-' }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-xs">
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
                             <div class="flex items-center justify-end gap-3">
                                 <a href="{{ route('payments.edit', $payment) }}"
-                                   class="text-primary-600 hover:text-primary-800">
+                                   class="text-primary hover:text-primary-700">
                                     Edit
                                 </a>
                                 @if ($payable)
                                     <a href="{{ route($payable instanceof \App\Models\JobCard ? 'job-cards.show' : 'counter-invoices.show', $payable->id) }}"
-                                       class="text-primary-600 hover:text-primary-800">
+                                       class="text-primary hover:text-primary-700">
                                         View Document
                                     </a>
                                 @endif
@@ -127,7 +127,7 @@
             </x-data-table>
 
             @if($payments->total() > 0)
-                <div class="mt-6 bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+                <div class="mt-6 bg-white rounded-xl border border-border shadow-sm p-6">
                     <h3 class="font-semibold text-gray-900 mb-4">Current Page Summary</h3>
                     <div class="grid grid-cols-5 gap-4 text-sm">
                         @php
@@ -137,7 +137,7 @@
                             $cardPayments = $payments->where('payment_mode', 'card')->sum('amount');
                             $otherPayments = $pageTotalAmount - ($cashPayments + $upiPayments + $cardPayments);
                         @endphp
-                        <div class="text-center p-4 bg-gray-50 rounded-lg">
+                        <div class="text-center p-4 bg-muted rounded-lg">
                             <div class="text-gray-600 mb-1">Total Amount</div>
                             <div class="text-xl font-bold text-gray-900">{{ config('garage.currency_symbol') }}{{ number_format($pageTotalAmount, 2) }}</div>
                         </div>
@@ -147,7 +147,7 @@
                         </div>
                         <div class="text-center p-4 bg-primary-50 rounded-lg">
                             <div class="text-gray-600 mb-1">UPI</div>
-                            <div class="text-xl font-bold text-primary-700">{{ config('garage.currency_symbol') }}{{ number_format($upiPayments, 2) }}</div>
+                            <div class="text-xl font-bold text-primary">{{ config('garage.currency_symbol') }}{{ number_format($upiPayments, 2) }}</div>
                         </div>
                         <div class="text-center p-4 bg-purple-50 rounded-lg">
                             <div class="text-gray-600 mb-1">Card</div>

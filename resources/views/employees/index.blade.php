@@ -2,11 +2,11 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <h2 class="flex items-center gap-2 font-semibold text-xl text-gray-800 leading-tight">
-                <x-heroicon-o-user-group class="w-6 h-6 text-primary-600" />
+                <x-heroicon-o-user-group class="w-6 h-6 text-primary" />
                 Employees
             </h2>
             <x-button :href="route('employees.create')">
-                <x-heroicon-o-plus class="w-4 h-4 mr-1.5" />
+                <x-heroicon-o-plus class="w-4 h-4" />
                 Add Employee
             </x-button>
         </div>
@@ -24,15 +24,15 @@
             <!-- Filter Toggle -->
             <div class="mb-4 flex flex-wrap gap-2">
                 <a href="{{ route('employees.index') }}"
-                   class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-150 {{ !request()->has('active') ? 'bg-primary-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50' }}">
+                   class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-150 {{ !request()->has('active') ? 'bg-primary text-white' : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground' }}">
                     All
                 </a>
                 <a href="{{ route('employees.index', ['active' => '1']) }}"
-                   class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-150 {{ request('active') === '1' ? 'bg-primary-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50' }}">
+                   class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-150 {{ request('active') === '1' ? 'bg-primary text-white' : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground' }}">
                     Active Only
                 </a>
                 <a href="{{ route('employees.index', ['active' => '0']) }}"
-                   class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-150 {{ request('active') === '0' ? 'bg-primary-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50' }}">
+                   class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-150 {{ request('active') === '0' ? 'bg-primary text-white' : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground' }}">
                     Inactive Only
                 </a>
             </div>
@@ -58,7 +58,7 @@
 
                 @foreach ($employees as $employee)
                     <tr class="hover:bg-muted/50">
-                        <td class="px-6 py-4 whitespace-nowrap text-xs font-medium text-gray-900">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {{ $employee->name }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
@@ -72,21 +72,21 @@
                                 {{ ucwords(str_replace('_', ' ', $employee->role)) }}
                             </x-badge>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600 capitalize">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 capitalize">
                             {{ $employee->specialization ? str_replace('_', ' ', $employee->specialization) : '-' }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                             {{ $employee->mobile }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             @if ($employee->active)
                                 <x-badge color="green">
-                                    <x-heroicon-o-check-circle class="w-3.5 h-3.5 mr-1" />
+                                    <x-heroicon-o-check-circle class="w-3.5 h-3.5" />
                                     Active
                                 </x-badge>
                             @else
                                 <x-badge color="gray">
-                                    <x-heroicon-o-x-circle class="w-3.5 h-3.5 mr-1" />
+                                    <x-heroicon-o-x-circle class="w-3.5 h-3.5" />
                                     Inactive
                                 </x-badge>
                             @endif

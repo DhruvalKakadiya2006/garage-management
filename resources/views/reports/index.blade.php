@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="flex items-center gap-2 font-semibold text-xl text-gray-800 leading-tight">
-            <x-heroicon-o-chart-bar class="w-6 h-6 text-primary-600" />
+            <x-heroicon-o-chart-bar class="w-6 h-6 text-primary" />
             Reports
         </h2>
     </x-slot>
@@ -42,17 +42,17 @@
                             <x-heroicon-o-banknotes class="w-10 h-10" />
                         </div>
                     </div>
-                    <div class="mt-4 pt-4 border-t border-gray-200">
-                        <span class="inline-flex items-center text-sm text-primary-600 hover:text-primary-800 font-medium">
+                    <div class="mt-4 pt-4 border-t border-border">
+                        <span class="inline-flex items-center gap-1 text-sm text-primary hover:text-primary-700 font-medium">
                             View Report
-                            <x-heroicon-o-arrow-right class="w-4 h-4 ml-1" />
+                            <x-heroicon-o-arrow-right class="w-4 h-4" />
                         </span>
                     </div>
                 </a>
 
                 <!-- Job Cards Report Card -->
                 <a href="{{ route('reports.job_cards') }}" 
-                   class="block bg-white shadow-sm hover:shadow-md transition-shadow rounded-xl p-6 border-l-4 border-primary-500">
+                   class="block bg-white shadow-sm hover:shadow-md transition-shadow rounded-xl p-6 border-l-4 border-primary">
                     <div class="flex items-start justify-between">
                         <div class="flex-1">
                             <h3 class="text-lg font-semibold text-gray-900 mb-2">Job Cards Report</h3>
@@ -65,14 +65,14 @@
                                 <li>• Job type distribution with percentages</li>
                             </ul>
                         </div>
-                        <div class="ml-4 text-primary-500">
+                        <div class="ml-4 text-primary">
                             <x-heroicon-o-wrench-screwdriver class="w-10 h-10" />
                         </div>
                     </div>
-                    <div class="mt-4 pt-4 border-t border-gray-200">
-                        <span class="inline-flex items-center text-sm text-primary-600 hover:text-primary-800 font-medium">
+                    <div class="mt-4 pt-4 border-t border-border">
+                        <span class="inline-flex items-center gap-1 text-sm text-primary hover:text-primary-700 font-medium">
                             View Report
-                            <x-heroicon-o-arrow-right class="w-4 h-4 ml-1" />
+                            <x-heroicon-o-arrow-right class="w-4 h-4" />
                         </span>
                     </div>
                 </a>
@@ -97,10 +97,10 @@
                             <x-heroicon-o-cube class="w-10 h-10" />
                         </div>
                     </div>
-                    <div class="mt-4 pt-4 border-t border-gray-200">
-                        <span class="inline-flex items-center text-sm text-primary-600 hover:text-primary-800 font-medium">
+                    <div class="mt-4 pt-4 border-t border-border">
+                        <span class="inline-flex items-center gap-1 text-sm text-primary hover:text-primary-700 font-medium">
                             View Report
-                            <x-heroicon-o-arrow-right class="w-4 h-4 ml-1" />
+                            <x-heroicon-o-arrow-right class="w-4 h-4" />
                         </span>
                     </div>
                 </a>
@@ -124,10 +124,10 @@
                             <x-heroicon-o-credit-card class="w-10 h-10" />
                         </div>
                     </div>
-                    <div class="mt-4 pt-4 border-t border-gray-200">
-                        <span class="inline-flex items-center text-sm text-primary-600 hover:text-primary-800 font-medium">
+                    <div class="mt-4 pt-4 border-t border-border">
+                        <span class="inline-flex items-center gap-1 text-sm text-primary hover:text-primary-700 font-medium">
                             View Report
-                            <x-heroicon-o-arrow-right class="w-4 h-4 ml-1" />
+                            <x-heroicon-o-arrow-right class="w-4 h-4" />
                         </span>
                     </div>
                 </a>
@@ -150,16 +150,16 @@
                             <x-heroicon-o-user-group class="w-10 h-10" />
                         </div>
                     </div>
-                    <div class="mt-4 pt-4 border-t border-gray-200">
-                        <span class="inline-flex items-center text-sm text-primary-600 hover:text-primary-800 font-medium">
+                    <div class="mt-4 pt-4 border-t border-border">
+                        <span class="inline-flex items-center gap-1 text-sm text-primary hover:text-primary-700 font-medium">
                             View Report
-                            <x-heroicon-o-arrow-right class="w-4 h-4 ml-1" />
+                            <x-heroicon-o-arrow-right class="w-4 h-4" />
                         </span>
                     </div>
                 </a>
 
                 <!-- Placeholder for future reports -->
-                <div class="bg-gray-50 shadow-sm rounded-xl p-6 border-l-4 border-gray-300 flex items-center justify-center">
+                <div class="bg-muted shadow-sm rounded-xl p-6 border-l-4 border-border flex items-center justify-center">
                     <div class="text-center text-gray-400">
                         <div class="mb-2 flex justify-center text-gray-300">
                             <x-heroicon-o-plus class="w-10 h-10" />
@@ -176,20 +176,20 @@
                     Report Features
                 </h3>
                 <ul class="space-y-2 text-sm text-gray-600">
-                    <li class="flex items-start">
-                        <x-heroicon-o-check-circle class="w-5 h-5 text-green-500 mr-2 shrink-0" />
+                    <li class="flex items-start gap-2">
+                        <x-heroicon-o-check-circle class="w-5 h-5 text-green-500 shrink-0" />
                         <span><strong>Date Range Filtering:</strong> All reports support from/to date filtering with defaults to the current month.</span>
                     </li>
-                    <li class="flex items-start">
-                        <x-heroicon-o-check-circle class="w-5 h-5 text-green-500 mr-2 shrink-0" />
+                    <li class="flex items-start gap-2">
+                        <x-heroicon-o-check-circle class="w-5 h-5 text-green-500 shrink-0" />
                         <span><strong>Bookmarkable URLs:</strong> Filter parameters are in the URL, making reports easy to share and bookmark.</span>
                     </li>
-                    <li class="flex items-start">
-                        <x-heroicon-o-check-circle class="w-5 h-5 text-green-500 mr-2 shrink-0" />
+                    <li class="flex items-start gap-2">
+                        <x-heroicon-o-check-circle class="w-5 h-5 text-green-500 shrink-0" />
                         <span><strong>Read-Only:</strong> Reports are view-only — no accidental modifications to your data.</span>
                     </li>
-                    <li class="flex items-start">
-                        <x-heroicon-o-check-circle class="w-5 h-5 text-green-500 mr-2 shrink-0" />
+                    <li class="flex items-start gap-2">
+                        <x-heroicon-o-check-circle class="w-5 h-5 text-green-500 shrink-0" />
                         <span><strong>Real-Time Data:</strong> All reports pull fresh data from your database on each view.</span>
                     </li>
                 </ul>

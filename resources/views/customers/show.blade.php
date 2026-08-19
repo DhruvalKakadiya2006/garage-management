@@ -3,7 +3,7 @@
         <div class="flex flex-wrap justify-between items-center gap-3">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center shrink-0">
-                    <x-heroicon-o-user class="w-5 h-5 text-primary-600" />
+                    <x-heroicon-o-user class="w-5 h-5 text-primary" />
                 </div>
                 <div>
                     <h2 class="flex items-center gap-2 font-semibold text-xl text-gray-800 leading-tight">
@@ -44,37 +44,44 @@
                     </p>
                 </div>
             </div>
-            <div class="flex flex-wrap items-center gap-2">
+            <div class="flex flex-wrap items-center gap-3">
                 @if ($customer->vehicles_count > 0)
                     <x-button :href="route('job-cards.create', $createJobCardParams)">
-                        <x-heroicon-o-wrench-screwdriver class="w-4 h-4 mr-1.5" />
+                        <x-heroicon-o-wrench-screwdriver class="w-4 h-4" />
                         Create Job Card
                     </x-button>
                 @endif
-                <x-button variant="secondary" :href="route('vehicles.create', ['customer_id' => $customer->id])">
-                    <x-heroicon-o-plus class="w-4 h-4 mr-1.5" />
-                    Add Vehicle
-                </x-button>
-                @if ($outstandingDocuments->isNotEmpty())
-                    <x-button variant="secondary" type="button" @click="$dispatch('open-modal', 'receive-payment')">
-                        <x-heroicon-o-banknotes class="w-4 h-4 mr-1.5" />
-                        Receive Payment
+
+                <div class="flex flex-wrap items-center gap-3">
+                    <x-button variant="secondary" :href="route('vehicles.create', ['customer_id' => $customer->id])">
+                        <x-heroicon-o-plus class="w-4 h-4" />
+                        Add Vehicle
                     </x-button>
-                @else
-                    <x-button variant="secondary" type="button" disabled title="No outstanding balance on any document.">
-                        <x-heroicon-o-banknotes class="w-4 h-4 mr-1.5" />
-                        Receive Payment
+                    @if ($outstandingDocuments->isNotEmpty())
+                        <x-button variant="secondary" type="button" @click="$dispatch('open-modal', 'receive-payment')">
+                            <x-heroicon-o-banknotes class="w-4 h-4" />
+                            Receive Payment
+                        </x-button>
+                    @else
+                        <x-button variant="secondary" type="button" disabled title="No outstanding balance on any document.">
+                            <x-heroicon-o-banknotes class="w-4 h-4" />
+                            Receive Payment
+                        </x-button>
+                    @endif
+                    <x-button variant="secondary" type="button" @click="$dispatch('open-modal', 'customer-statement')">
+                        <x-heroicon-o-document-text class="w-4 h-4" />
+                        Statement
                     </x-button>
-                @endif
-                <x-button variant="secondary" type="button" @click="$dispatch('open-modal', 'customer-statement')">
-                    <x-heroicon-o-document-text class="w-4 h-4 mr-1.5" />
-                    Statement
-                </x-button>
-                <x-button variant="secondary" :href="route('customers.edit', $customer)">
-                    <x-heroicon-o-pencil-square class="w-4 h-4 mr-1.5" />
-                    Edit
-                </x-button>
+                    <x-button variant="secondary" :href="route('customers.edit', $customer)">
+                        <x-heroicon-o-pencil-square class="w-4 h-4" />
+                        Edit
+                    </x-button>
+                </div>
+
+                <span class="hidden sm:inline-block w-px h-6 bg-border" aria-hidden="true"></span>
+
                 <x-button variant="ghost" :href="route('customers.index')">
+                    <x-heroicon-o-arrow-left class="w-4 h-4" />
                     Back
                 </x-button>
             </div>
@@ -131,17 +138,17 @@
 
             {{-- Tabs --}}
             <div>
-                <div class="flex gap-1 border-b border-gray-200 mb-4">
+                <div class="flex gap-1 border-b border-border mb-4">
                     <a href="?tab=vehicles"
-                       class="px-4 py-2 text-sm font-medium transition-colors duration-150 border-b-2 -mb-px {{ $tab === 'vehicles' ? 'border-primary-600 text-primary-700' : 'border-transparent text-gray-500 hover:text-gray-700' }}">
+                       class="px-4 py-2 text-sm font-medium transition-colors duration-150 border-b-2 -mb-px {{ $tab === 'vehicles' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700' }}">
                         Vehicles
                     </a>
                     <a href="?tab=job_cards"
-                       class="px-4 py-2 text-sm font-medium transition-colors duration-150 border-b-2 -mb-px {{ $tab === 'job_cards' ? 'border-primary-600 text-primary-700' : 'border-transparent text-gray-500 hover:text-gray-700' }}">
+                       class="px-4 py-2 text-sm font-medium transition-colors duration-150 border-b-2 -mb-px {{ $tab === 'job_cards' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700' }}">
                         Job Cards
                     </a>
                     <a href="?tab=financial"
-                       class="px-4 py-2 text-sm font-medium transition-colors duration-150 border-b-2 -mb-px {{ $tab === 'financial' ? 'border-primary-600 text-primary-700' : 'border-transparent text-gray-500 hover:text-gray-700' }}">
+                       class="px-4 py-2 text-sm font-medium transition-colors duration-150 border-b-2 -mb-px {{ $tab === 'financial' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700' }}">
                         Invoices &amp; Payments
                     </a>
                 </div>
@@ -152,7 +159,7 @@
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="font-semibold text-gray-900">Vehicles</h3>
                             <x-button variant="secondary" :href="route('vehicles.create', ['customer_id' => $customer->id])">
-                                <x-heroicon-o-plus class="w-4 h-4 mr-1.5" />
+                                <x-heroicon-o-plus class="w-4 h-4" />
                                 Add Vehicle
                             </x-button>
                         </div>
@@ -195,7 +202,7 @@
                                                     {{ $vehicle->current_odometer_km ? number_format($vehicle->current_odometer_km) . ' km' : '—' }}
                                                 </td>
                                                 <td class="px-4 py-3 whitespace-nowrap text-xs text-right">
-                                                    <a href="{{ route('vehicles.edit', $vehicle) }}" class="text-primary-600 hover:text-primary-800">Edit</a>
+                                                    <a href="{{ route('vehicles.edit', $vehicle) }}" class="text-primary hover:text-primary-700">Edit</a>
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -230,14 +237,14 @@
                         </x-slot>
                         @foreach ($jobCards as $jobCard)
                             <tr class="hover:bg-muted/50">
-                                <td class="px-6 py-4 whitespace-nowrap text-xs font-medium">
-                                    <a href="{{ route('job-cards.show', $jobCard) }}" class="text-primary-600 hover:text-primary-800">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="{{ route('job-cards.show', $jobCard) }}" class="text-primary hover:text-primary-700">
                                         {{ $jobCard->job_card_no }}
                                     </a>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600">{{ $jobCard->job_date->format('d M Y') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600">{{ $jobCard->vehicle?->registration_no ?? 'NON-RTO' }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600 capitalize">{{ str_replace('_', ' ', $jobCard->job_type) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $jobCard->job_date->format('d M Y') }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $jobCard->vehicle?->registration_no ?? 'NON-RTO' }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 capitalize">{{ str_replace('_', ' ', $jobCard->job_type) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <x-badge :color="match ($jobCard->status) {
                                         'delivered' => 'green',
@@ -250,9 +257,9 @@
                                         {{ ucwords(str_replace('_', ' ', $jobCard->status)) }}
                                     </x-badge>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-800 text-right">{{ $money($jobCard->grand_total) }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600 text-right">{{ $money($jobCard->amount_paid) }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-xs text-right {{ $jobCard->outstanding > 0 ? 'font-medium text-red-600' : 'text-gray-600' }}">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 text-right">{{ $money($jobCard->grand_total) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-right">{{ $money($jobCard->amount_paid) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-right {{ $jobCard->outstanding > 0 ? 'font-medium text-red-600' : 'text-gray-600' }}">
                                     {{ $money($jobCard->outstanding) }}
                                 </td>
                             </tr>
@@ -282,15 +289,15 @@
                         </x-slot>
                         @foreach ($counterInvoices as $invoice)
                             <tr class="hover:bg-muted/50">
-                                <td class="px-6 py-4 whitespace-nowrap text-xs font-medium">
-                                    <a href="{{ route('counter-invoices.show', $invoice) }}" class="text-primary-600 hover:text-primary-800">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="{{ route('counter-invoices.show', $invoice) }}" class="text-primary hover:text-primary-700">
                                         {{ $invoice->invoice_no }}
                                     </a>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600">{{ $invoice->invoice_date->format('d M Y') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-800 text-right">{{ $money($invoice->grand_total) }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600 text-right">{{ $money($invoice->amount_paid) }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-xs text-right {{ $invoice->outstanding > 0 ? 'font-medium text-red-600' : 'text-gray-600' }}">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $invoice->invoice_date->format('d M Y') }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 text-right">{{ $money($invoice->grand_total) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-right">{{ $money($invoice->amount_paid) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-right {{ $invoice->outstanding > 0 ? 'font-medium text-red-600' : 'text-gray-600' }}">
                                     {{ $money($invoice->outstanding) }}
                                 </td>
                             </tr>
@@ -323,17 +330,17 @@
                                     : ($payable ? route('counter-invoices.show', $payable) : null);
                             @endphp
                             <tr class="hover:bg-muted/50">
-                                <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-900">{{ $payment->payment_date->format('d M Y') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-xs font-medium">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $payment->payment_date->format('d M Y') }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     @if ($docRoute)
-                                        <a href="{{ $docRoute }}" class="text-primary-600 hover:text-primary-800">{{ $docNo }}</a>
+                                        <a href="{{ $docRoute }}" class="text-primary hover:text-primary-700">{{ $docNo }}</a>
                                     @else
                                         <span class="text-gray-400 italic">Deleted record</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600 capitalize">{{ str_replace('_', ' ', $payment->payment_mode) }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600">{{ $payment->reference_no ?? '-' }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-900 font-medium text-right">{{ $money($payment->amount) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 capitalize">{{ str_replace('_', ' ', $payment->payment_mode) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $payment->reference_no ?? '-' }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium text-right">{{ $money($payment->amount) }}</td>
                             </tr>
                         @endforeach
                     </x-data-table>
@@ -382,7 +389,7 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Document *</label>
                 <select x-model="payableKey" @change="applyOutstanding()" required
-                        class="block w-full rounded-md border-gray-300 shadow-sm text-sm">
+                        class="block w-full rounded-md border-input shadow-sm text-sm">
                     <option value="">-- Select document --</option>
                     <template x-for="doc in docs" :key="doc.type + '|' + doc.id">
                         <option :value="doc.type + '|' + doc.id" x-text="doc.label + ' — ' + doc.date + ' (outstanding ' + @js($currency) + doc.outstanding + ')'"></option>
@@ -397,14 +404,14 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Amount *</label>
                     <input type="number" step="0.01" min="0.01" name="amount" x-model="amount"
-                           class="block w-full rounded-md border-gray-300 shadow-sm text-sm" required>
+                           class="block w-full rounded-md border-input shadow-sm text-sm" required>
                     <p class="text-xs text-gray-500 mt-1" x-show="selectedDoc">
                         Outstanding: <span class="font-medium" x-text="@js($currency) + selectedDoc.outstanding"></span>
                     </p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Payment Mode *</label>
-                    <select name="payment_mode" required class="block w-full rounded-md border-gray-300 shadow-sm text-sm">
+                    <select name="payment_mode" required class="block w-full rounded-md border-input shadow-sm text-sm">
                         <option value="">-- Select --</option>
                         @foreach (config('garage.option_lists.payment_mode') as $value => $label)
                             <option value="{{ $value }}">{{ $label }}</option>
@@ -414,22 +421,22 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Payment Date *</label>
                     <input type="date" name="payment_date" x-model="paymentDate" required
-                           class="block w-full rounded-md border-gray-300 shadow-sm text-sm">
+                           class="block w-full rounded-md border-input shadow-sm text-sm">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Reference No</label>
-                    <input type="text" name="reference_no" class="block w-full rounded-md border-gray-300 shadow-sm text-sm"
+                    <input type="text" name="reference_no" class="block w-full rounded-md border-input shadow-sm text-sm"
                            placeholder="Txn ID / Cheque No">
                 </div>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                <textarea name="notes" rows="2" class="block w-full rounded-md border-gray-300 shadow-sm text-sm"
+                <textarea name="notes" rows="2" class="block w-full rounded-md border-input shadow-sm text-sm"
                           placeholder="Optional payment notes"></textarea>
             </div>
 
-            <div class="flex justify-end gap-2">
+            <div class="flex justify-end gap-3">
                 <x-button variant="secondary" type="button" @click="$dispatch('close-modal', 'receive-payment')">
                     Cancel
                 </x-button>
@@ -452,17 +459,17 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">From Date</label>
                     <input type="date" name="from_date" value="{{ $statementDefaultFrom }}"
-                           class="block w-full rounded-md border-gray-300 shadow-sm text-sm">
+                           class="block w-full rounded-md border-input shadow-sm text-sm">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">To Date</label>
                     <input type="date" name="to_date" value="{{ $statementDefaultTo }}"
-                           class="block w-full rounded-md border-gray-300 shadow-sm text-sm">
+                           class="block w-full rounded-md border-input shadow-sm text-sm">
                 </div>
             </div>
             <p class="text-xs text-gray-500">Defaults to the current financial year (1 April – today).</p>
 
-            <div class="flex justify-end gap-2">
+            <div class="flex justify-end gap-3">
                 <x-button variant="secondary" type="button" @click="$dispatch('close-modal', 'customer-statement')">
                     Cancel
                 </x-button>

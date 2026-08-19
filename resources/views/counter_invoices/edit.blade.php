@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <h2 class="flex items-center gap-2 font-semibold text-xl text-gray-800 leading-tight">
-                <x-heroicon-o-receipt-percent class="w-6 h-6 text-primary-600" />
+                <x-heroicon-o-receipt-percent class="w-6 h-6 text-primary" />
                 Edit Counter Invoice {{ $counterInvoice->invoice_no }}
             </h2>
             <x-button variant="secondary" :href="route('counter-invoices.show', $counterInvoice)">
@@ -62,19 +62,19 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">Customer</label>
                         <p class="text-xs text-gray-500 mb-2">Select an existing customer or enter walk-in details. At least one is required.</p>
                         <div class="flex gap-4">
-                            <label class="flex items-center">
-                                <input type="radio" name="customer_type" value="existing" x-model="customerType" class="mr-2">
+                            <label class="flex items-center gap-2">
+                                <input type="radio" name="customer_type" value="existing" x-model="customerType">
                                 <span class="text-sm">Existing Customer</span>
                             </label>
-                            <label class="flex items-center">
-                                <input type="radio" name="customer_type" value="walkin" x-model="customerType" class="mr-2">
+                            <label class="flex items-center gap-2">
+                                <input type="radio" name="customer_type" value="walkin" x-model="customerType">
                                 <span class="text-sm">Walk-in / Quick Sale</span>
                             </label>
                         </div>
                     </div>
 
                     <!-- Existing Customer -->
-                    <div x-show="customerType === 'existing'" class="border-l-4 border-primary-400 pl-4">
+                    <div x-show="customerType === 'existing'" class="border-l-4 border-primary pl-4">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Select Customer</label>
                         <x-searchable-combobox
                             name="customer_id"
@@ -97,7 +97,7 @@
                     <div class="border-t pt-4">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="font-semibold text-gray-900">Items *</h3>
-                            <button type="button" @click="addItem()" class="text-sm text-primary-600 hover:text-primary-800">+ Add Item</button>
+                            <button type="button" @click="addItem()" class="text-sm text-primary hover:text-primary-700">+ Add Item</button>
                         </div>
                         <template x-for="(item, index) in items" :key="index">
                             <div class="grid grid-cols-12 gap-2 mb-2 items-end">
@@ -111,10 +111,10 @@
                                             @combobox-selected="autofillPrice(index, $event.detail)" />
                                     </template>
                                     <template x-if="item.spare_part_id">
-                                        <div class="flex items-center justify-between gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 shadow-sm">
+                                        <div class="flex items-center justify-between gap-2 rounded-md border border-input bg-white px-3 py-1.5 shadow-sm">
                                             <span class="truncate text-sm text-gray-800" x-text="item.itemLabel"></span>
                                             <button type="button" @click="clearItem(index)" title="Change item"
-                                                    class="inline-flex shrink-0 items-center rounded-md p-1 text-gray-400 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500">
+                                                    class="inline-flex shrink-0 items-center rounded-md p-1 text-gray-400 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                                                 <x-heroicon-o-x-mark class="w-3.5 h-3.5" />
                                             </button>
                                         </div>
@@ -122,21 +122,21 @@
                                 </div>
                                 <div class="col-span-2">
                                     <input type="number" :name="`items[${index}][quantity]`" x-model="item.quantity" @input="calculateItemLine(index)"
-                                           placeholder="Qty" class="block w-full text-sm rounded-md border-gray-300 shadow-sm" required min="1">
+                                           placeholder="Qty" class="block w-full text-sm rounded-md border-input shadow-sm" required min="1">
                                 </div>
                                 <div class="col-span-2">
                                     <input type="number" step="0.01" :name="`items[${index}][mrp]`" x-model="item.mrp"
                                            placeholder="MRP" readonly
-                                           class="block w-full text-sm rounded-md border-gray-300 bg-gray-100 shadow-sm cursor-not-allowed" title="MRP is set from the spare part master and cannot be edited">
+                                           class="block w-full text-sm rounded-md border-input bg-muted shadow-sm cursor-not-allowed" title="MRP is set from the spare part master and cannot be edited">
                                 </div>
                                 <div class="col-span-1">
                                     <input type="number" step="0.01" :name="`items[${index}][discount_percent]`" x-model="item.discount_percent" @input="calculateItemLine(index)"
-                                           placeholder="Disc%" class="block w-full text-sm rounded-md border-gray-300 shadow-sm" min="0" max="100">
+                                           placeholder="Disc%" class="block w-full text-sm rounded-md border-input shadow-sm" min="0" max="100">
                                 </div>
                                 <div class="col-span-1 text-right text-sm font-medium" x-text="'{{ config('garage.currency_symbol') }}' + item.lineTotal.toFixed(2)"></div>
                                 <div class="col-span-1">
                                     <button type="button" @click="removeItem(index)" title="Remove"
-                                            class="inline-flex items-center justify-center rounded-md p-1.5 text-red-600 transition-colors duration-150 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2">
+                                            class="inline-flex items-center justify-center rounded-md p-1.5 text-red-600 transition-colors duration-150 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                                         <x-heroicon-o-x-mark class="w-4 h-4" />
                                     </button>
                                 </div>
@@ -151,15 +151,15 @@
 
                             <div class="grid grid-cols-2 gap-2">
                                 <input type="number" step="0.01" name="discount_percent" x-model="discountPercent" @input="calculateTotals()"
-                                       placeholder="Invoice Discount %" class="text-sm rounded-md border-gray-300 shadow-sm" min="0" max="100">
+                                       placeholder="Invoice Discount %" class="text-sm rounded-md border-input shadow-sm" min="0" max="100">
                                 <input type="number" step="0.01" name="discount_amount" x-model="discountAmount" @input="discountPercent=0; calculateTotals()"
-                                       placeholder="Invoice Discount {{ config('garage.currency_symbol') }}" class="text-sm rounded-md border-gray-300 shadow-sm" min="0">
+                                       placeholder="Invoice Discount {{ config('garage.currency_symbol') }}" class="text-sm rounded-md border-input shadow-sm" min="0">
                             </div>
 
-                            <div class="flex items-center">
+                            <div class="flex items-center gap-2">
                                 <input type="checkbox" name="gst_applicable" x-model="gstApplicable" @change="calculateTotals()"
-                                       class="rounded border-gray-300 text-primary-600 shadow-sm">
-                                <span class="ml-2 text-sm">GST Applicable</span>
+                                       class="rounded border-input text-primary shadow-sm">
+                                <span class="text-sm">GST Applicable</span>
                             </div>
 
                             <div class="flex justify-between text-sm"><span>Round Off:</span><span x-text="(roundOffAmount > 0 ? '+' : '') + '{{ config('garage.currency_symbol') }}' + roundOffAmount.toFixed(2)"></span></div>

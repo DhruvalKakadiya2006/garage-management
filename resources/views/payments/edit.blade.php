@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="flex items-center gap-2 font-semibold text-xl text-gray-800 leading-tight">
-            <x-heroicon-o-banknotes class="w-6 h-6 text-primary-600" />
+            <x-heroicon-o-banknotes class="w-6 h-6 text-primary" />
             Edit Payment
         </h2>
     </x-slot>
@@ -20,7 +20,7 @@
                             : ($payable ? 'Counter Invoice ' . $payable->invoice_no : 'Deleted record');
                     @endphp
 
-                    <div class="p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
+                    <div class="p-4 bg-muted rounded-lg text-sm text-gray-600">
                         Editing payment on <span class="font-medium text-gray-900">{{ $documentLabel }}</span>. The linked
                         document's outstanding balance recalculates automatically.
                     </div>

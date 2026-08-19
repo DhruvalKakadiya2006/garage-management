@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="flex items-center gap-2 font-semibold text-xl text-gray-800 leading-tight">
-            <x-heroicon-o-clipboard-document-list class="w-6 h-6 text-primary-600" />
+            <x-heroicon-o-clipboard-document-list class="w-6 h-6 text-primary" />
             Add Labour Service
         </h2>
     </x-slot>
@@ -28,10 +28,10 @@
                     </div>
 
                     <div>
-                        <label class="flex items-center">
+                        <label class="flex items-center gap-2">
                             <input type="checkbox" name="taxable" value="1" x-model="taxable"
-                                   class="rounded border-gray-300 text-primary-600 shadow-sm focus:ring-primary-500">
-                            <span class="ml-2 text-sm text-gray-700">Taxable (GST applicable)</span>
+                                   class="rounded border-input text-primary shadow-sm focus:ring-ring">
+                            <span class="text-sm text-gray-700">Taxable (GST applicable)</span>
                         </label>
                     </div>
 

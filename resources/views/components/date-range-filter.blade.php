@@ -1,32 +1,32 @@
 @props(['fromDate' => '', 'toDate' => '', 'action' => ''])
 
-<div class="bg-white shadow-sm sm:rounded-lg p-4 mb-6">
+<div class="bg-card border border-border rounded-lg shadow-sm p-4 mb-6">
     <form method="GET" action="{{ $action }}" class="flex flex-wrap gap-4 items-end">
         <div class="flex-1 min-w-[200px]">
             <label for="from_date" class="block text-sm font-medium text-gray-700 mb-1">From Date</label>
-            <input type="date" 
-                   id="from_date" 
-                   name="from_date" 
+            <input type="date"
+                   id="from_date"
+                   name="from_date"
                    value="{{ $fromDate }}"
-                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm">
+                   class="block w-full rounded-md border border-input bg-background h-10 px-3 text-sm transition-colors focus:ring-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
         </div>
 
         <div class="flex-1 min-w-[200px]">
             <label for="to_date" class="block text-sm font-medium text-gray-700 mb-1">To Date</label>
-            <input type="date" 
-                   id="to_date" 
-                   name="to_date" 
+            <input type="date"
+                   id="to_date"
+                   name="to_date"
                    value="{{ $toDate }}"
-                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm">
+                   class="block w-full rounded-md border border-input bg-background h-10 px-3 text-sm transition-colors focus:ring-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
         </div>
 
         <div class="flex gap-2">
-            <button type="submit" 
-                    class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-md">
+            <button type="submit"
+                    class="inline-flex items-center justify-center gap-2 rounded-md h-10 px-4 text-sm font-medium shadow-sm transition-colors bg-primary text-primary-foreground hover:bg-primary/90">
                 Apply Filter
             </button>
-            <a href="{{ $action }}" 
-               class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium rounded-md">
+            <a href="{{ $action }}"
+               class="inline-flex items-center justify-center gap-2 rounded-md h-10 px-4 text-sm font-medium border border-border bg-background hover:bg-accent hover:text-accent-foreground transition-colors">
                 Reset
             </a>
         </div>

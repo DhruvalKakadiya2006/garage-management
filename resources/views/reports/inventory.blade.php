@@ -2,12 +2,12 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <h2 class="flex items-center gap-2 font-semibold text-xl text-gray-800 leading-tight">
-                <x-heroicon-o-cube class="w-6 h-6 text-primary-600" />
+                <x-heroicon-o-cube class="w-6 h-6 text-primary" />
                 Inventory Report
             </h2>
             <a href="{{ route('reports.index') }}" 
-               class="inline-flex items-center text-sm text-gray-600 hover:text-gray-800">
-                <x-heroicon-o-arrow-left class="w-4 h-4 mr-1" />
+               class="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800">
+                <x-heroicon-o-arrow-left class="w-4 h-4" />
                 Back to Reports
             </a>
         </div>
@@ -77,8 +77,8 @@
                                         <div class="font-medium text-gray-900">{{ $part['part_name'] }}</div>
                                         <div class="text-xs text-gray-500">{{ $part['part_code'] }}</div>
                                         @if($part['low_stock'])
-                                            <span class="inline-flex items-center text-xs font-medium text-red-700">
-                                                <x-heroicon-o-exclamation-triangle class="w-3.5 h-3.5 mr-1" />
+                                            <span class="inline-flex items-center gap-1 text-xs font-medium text-red-700">
+                                                <x-heroicon-o-exclamation-triangle class="w-3.5 h-3.5" />
                                                 Low Stock
                                             </span>
                                         @endif
@@ -92,7 +92,7 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-gray-600">{{ number_format($part['stock_value'], 2) }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right font-medium">
                                         @if($part['times_used'] > 0)
-                                            <span class="text-primary-600">{{ $part['times_used'] }}</span>
+                                            <span class="text-primary">{{ $part['times_used'] }}</span>
                                         @else
                                             <span class="text-gray-400">0</span>
                                         @endif

@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="flex items-center gap-2 font-semibold text-xl text-gray-800 leading-tight">
-            <x-heroicon-o-truck class="w-6 h-6 text-primary-600" />
+            <x-heroicon-o-truck class="w-6 h-6 text-primary" />
             Add Vehicle
         </h2>
     </x-slot>
@@ -58,7 +58,7 @@
                             <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
                                 <input type="checkbox" name="is_non_rto" value="1" x-model="isNonRto"
                                        {{ old('is_non_rto') ? 'checked' : '' }}
-                                       class="rounded border-gray-300 text-primary-600 shadow-sm focus:ring-primary-500">
+                                       class="rounded border-input text-primary shadow-sm focus:ring-ring">
                                 Non-RTO Vehicle
                             </label>
                         </div>

@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div>
             <h2 class="flex items-center gap-2 font-semibold text-xl text-gray-800 leading-tight">
-                <x-heroicon-o-cube class="w-6 h-6 text-primary-600" />
+                <x-heroicon-o-cube class="w-6 h-6 text-primary" />
                 Inventory
             </h2>
             <p class="mt-1 text-sm text-gray-500">Manage spare parts and labour services in one place.</p>
@@ -30,24 +30,24 @@
                 </div>
             @endif
 
-            <div class="flex gap-1 border-b border-gray-200">
+            <div class="flex gap-1 border-b border-border">
                 <button type="button" @click="setTab('parts')"
                         class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors duration-150"
-                        :class="tab === 'parts' ? 'border-primary-600 text-primary-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'">
+                        :class="tab === 'parts' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-border'">
                     <x-heroicon-o-cube class="w-4 h-4" />
                     Spare Parts
                     <span class="text-xs px-1.5 py-0.5 rounded-full"
-                          :class="tab === 'parts' ? 'bg-primary-50 text-primary-700' : 'bg-gray-100 text-gray-600'">
+                          :class="tab === 'parts' ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground'">
                         {{ $spareParts->total() }}
                     </span>
                 </button>
                 <button type="button" @click="setTab('labours')"
                         class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors duration-150"
-                        :class="tab === 'labours' ? 'border-primary-600 text-primary-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'">
+                        :class="tab === 'labours' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-border'">
                     <x-heroicon-o-clipboard-document-list class="w-4 h-4" />
                     Labour Services
                     <span class="text-xs px-1.5 py-0.5 rounded-full"
-                          :class="tab === 'labours' ? 'bg-primary-50 text-primary-700' : 'bg-gray-100 text-gray-600'">
+                          :class="tab === 'labours' ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground'">
                         {{ $labourMasters->total() }}
                     </span>
                 </button>

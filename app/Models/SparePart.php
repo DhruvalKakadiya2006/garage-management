@@ -13,7 +13,7 @@ class SparePart extends Model
     protected $fillable = [
         'part_name', 'part_code', 'category', 'compatible_vehicle_brand', 'unit',
         'purchase_price', 'mrp', 'labor_charge', 'hsn_code', 'gst_rate',
-        'current_stock_qty', 'reorder_level',
+        'current_stock_qty', 'reorder_level', 'external_ref',
     ];
 
     protected $casts = [

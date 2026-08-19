@@ -7,6 +7,7 @@ $navItems = [
     ['route' => 'counter-invoices.index', 'pattern' => 'counter-invoices.*', 'icon' => 'receipt-percent', 'label' => __('Counter Invoice')],
     ['route' => 'payments.index', 'pattern' => 'payments.*', 'icon' => 'banknotes', 'label' => __('Payments')],
     ['route' => 'reports.index', 'pattern' => 'reports.*', 'icon' => 'chart-bar', 'label' => __('Reports')],
+    ['route' => 'import-export.index', 'pattern' => 'import-export.*', 'icon' => 'arrow-up-tray', 'label' => __('Import / Export')],
     ['route' => 'employees.index', 'pattern' => 'employees.*', 'icon' => 'user-group', 'label' => __('Employees')],
     ['route' => 'inventory.index', 'pattern' => ['inventory.*', 'spare-parts.*', 'labour-masters.*'], 'icon' => 'cube', 'label' => __('Inventory')],
 ];
@@ -23,7 +24,7 @@ $userInitials = collect(explode(' ', trim((string) Auth::user()->name)))
        :class="collapsed ? 'w-20' : 'w-64'">
     <!-- Sidebar Header -->
     <div class="flex items-center justify-center h-16 shrink-0 border-b border-border overflow-hidden">
-        <a href="{{ route('dashboard') }}" class="flex items-center justify-center" :class="collapsed ? 'h-4' : 'h-9'">
+        <a href="{{ route('dashboard') }}" class="flex items-center justify-center" :class="collapsed ? 'h-5' : 'h-9'">
             <x-application-logo class="h-full w-auto" />
         </a>
     </div>
@@ -34,54 +35,60 @@ $userInitials = collect(explode(' ', trim((string) Auth::user()->name)))
     </nav>
 
     <!-- Footer: collapse toggle + user dropdown -->
-    <div class="p-2 border-t border-border space-y-2">
-        <!-- Collapse toggle -->
-        <div class="flex justify-center">
+    <div class="shrink-0 border-t border-border">
+        <!-- Collapse control -->
+        <div class="flex justify-center px-2 pt-2 pb-2">
             <button type="button" @click="toggleCollapsed()"
                     :title="collapsed ? 'Expand sidebar' : 'Collapse sidebar'"
-                    class="inline-flex items-center justify-center w-10 h-10 rounded-md bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 transition duration-150 ease-in-out">
-                <x-heroicon-o-chevron-left x-show="!collapsed" class="w-5 h-5" />
-                <x-heroicon-o-chevron-right x-show="collapsed" class="w-5 h-5" />
+                    class="inline-flex items-center justify-center w-8 h-8 rounded-md bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 transition duration-150 ease-in-out">
+                <x-heroicon-o-chevron-left x-show="!collapsed" class="w-4 h-4" />
+                <x-heroicon-o-chevron-right x-show="collapsed" class="w-4 h-4" />
             </button>
         </div>
 
-        <x-dropdown align="left" width="56" direction="up">
-            <x-slot name="trigger">
-                <button type="button"
-                        class="w-full flex items-center px-2 py-2 rounded-lg text-gray-700 hover:bg-accent focus:outline-none transition duration-150 ease-in-out"
-                        :class="collapsed ? 'justify-center px-0' : ''">
-                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary-600 text-white text-sm font-semibold shrink-0">
-                        {{ $userInitials }}
-                    </span>
-                    <span x-show="!collapsed" class="ms-3 flex-1 min-w-0 text-start">
-                        <span class="block text-sm font-medium text-gray-800 truncate">{{ Auth::user()->name }}</span>
-                        <span class="block text-xs text-gray-500 truncate">{{ Auth::user()->email }}</span>
-                    </span>
-                    <x-heroicon-o-chevron-down x-show="!collapsed" class="w-4 h-4 text-gray-400 shrink-0" />
-                </button>
-            </x-slot>
+        <!-- Divider -->
+        <div class="border-t border-border" aria-hidden="true"></div>
 
-            <x-slot name="content">
-                <x-dropdown-link :href="route('profile.edit')">
-                    <span class="inline-flex items-center">
-                        <x-heroicon-o-user-circle class="w-4 h-4 me-2" />
-                        {{ __('Profile') }}
-                    </span>
-                </x-dropdown-link>
+        <!-- User profile -->
+        <div class="p-2">
+            <x-dropdown align="left" width="56" direction="up">
+                <x-slot name="trigger">
+                    <button type="button"
+                            class="w-full flex items-center px-2 py-2 rounded-lg text-gray-700 hover:bg-accent focus:outline-none transition duration-150 ease-in-out"
+                            :class="collapsed ? 'justify-center px-0' : ''">
+                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-white text-sm font-semibold shrink-0">
+                            {{ $userInitials }}
+                        </span>
+                        <span x-show="!collapsed" class="ms-3 flex-1 min-w-0 text-start">
+                            <span class="block text-sm font-medium text-gray-800 truncate">{{ Auth::user()->name }}</span>
+                            <span class="block text-xs text-gray-500 truncate">{{ Auth::user()->email }}</span>
+                        </span>
+                        <x-heroicon-o-chevron-down x-show="!collapsed" class="w-4 h-4 text-gray-400 shrink-0" />
+                    </button>
+                </x-slot>
 
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-
-                    <x-dropdown-link :href="route('logout')"
-                            onclick="event.preventDefault(); this.closest('form').submit();">
+                <x-slot name="content">
+                    <x-dropdown-link :href="route('profile.edit')">
                         <span class="inline-flex items-center">
-                            <x-heroicon-o-arrow-right-start-on-rectangle class="w-4 h-4 me-2" />
-                            {{ __('Log Out') }}
+                            <x-heroicon-o-user-circle class="w-4 h-4 me-2" />
+                            {{ __('Profile') }}
                         </span>
                     </x-dropdown-link>
-                </form>
-            </x-slot>
-        </x-dropdown>
+
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+
+                        <x-dropdown-link :href="route('logout')"
+                                onclick="event.preventDefault(); this.closest('form').submit();">
+                            <span class="inline-flex items-center">
+                                <x-heroicon-o-arrow-right-start-on-rectangle class="w-4 h-4 me-2" />
+                                {{ __('Log Out') }}
+                            </span>
+                        </x-dropdown-link>
+                    </form>
+                </x-slot>
+            </x-dropdown>
+        </div>
     </div>
 </aside>
 
@@ -111,7 +118,7 @@ $userInitials = collect(explode(' ', trim((string) Auth::user()->name)))
             <x-slot name="trigger">
                 <button type="button"
                         class="w-full flex items-center px-2 py-2 rounded-lg text-gray-700 hover:bg-accent focus:outline-none transition duration-150 ease-in-out">
-                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary-600 text-white text-sm font-semibold shrink-0">
+                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-white text-sm font-semibold shrink-0">
                         {{ $userInitials }}
                     </span>
                     <span class="ms-3 flex-1 min-w-0 text-start">

@@ -2,12 +2,12 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <h2 class="flex items-center gap-2 font-semibold text-xl text-gray-800 leading-tight">
-                <x-heroicon-o-wrench-screwdriver class="w-6 h-6 text-primary-600" />
+                <x-heroicon-o-wrench-screwdriver class="w-6 h-6 text-primary" />
                 Job Cards Report
             </h2>
             <a href="{{ route('reports.index') }}" 
-               class="inline-flex items-center text-sm text-gray-600 hover:text-gray-800">
-                <x-heroicon-o-arrow-left class="w-4 h-4 mr-1" />
+               class="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800">
+                <x-heroicon-o-arrow-left class="w-4 h-4" />
                 Back to Reports
             </a>
         </div>
@@ -70,7 +70,7 @@
                                     </td>
                                 </tr>
                                 @endforeach
-                                <tr class="bg-gray-50 font-semibold">
+                                <tr class="bg-muted font-semibold">
                                     <td class="px-6 py-4">Total</td>
                                     <td class="px-6 py-4 text-right">{{ $totalJobCards }}</td>
                                     <td class="px-6 py-4 text-right">100%</td>
@@ -110,7 +110,7 @@
                                     </td>
                                 </tr>
                                 @endforeach
-                                <tr class="bg-gray-50 font-semibold">
+                                <tr class="bg-muted font-semibold">
                                     <td class="px-6 py-4">Total</td>
                                     <td class="px-6 py-4 text-right">{{ $totalJobCards }}</td>
                                     <td class="px-6 py-4 text-right">100%</td>

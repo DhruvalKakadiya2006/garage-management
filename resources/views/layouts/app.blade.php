@@ -11,7 +11,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans antialiased">
-        <div x-data="sidebar()" x-cloak class="min-h-screen bg-gray-100">
+        <div x-data="sidebar()" x-cloak class="min-h-screen bg-muted">
             @include('layouts.navigation')
 
             <!-- Mobile backdrop -->

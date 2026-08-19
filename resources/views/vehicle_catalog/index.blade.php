@@ -2,11 +2,11 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <h2 class="flex items-center gap-2 font-semibold text-xl text-gray-800 leading-tight">
-                <x-heroicon-o-book-open class="w-6 h-6 text-primary-600" />
+                <x-heroicon-o-book-open class="w-6 h-6 text-primary" />
                 Vehicle Catalog
             </h2>
             <x-button :href="route('vehicle-brands.create')">
-                <x-heroicon-o-plus class="w-4 h-4 mr-1.5" />
+                <x-heroicon-o-plus class="w-4 h-4" />
                 Add Brand
             </x-button>
         </div>
@@ -35,11 +35,11 @@
                 <template x-if="selectedModelId">
                     <div class="flex flex-wrap items-center gap-3 w-full">
                         <span class="text-sm font-medium text-primary-800 mr-auto">
-                            <span class="text-primary-500">Selected Model:</span>
+                            <span class="text-primary">Selected Model:</span>
                             <span class="font-semibold" x-text="selectedModel ? selectedModel.name + ' (' + selectedModel.brand_name + ')' : ''"></span>
                         </span>
                         <x-button variant="secondary" type="button" @click="goEditModel()">
-                            <x-heroicon-o-pencil-square class="w-4 h-4 mr-1.5" />
+                            <x-heroicon-o-pencil-square class="w-4 h-4" />
                             Edit
                         </x-button>
                         <form :action="'{{ url('vehicle-models') }}' + '/' + selectedModelId" method="POST"
@@ -47,7 +47,7 @@
                             @csrf
                             @method('DELETE')
                             <x-button variant="danger" type="submit">
-                                <x-heroicon-o-trash class="w-4 h-4 mr-1.5" />
+                                <x-heroicon-o-trash class="w-4 h-4" />
                                 Delete
                             </x-button>
                         </form>
@@ -58,15 +58,15 @@
                 <template x-if="selectedBrandId && !selectedModelId">
                     <div class="flex flex-wrap items-center gap-3 w-full">
                         <span class="text-sm font-medium text-primary-800 mr-auto">
-                            <span class="text-primary-500">Selected Brand:</span>
+                            <span class="text-primary">Selected Brand:</span>
                             <span class="font-semibold" x-text="selectedBrand ? selectedBrand.name : ''"></span>
                         </span>
                         <x-button type="button" @click="goAddModel()">
-                            <x-heroicon-o-plus class="w-4 h-4 mr-1.5" />
+                            <x-heroicon-o-plus class="w-4 h-4" />
                             Add Model
                         </x-button>
                         <x-button variant="secondary" type="button" @click="goEditBrand()">
-                            <x-heroicon-o-pencil-square class="w-4 h-4 mr-1.5" />
+                            <x-heroicon-o-pencil-square class="w-4 h-4" />
                             Edit
                         </x-button>
                         <form :action="'{{ url('vehicle-brands') }}' + '/' + selectedBrandId" method="POST"
@@ -74,7 +74,7 @@
                             @csrf
                             @method('DELETE')
                             <x-button variant="danger" type="submit">
-                                <x-heroicon-o-trash class="w-4 h-4 mr-1.5" />
+                                <x-heroicon-o-trash class="w-4 h-4" />
                                 Delete
                             </x-button>
                         </form>
@@ -104,32 +104,32 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             <input type="radio" name="vehicle_brand" value="{{ $brand->id }}" x-model="selectedBrandId"
                                    @change="selectedModelId = ''"
-                                   class="h-4 w-4 rounded-full border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer">
+                                   class="h-4 w-4 rounded-full border-input text-primary focus:ring-ring cursor-pointer">
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-xs font-medium text-gray-900">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {{ $brand->name }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                             {{ $brand->models_count }} model(s)
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right">
                             <button type="button" @click="toggleExpand('{{ $brand->id }}')" title="View models"
-                                    class="inline-flex items-center justify-center rounded-md p-2 text-gray-500 transition-colors duration-150 hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2">
+                                    class="inline-flex items-center justify-center rounded-md p-2 text-gray-500 transition-colors duration-150 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                                 <x-heroicon-o-chevron-down class="w-5 h-5 transition-transform duration-150"
                                                            x-bind:class="expandedId === '{{ $brand->id }}' ? 'rotate-180' : ''" />
                             </button>
                         </td>
                     </tr>
-                    <tr x-show="expandedId === '{{ $brand->id }}'" class="bg-gray-50/60">
+                    <tr x-show="expandedId === '{{ $brand->id }}'" class="bg-muted/60">
                         <td colspan="4" class="px-6 py-4">
                             <div class="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
                                 Models under {{ $brand->name }} ({{ $brand->models->count() }})
                             </div>
                             @forelse ($brand->models as $model)
-                                <div class="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
+                                <div class="flex items-center gap-3 py-2 border-b border-border last:border-0">
                                     <input type="radio" name="vehicle_model" value="{{ $model->id }}" x-model="selectedModelId"
                                            @change="selectedBrandId = ''"
-                                           class="h-4 w-4 rounded-full border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer">
+                                           class="h-4 w-4 rounded-full border-input text-primary focus:ring-ring cursor-pointer">
                                     <span class="text-sm font-medium text-gray-900">{{ $model->name }}</span>
                                     @if ($model->battery_type)
                                         <x-badge color="gray">{{ ucwords(str_replace('-', ' ', $model->battery_type)) }}</x-badge>

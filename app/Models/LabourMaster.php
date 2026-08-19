@@ -11,7 +11,7 @@ class LabourMaster extends Model
 
     protected $fillable = [
         'service_name', 'category', 'standard_rate', 'estimated_time_minutes',
-        'taxable', 'gst_rate', 'hsn_sac_code',
+        'taxable', 'gst_rate', 'hsn_sac_code', 'external_ref',
     ];
 
     protected $casts = [

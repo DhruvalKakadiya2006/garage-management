@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="flex items-center gap-2 font-semibold text-xl text-gray-800 leading-tight">
-            <x-heroicon-o-user-group class="w-6 h-6 text-primary-600" />
+            <x-heroicon-o-user-group class="w-6 h-6 text-primary" />
             Add Employee
         </h2>
     </x-slot>
@@ -27,10 +27,10 @@
                     </div>
 
                     <div>
-                        <label class="flex items-center">
+                        <label class="flex items-center gap-2">
                             <input type="checkbox" name="active" value="1" {{ old('active', true) ? 'checked' : '' }}
-                                   class="rounded border-gray-300 text-primary-600 shadow-sm focus:ring-primary-500">
-                            <span class="ml-2 text-sm text-gray-700">Active</span>
+                                   class="rounded border-input text-primary shadow-sm focus:ring-ring">
+                            <span class="text-sm text-gray-700">Active</span>
                         </label>
                     </div>
 

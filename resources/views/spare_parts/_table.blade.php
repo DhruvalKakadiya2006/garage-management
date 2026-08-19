@@ -5,16 +5,16 @@
 <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
     <div class="flex items-center gap-2">
         <a href="{{ route($indexRoute) }}"
-           class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-150 {{ !$lowStock ? 'bg-primary-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50' }}">
+           class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-150 {{ !$lowStock ? 'bg-primary text-white' : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground' }}">
             All Parts
         </a>
         <a href="{{ route($indexRoute, ['low_stock' => 1]) }}"
-           class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-150 {{ $lowStock ? 'bg-primary-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50' }}">
+           class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-150 {{ $lowStock ? 'bg-primary text-white' : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground' }}">
             Low Stock
         </a>
     </div>
     <x-button :href="route('spare-parts.create')">
-        <x-heroicon-o-plus class="w-4 h-4 mr-1.5" />
+        <x-heroicon-o-plus class="w-4 h-4" />
         Add Spare Part
     </x-button>
 </div>
@@ -42,25 +42,25 @@
 
     @foreach ($spareParts as $part)
         <tr class="hover:bg-muted/50">
-            <td class="px-6 py-4 text-xs font-medium text-gray-900">
+            <td class="px-6 py-4 text-sm font-medium text-gray-900">
                 {{ $part->part_name }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                 {{ $part->part_code }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                 {{ $part->category ?? '-' }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-900 text-right">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
                 {{ config('garage.currency_symbol') }}{{ number_format($part->mrp, 2) }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-900 text-right">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
                 {{ config('garage.currency_symbol') }}{{ number_format($part->labor_charge, 2) }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-xs font-medium text-gray-900 text-right">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
                 {{ config('garage.currency_symbol') }}{{ number_format($part->total_price, 2) }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-xs text-center">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
                 @if ($part->current_stock_qty <= 0)
                     <x-badge color="red">{{ $part->current_stock_qty }}</x-badge>
                 @elseif ($part->current_stock_qty <= $part->reorder_level)

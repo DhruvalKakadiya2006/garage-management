@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="flex items-center gap-2 font-semibold text-xl text-gray-800 leading-tight">
-            <x-heroicon-o-book-open class="w-6 h-6 text-primary-600" />
+            <x-heroicon-o-book-open class="w-6 h-6 text-primary" />
             Edit Model
         </h2>
     </x-slot>

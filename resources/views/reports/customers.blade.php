@@ -2,12 +2,12 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <h2 class="flex items-center gap-2 font-semibold text-xl text-gray-800 leading-tight">
-                <x-heroicon-o-user-group class="w-6 h-6 text-primary-600" />
+                <x-heroicon-o-user-group class="w-6 h-6 text-primary" />
                 Customers Report
             </h2>
             <a href="{{ route('reports.index') }}" 
-               class="inline-flex items-center text-sm text-gray-600 hover:text-gray-800">
-                <x-heroicon-o-arrow-left class="w-4 h-4 mr-1" />
+               class="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800">
+                <x-heroicon-o-arrow-left class="w-4 h-4" />
                 Back to Reports
             </a>
         </div>

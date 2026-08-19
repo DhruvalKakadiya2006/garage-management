@@ -13,6 +13,7 @@ class VehicleModel extends Model
         'vehicle_brand_id',
         'name',
         'battery_type',
+        'external_ref',
     ];
 
     public function vehicleBrand()

@@ -10,7 +10,7 @@ class VehicleBrand extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name',
+        'name', 'external_ref',
     ];
 
     public function models()

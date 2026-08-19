@@ -11,7 +11,7 @@ class Vehicle extends Model
 
     protected $fillable = [
         'customer_id', 'vehicle_model_id', 'registration_no', 'chassis_no',
-        'motor_battery_serial_no', 'is_non_rto', 'current_odometer_km', 'color', 'remarks',
+        'motor_battery_serial_no', 'is_non_rto', 'current_odometer_km', 'color', 'remarks', 'external_ref',
     ];
 
     protected $casts = [

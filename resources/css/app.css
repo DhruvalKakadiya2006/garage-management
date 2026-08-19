@@ -12,7 +12,7 @@
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
-    --primary: 209 78% 35%; /* #145C9E */
+    --primary: 239 84% 67%; /* #6366f1 Indigo 500 */
     --primary-foreground: 0 0% 100%;
     --secondary: 210 40% 96%;
     --secondary-foreground: 222 47% 11%;
@@ -24,7 +24,7 @@
     --destructive-foreground: 0 0% 100%;
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 209 78% 35%; /* #145C9E */
+    --ring: 239 84% 67%; /* #6366f1 Indigo 500 */
     --radius: 0.5rem;
 }
 

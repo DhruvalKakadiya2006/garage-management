@@ -1,39 +1,46 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex justify-between items-center">
+        <div class="flex flex-wrap justify-between items-center gap-3">
             <h2 class="flex items-center gap-2 font-semibold text-xl text-gray-800 leading-tight">
-                <x-heroicon-o-wrench-screwdriver class="w-6 h-6 text-primary-600" />
+                <x-heroicon-o-wrench-screwdriver class="w-6 h-6 text-primary" />
                 Job Card {{ $jobCard->job_card_no }}
             </h2>
-            <div class="space-x-2">
+            <div class="flex flex-wrap items-center gap-3">
                 <x-button :href="route('job-cards.assign', $jobCard)">
+                    <x-heroicon-o-clipboard-document-list class="w-4 h-4" />
                     Assign & Bill
                 </x-button>
-                @if ($jobCard->parts->count() + $jobCard->labours->count() > 0)
-                    <x-button variant="secondary" :href="route('job-cards.invoice', $jobCard)">
-                        <x-heroicon-o-document-text class="w-4 h-4 mr-1.5" />
-                        Generate Invoice
+
+                <div class="flex flex-wrap items-center gap-3">
+                    @if ($jobCard->parts->count() + $jobCard->labours->count() > 0)
+                        <x-button variant="secondary" :href="route('job-cards.invoice', $jobCard)">
+                            <x-heroicon-o-document-text class="w-4 h-4" />
+                            Generate Invoice
+                        </x-button>
+                        <x-button variant="secondary" :href="route('job-cards.estimate', $jobCard)">
+                            <x-heroicon-o-document-chart-bar class="w-4 h-4" />
+                            Generate Estimate
+                        </x-button>
+                    @else
+                        <x-button variant="secondary" disabled title="Add at least one part or labour line to generate">
+                            <x-heroicon-o-document-text class="w-4 h-4" />
+                            Generate Invoice
+                        </x-button>
+                        <x-button variant="secondary" disabled title="Add at least one part or labour line to generate">
+                            <x-heroicon-o-document-chart-bar class="w-4 h-4" />
+                            Generate Estimate
+                        </x-button>
+                    @endif
+                    <x-button variant="secondary" :href="route('job-cards.edit', $jobCard)">
+                        <x-heroicon-o-pencil-square class="w-4 h-4" />
+                        Edit
                     </x-button>
-                    <x-button variant="secondary" :href="route('job-cards.estimate', $jobCard)">
-                        <x-heroicon-o-document-chart-bar class="w-4 h-4 mr-1.5" />
-                        Generate Estimate
-                    </x-button>
-                @else
-                    <button type="button" disabled title="Add at least one part or labour line to generate"
-                            class="inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium text-sm transition-colors duration-150 bg-white text-gray-700 border border-gray-300 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                        <x-heroicon-o-document-text class="w-4 h-4 mr-1.5" />
-                        Generate Invoice
-                    </button>
-                    <button type="button" disabled title="Add at least one part or labour line to generate"
-                            class="inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium text-sm transition-colors duration-150 bg-white text-gray-700 border border-gray-300 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                        <x-heroicon-o-document-chart-bar class="w-4 h-4 mr-1.5" />
-                        Generate Estimate
-                    </button>
-                @endif
-                <x-button variant="secondary" :href="route('job-cards.edit', $jobCard)">
-                    Edit
-                </x-button>
-                <x-button variant="secondary" :href="route('job-cards.index')">
+                </div>
+
+                <span class="hidden sm:inline-block w-px h-6 bg-border" aria-hidden="true"></span>
+
+                <x-button variant="ghost" :href="route('job-cards.index')">
+                    <x-heroicon-o-arrow-left class="w-4 h-4" />
                     Back
                 </x-button>
             </div>
@@ -68,17 +75,17 @@
                                     default => 'gray',
                                 }">
                                     @if($jobCard->status === 'delivered')
-                                        <x-heroicon-o-check-circle class="w-3.5 h-3.5 mr-1" />
+                                        <x-heroicon-o-check-circle class="w-3.5 h-3.5" />
                                     @elseif($jobCard->status === 'ready_for_delivery')
-                                        <x-heroicon-o-check-badge class="w-3.5 h-3.5 mr-1" />
+                                        <x-heroicon-o-check-badge class="w-3.5 h-3.5" />
                                     @elseif($jobCard->status === 'in_progress')
-                                        <x-heroicon-o-clock class="w-3.5 h-3.5 mr-1" />
+                                        <x-heroicon-o-clock class="w-3.5 h-3.5" />
                                     @elseif($jobCard->status === 'waiting_for_parts')
-                                        <x-heroicon-o-pause-circle class="w-3.5 h-3.5 mr-1" />
+                                        <x-heroicon-o-pause-circle class="w-3.5 h-3.5" />
                                     @elseif($jobCard->status === 'cancelled')
-                                        <x-heroicon-o-x-circle class="w-3.5 h-3.5 mr-1" />
+                                        <x-heroicon-o-x-circle class="w-3.5 h-3.5" />
                                     @else
-                                        <x-heroicon-o-inbox-arrow-down class="w-3.5 h-3.5 mr-1" />
+                                        <x-heroicon-o-inbox-arrow-down class="w-3.5 h-3.5" />
                                     @endif
                                     {{ ucwords(str_replace('_', ' ', $jobCard->status)) }}
                                 </x-badge>
@@ -90,11 +97,11 @@
                                     default => 'red',
                                 }">
                                     @if($jobCard->payment_status_label === 'paid')
-                                        <x-heroicon-o-check-circle class="w-3.5 h-3.5 mr-1" />
+                                        <x-heroicon-o-check-circle class="w-3.5 h-3.5" />
                                     @elseif($jobCard->payment_status_label === 'partially_paid')
-                                        <x-heroicon-o-clock class="w-3.5 h-3.5 mr-1" />
+                                        <x-heroicon-o-clock class="w-3.5 h-3.5" />
                                     @else
-                                        <x-heroicon-o-x-circle class="w-3.5 h-3.5 mr-1" />
+                                        <x-heroicon-o-x-circle class="w-3.5 h-3.5" />
                                     @endif
                                     {{ ucwords(str_replace('_', ' ', $jobCard->payment_status_label)) }}
                                 </x-badge>
@@ -233,19 +240,19 @@
                 @endif
 
                 <!-- Payment Summary -->
-                <div class="mb-6 p-4 bg-gray-50 rounded-lg">
-                    <div class="grid grid-cols-3 gap-4 text-sm">
-                        <div>
+                <div class="mb-6 p-4 bg-muted rounded-lg">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                        <div class="flex flex-wrap items-baseline gap-2">
                             <span class="text-gray-600">Grand Total:</span>
-                            <span class="font-semibold text-lg ml-2">{{ config('garage.currency_symbol') }}{{ number_format((float) $jobCard->grand_total, 2) }}</span>
+                            <span class="font-semibold text-lg">{{ config('garage.currency_symbol') }}{{ number_format((float) $jobCard->grand_total, 2) }}</span>
                         </div>
-                        <div>
+                        <div class="flex flex-wrap items-baseline gap-2">
                             <span class="text-gray-600">Amount Paid:</span>
-                            <span class="font-semibold text-lg ml-2 text-green-600">{{ config('garage.currency_symbol') }}{{ number_format($jobCard->amount_paid, 2) }}</span>
+                            <span class="font-semibold text-lg text-green-600">{{ config('garage.currency_symbol') }}{{ number_format($jobCard->amount_paid, 2) }}</span>
                         </div>
-                        <div>
+                        <div class="flex flex-wrap items-baseline gap-2">
                             <span class="text-gray-600">Outstanding:</span>
-                            <span class="font-semibold text-lg ml-2 {{ $jobCard->outstanding > 0 ? 'text-red-600' : 'text-gray-600' }}">{{ config('garage.currency_symbol') }}{{ number_format($jobCard->outstanding, 2) }}</span>
+                            <span class="font-semibold text-lg {{ $jobCard->outstanding > 0 ? 'text-red-600' : 'text-gray-600' }}">{{ config('garage.currency_symbol') }}{{ number_format($jobCard->outstanding, 2) }}</span>
                         </div>
                     </div>
                 </div>
@@ -274,13 +281,15 @@
                                     <td class="px-4 py-2 text-right font-medium">{{ config('garage.currency_symbol') }}{{ number_format($payment->amount, 2) }}</td>
                                     <td class="px-4 py-2 text-gray-600">{{ $payment->notes ?? '-' }}</td>
                                     <td class="px-4 py-2 text-right text-xs whitespace-nowrap">
-                                        <a href="{{ route('payments.edit', $payment) }}" class="text-primary-600 hover:text-primary-800">Edit</a>
-                                        <form action="{{ route('payments.destroy', $payment) }}" method="POST"
-                                              onsubmit="return confirm('Void (delete) this payment record?');" class="inline ml-3">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-800">Void</button>
-                                        </form>
+                                        <div class="inline-flex items-center gap-3">
+                                            <a href="{{ route('payments.edit', $payment) }}" class="text-primary hover:text-primary-700">Edit</a>
+                                            <form action="{{ route('payments.destroy', $payment) }}" method="POST"
+                                                  onsubmit="return confirm('Void (delete) this payment record?');" class="inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-red-600 hover:text-red-800">Void</button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                                 @endforeach
@@ -293,8 +302,8 @@
 
                 <!-- Record Payment Form -->
                 @if(! $jobCard->is_billed)
-                    <div class="inline-flex items-center py-4 text-gray-500 font-medium">
-                        <x-heroicon-o-inbox class="w-5 h-5 mr-1.5" />
+                    <div class="inline-flex items-center gap-1.5 py-4 text-gray-500 font-medium">
+                        <x-heroicon-o-inbox class="w-5 h-5" />
                         Not billed yet &mdash; add parts / labour to bill this card.
                     </div>
                 @elseif($jobCard->outstanding > 0)
@@ -310,12 +319,12 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Amount *</label>
                                     <input type="number" step="0.01" name="amount" max="{{ $jobCard->outstanding }}"
                                            value="{{ old('amount', $jobCard->outstanding) }}"
-                                           class="block w-full rounded-md border-gray-300 shadow-sm text-sm" required>
+                                           class="block w-full rounded-md border-input shadow-sm text-sm" required>
                                     <p class="text-xs text-gray-500 mt-1">Max: {{ config('garage.currency_symbol') }}{{ number_format($jobCard->outstanding, 2) }}</p>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Payment Mode *</label>
-                                    <select name="payment_mode" class="block w-full rounded-md border-gray-300 shadow-sm text-sm" required>
+                                    <select name="payment_mode" class="block w-full rounded-md border-input shadow-sm text-sm" required>
                                         <option value="">-- Select --</option>
                                         @foreach (config('garage.option_lists.payment_mode') as $value => $label)
                                             <option value="{{ $value }}">{{ $label }}</option>
@@ -325,19 +334,19 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Payment Date *</label>
                                     <input type="date" name="payment_date" value="{{ old('payment_date', date('Y-m-d')) }}"
-                                           class="block w-full rounded-md border-gray-300 shadow-sm text-sm" required>
+                                           class="block w-full rounded-md border-input shadow-sm text-sm" required>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Reference No</label>
                                     <input type="text" name="reference_no" value="{{ old('reference_no') }}"
-                                           class="block w-full rounded-md border-gray-300 shadow-sm text-sm"
+                                           class="block w-full rounded-md border-input shadow-sm text-sm"
                                            placeholder="Txn ID / Cheque No">
                                 </div>
                             </div>
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                                <textarea name="notes" rows="2" class="block w-full rounded-md border-gray-300 shadow-sm text-sm"
+                                <textarea name="notes" rows="2" class="block w-full rounded-md border-input shadow-sm text-sm"
                                           placeholder="Optional payment notes">{{ old('notes') }}</textarea>
                             </div>
 
@@ -350,13 +359,13 @@
                     </div>
                 @else
                     @if($jobCard->amount_paid > 0)
-                        <div class="inline-flex items-center text-center py-4 text-green-600 font-medium">
-                            <x-heroicon-o-check-circle class="w-5 h-5 mr-1.5" />
+                        <div class="inline-flex items-center gap-1.5 text-center py-4 text-green-600 font-medium">
+                            <x-heroicon-o-check-circle class="w-5 h-5" />
                             Fully Paid
                         </div>
                     @else
-                        <div class="inline-flex items-center text-center py-4 text-gray-500 font-medium">
-                            <x-heroicon-o-check-circle class="w-5 h-5 mr-1.5" />
+                        <div class="inline-flex items-center gap-1.5 text-center py-4 text-gray-500 font-medium">
+                            <x-heroicon-o-check-circle class="w-5 h-5" />
                             No amount due on this job card.
                         </div>
                     @endif

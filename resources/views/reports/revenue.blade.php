@@ -2,12 +2,12 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <h2 class="flex items-center gap-2 font-semibold text-xl text-gray-800 leading-tight">
-                <x-heroicon-o-banknotes class="w-6 h-6 text-primary-600" />
+                <x-heroicon-o-banknotes class="w-6 h-6 text-primary" />
                 Revenue Report
             </h2>
             <a href="{{ route('reports.index') }}" 
-               class="inline-flex items-center text-sm text-gray-600 hover:text-gray-800">
-                <x-heroicon-o-arrow-left class="w-4 h-4 mr-1" />
+               class="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800">
+                <x-heroicon-o-arrow-left class="w-4 h-4" />
                 Back to Reports
             </a>
         </div>
@@ -44,8 +44,8 @@
             <!-- Revenue Breakdown by Source -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="bg-white shadow-sm rounded-xl p-6">
-                    <h3 class="font-semibold text-gray-900 mb-4 flex items-center">
-                        <span class="text-primary-500 mr-2">
+                    <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <span class="text-primary">
                             <x-heroicon-o-wrench-screwdriver class="w-5 h-5" />
                         </span>
                         Job Cards Revenue
@@ -62,8 +62,8 @@
                 </div>
 
                 <div class="bg-white shadow-sm rounded-xl p-6">
-                    <h3 class="font-semibold text-gray-900 mb-4 flex items-center">
-                        <span class="text-green-500 mr-2">
+                    <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <span class="text-green-500">
                             <x-heroicon-o-shopping-cart class="w-5 h-5" />
                         </span>
                         Counter Invoices Revenue
@@ -107,7 +107,7 @@
                                 </td>
                             </tr>
                             @endforeach
-                            <tr class="bg-gray-50 font-semibold">
+                            <tr class="bg-muted font-semibold">
                                 <td class="px-6 py-4">Total (Job Cards)</td>
                                 <td class="px-6 py-4 text-right">{{ config('garage.currency_symbol') }}{{ number_format($jobCardsRevenue, 2) }}</td>
                                 <td class="px-6 py-4 text-right">100%</td>

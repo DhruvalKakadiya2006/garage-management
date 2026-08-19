@@ -2,12 +2,12 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <h2 class="flex items-center gap-2 font-semibold text-xl text-gray-800 leading-tight">
-                <x-heroicon-o-credit-card class="w-6 h-6 text-primary-600" />
+                <x-heroicon-o-credit-card class="w-6 h-6 text-primary" />
                 Payments Report
             </h2>
             <a href="{{ route('reports.index') }}" 
-               class="inline-flex items-center text-sm text-gray-600 hover:text-gray-800">
-                <x-heroicon-o-arrow-left class="w-4 h-4 mr-1" />
+               class="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800">
+                <x-heroicon-o-arrow-left class="w-4 h-4" />
                 Back to Reports
             </a>
         </div>
@@ -49,7 +49,7 @@
                         $modeLabels = ['cash' => 'Cash', 'upi' => 'UPI', 'card' => 'Card', 'bank_transfer' => 'Bank Transfer', 'cheque' => 'Cheque'];
                     @endphp
                     @foreach($paymentsByMode as $mode => $summary)
-                        <div class="text-center p-4 bg-gray-50 rounded-lg">
+                        <div class="text-center p-4 bg-muted rounded-lg">
                             <div class="text-gray-600 mb-1">{{ $modeLabels[$mode] }}</div>
                             <div class="text-xl font-bold text-gray-900">{{ config('garage.currency_symbol') }}{{ number_format($summary['total'], 2) }}</div>
                             <div class="text-xs text-gray-500 mt-1">{{ $summary['count'] }} payment(s)</div>
@@ -101,7 +101,7 @@
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             @if ($payable)
-                                                <a href="{{ $docRoute }}" class="font-medium text-primary-600 hover:text-primary-800">
+                                                <a href="{{ $docRoute }}" class="font-medium text-primary hover:text-primary-700">
                                                     {{ $docNo }}
                                                 </a>
                                             @else

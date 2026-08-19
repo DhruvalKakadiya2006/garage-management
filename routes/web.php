@@ -15,6 +15,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\ImportExportController;
 
 Route::get('/', function () {
     return redirect(auth()->check() ? route('dashboard') : route('login'));
@@ -87,6 +88,16 @@ Route::middleware(['auth'])->group(function () {
     Route::get('reports/inventory', [ReportController::class, 'inventory'])->name('reports.inventory');
     Route::get('reports/payments', [ReportController::class, 'payments'])->name('reports.payments');
     Route::get('reports/customers', [ReportController::class, 'customers'])->name('reports.customers');
+
+    // Import/Export foundation
+    Route::get('import-export', [ImportExportController::class, 'index'])->name('import-export.index');
+    Route::get('import-export/guide', [ImportExportController::class, 'guide'])->name('import-export.guide');
+    Route::post('import-export/preview', [ImportExportController::class, 'preview'])->name('import-export.preview');
+    Route::get('import-export/preview/{token}', [ImportExportController::class, 'showPreview'])->name('import-export.preview.show');
+    Route::post('import-export/confirm/{token}', [ImportExportController::class, 'confirm'])->name('import-export.confirm');
+    Route::get('import-export/export', [ImportExportController::class, 'export'])->name('import-export.export');
+    Route::get('import-export/template', [ImportExportController::class, 'template'])->name('import-export.template');
+    Route::get('import-export/error-report/{token}', [ImportExportController::class, 'errorReport'])->name('import-export.error-report');
 });
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

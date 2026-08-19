@@ -10,7 +10,7 @@ class Employee extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'role', 'mobile', 'specialization', 'active', 'join_date',
+        'name', 'role', 'mobile', 'specialization', 'active', 'join_date', 'external_ref',
     ];
 
     protected $casts = [

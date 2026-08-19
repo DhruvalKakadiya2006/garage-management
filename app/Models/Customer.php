@@ -11,14 +11,14 @@ class Customer extends Model
 
     protected $fillable = [
         'first_name', 'last_name', 'surname', 'company_name', 'display_name', 'mobile', 'alt_mobile', 'email',
-        'address', 'city', 'gstin', 'customer_type',
+        'address', 'city', 'gstin', 'customer_type', 'external_ref',
     ];
 
     protected static function boot()
     {
         parent::boot();
 
-        static::creating(function ($customer) {
+        static::saving(function ($customer) {
             if (empty($customer->display_name)) {
                 $customer->display_name = trim(preg_replace('/\s+/', ' ',
                     "{$customer->first_name} {$customer->last_name} {$customer->surname}"
