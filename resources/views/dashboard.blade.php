@@ -83,7 +83,7 @@
                             <x-heroicon-o-cube class="w-5 h-5 text-primary" />
                             Low Stock Alert
                         </h3>
-                        <a href="{{ route('spare-parts.index', ['low_stock' => 1]) }}" title="View low stock parts"
+                        <a href="{{ route('inventory.index', ['tab' => 'parts', 'low_stock' => 1]) }}" title="View low stock parts"
                            class="text-gray-400 hover:text-primary">
                             <x-heroicon-o-arrow-top-right-on-square class="w-4 h-4" />
                         </a>
@@ -123,10 +123,6 @@
                         Quick Actions
                     </h3>
                     <div class="space-y-3">
-                        <x-button :href="route('job-cards.create')" class="w-full">
-                            <x-heroicon-o-plus class="w-4 h-4" />
-                            New Job Card
-                        </x-button>
                         <x-button variant="success" :href="route('counter-invoices.create')" class="w-full">
                             <x-heroicon-o-plus class="w-4 h-4" />
                             New Counter Invoice
@@ -149,7 +145,7 @@
                     </div>
 
                     @if ($recentJobCards->isEmpty())
-                        <p class="text-sm text-gray-500">No job cards yet. Create one from Quick Actions.</p>
+                        <p class="text-sm text-gray-500">No job cards yet. Create one from a customer's page.</p>
                     @else
                         <ul class="divide-y divide-border">
                             @foreach ($recentJobCards as $jc)

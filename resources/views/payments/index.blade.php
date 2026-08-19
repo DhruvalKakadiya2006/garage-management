@@ -6,8 +6,28 @@
         </h2>
     </x-slot>
 
+    @php
+        $paymentsData = $payments->getCollection()->map(function ($p) {
+            $payable = $p->payable;
+            $label = $payable
+                ? ($payable instanceof \App\Models\JobCard ? $payable->job_card_no : $payable->invoice_no)
+                  .' · '.number_format((float) $p->amount, 2)
+                : 'Orphaned payment';
+            $viewUrl = $payable
+                ? route($payable instanceof \App\Models\JobCard ? 'job-cards.show' : 'counter-invoices.show', $payable->id)
+                : null;
+
+            return [
+                'id' => (string) $p->id,
+                'label' => $label,
+                'view_url' => $viewUrl,
+            ];
+        })->values();
+    @endphp
+
     <div class="py-6">
-        <div class="max-w-full sm:px-6 lg:px-8">
+        <div class="max-w-full sm:px-6 lg:px-8"
+             x-data="{ ...tableSelection({ bulkEndpoint: '{{ route('payments.bulk-delete') }}' }), ...paymentList() }">
 
             @if (session('success'))
                 <div class="mb-4 bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-md">
@@ -22,6 +42,30 @@
                 </p>
             </div>
 
+            <x-table-selection-bar
+                :bulk-endpoint="route('payments.bulk-delete')"
+                bulk-action-label="Void"
+                bulk-modal-title="Void selected payment(s)?"
+                bulk-modal-confirm-label="Void"
+                bulk-confirm-message="Voided payments are permanently removed; the linked document's outstanding balance updates automatically."
+            >
+                <x-slot name="single">
+                    <span class="text-sm font-medium text-primary-800">
+                        Selected:
+                        <span x-text="selectedPayment ? selectedPayment.label : ''" class="font-semibold"></span>
+                    </span>
+                    <x-button variant="secondary" x-bind:href="base + '/' + singleId + '/edit'">
+                        <x-heroicon-o-pencil-square class="w-4 h-4" />
+                        Edit
+                    </x-button>
+                    <x-button variant="secondary" x-cloak x-show="selectedPayment && selectedPayment.view_url"
+                              x-bind:href="selectedPayment.view_url">
+                        <x-heroicon-o-document-text class="w-4 h-4" />
+                        View Document
+                    </x-button>
+                </x-slot>
+            </x-table-selection-bar>
+
             <x-data-table
                 :empty="$payments->isEmpty()"
                 emptyMessage="No payments recorded yet."
@@ -30,6 +74,7 @@
             >
                 <x-slot name="header">
                     <tr>
+                        <th class="w-10 px-6 py-3 text-left"><x-table-select-all /></th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Payment Date</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Document Type</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Document No</th>
@@ -38,7 +83,6 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Reference</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Amount</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Notes</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
                     </tr>
                 </x-slot>
 
@@ -47,6 +91,9 @@
                         $payable = $payment->payable;
                     @endphp
                     <tr class="hover:bg-muted/50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <x-table-checkbox :id="$payment->id" />
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {{ $payment->payment_date->format('d M Y') }}
                         </td>
@@ -99,29 +146,6 @@
                         <td class="px-6 py-4 text-sm text-gray-500">
                             {{ $payment->notes ? \Illuminate\Support\Str::limit($payment->notes, 30) : '-' }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                            <div class="flex items-center justify-end gap-3">
-                                <a href="{{ route('payments.edit', $payment) }}"
-                                   class="text-primary hover:text-primary-700">
-                                    Edit
-                                </a>
-                                @if ($payable)
-                                    <a href="{{ route($payable instanceof \App\Models\JobCard ? 'job-cards.show' : 'counter-invoices.show', $payable->id) }}"
-                                       class="text-primary hover:text-primary-700">
-                                        View Document
-                                    </a>
-                                @endif
-                                <form action="{{ route('payments.destroy', $payment) }}" method="POST"
-                                      onsubmit="return confirm('Void (delete) this payment record? The linked document and its outstanding balance will be updated.');"
-                                      class="inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-red-600 hover:text-red-800">
-                                        Void
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
                     </tr>
                 @endforeach
             </x-data-table>
@@ -163,4 +187,20 @@
             @endif
         </div>
     </div>
+
+    <script>
+        function paymentList() {
+            const payments = @json($paymentsData);
+            const base = '{{ url('payments') }}';
+
+            return {
+                base: base,
+                payments: payments,
+
+                get selectedPayment() {
+                    return this.payments.find(p => p.id === this.singleId) || null;
+                },
+            };
+        }
+    </script>
 </x-app-layout>

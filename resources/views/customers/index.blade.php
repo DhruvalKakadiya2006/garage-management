@@ -19,29 +19,17 @@
                         </x-button>
                     </x-slot>
                     <x-slot name="content">
-                        <x-dropdown-link :href="route('import-export.export', ['entity' => 'customers', 'format' => 'csv'])">
+                        <x-dropdown-link :href="route('import-export.export', ['entity' => 'customers'])">
                             <span class="inline-flex items-center gap-2">
                                 <x-heroicon-o-document-text class="w-4 h-4" />
                                 Export CSV
                             </span>
                         </x-dropdown-link>
-                        <x-dropdown-link :href="route('import-export.export', ['entity' => 'customers', 'format' => 'xlsx'])">
-                            <span class="inline-flex items-center gap-2">
-                                <x-heroicon-o-document-text class="w-4 h-4" />
-                                Export Excel
-                            </span>
-                        </x-dropdown-link>
                         <div class="my-1 border-t border-border"></div>
-                        <x-dropdown-link :href="route('import-export.template', ['entity' => 'customers', 'format' => 'csv'])">
+                        <x-dropdown-link :href="route('import-export.template', ['entity' => 'customers'])">
                             <span class="inline-flex items-center gap-2">
                                 <x-heroicon-o-clipboard-document-list class="w-4 h-4" />
                                 Download Import Template (CSV)
-                            </span>
-                        </x-dropdown-link>
-                        <x-dropdown-link :href="route('import-export.template', ['entity' => 'customers', 'format' => 'xlsx'])">
-                            <span class="inline-flex items-center gap-2">
-                                <x-heroicon-o-clipboard-document-list class="w-4 h-4" />
-                                Download Import Template (Excel)
                             </span>
                         </x-dropdown-link>
                     </x-slot>
@@ -70,7 +58,8 @@
     @endphp
 
     <div class="py-6">
-        <div class="max-w-full sm:px-6 lg:px-8" x-data="customerList()">
+        <div class="max-w-full sm:px-6 lg:px-8"
+             x-data="{ ...tableSelection({ bulkEndpoint: '{{ route('customers.bulk-delete') }}' }), ...customerList() }">
 
             @if (session('success'))
                 <div class="mb-4 bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-md">
@@ -85,35 +74,25 @@
             @endif
 
             {{-- Contextual action bar --}}
-            <div x-show="selectedId" x-transition.opacity.duration.150
-                 class="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-primary-200 bg-primary-50 px-4 py-3 shadow-sm">
-                <span class="text-sm font-medium text-primary-800 mr-auto">
-                    <span class="text-primary">Selected:</span>
-                    <span x-text="selectedCustomer ? selectedCustomer.display_name : ''" class="font-semibold"></span>
-                </span>
-                <x-button type="button" @click="createJobCard()">
-                    <x-heroicon-o-wrench-screwdriver class="w-4 h-4" />
-                    Create Job Card
-                </x-button>
-                <x-button variant="secondary" type="button" @click="addVehicle()">
-                    <x-heroicon-o-plus class="w-4 h-4" />
-                    Add Vehicle
-                </x-button>
-                <x-button variant="secondary" type="button" @click="editSelected()">
-                    <x-heroicon-o-pencil-square class="w-4 h-4" />
-                    Edit
-                </x-button>
-                <form :action="'{{ url('customers') }}' + '/' + selectedId" method="POST"
-                      onsubmit="return confirm('Delete this customer? Related vehicles and documents will be protected.');"
-                      class="inline">
-                    @csrf
-                    @method('DELETE')
-                    <x-button variant="danger" type="submit">
-                        <x-heroicon-o-trash class="w-4 h-4" />
-                        Delete
+            <x-table-selection-bar
+                :bulk-endpoint="route('customers.bulk-delete')"
+                bulkConfirmMessage="Customers with vehicles or linked documents (job cards, counter invoices) will be skipped."
+            >
+                <x-slot name="single">
+                    <x-button type="button" @click="createJobCard()">
+                        <x-heroicon-o-wrench-screwdriver class="w-4 h-4" />
+                        Create Job Card
                     </x-button>
-                </form>
-            </div>
+                    <x-button variant="secondary" type="button" @click="addVehicle()">
+                        <x-heroicon-o-plus class="w-4 h-4" />
+                        Add Vehicle
+                    </x-button>
+                    <x-button variant="secondary" type="button" @click="editSelected()">
+                        <x-heroicon-o-pencil-square class="w-4 h-4" />
+                        Edit
+                    </x-button>
+                </x-slot>
+            </x-table-selection-bar>
 
             <x-data-table
                 :empty="$customers->isEmpty()"
@@ -125,7 +104,7 @@
             >
                 <x-slot name="header">
                     <tr>
-                        <th class="w-10 px-6 py-3 text-left"></th>
+                        <th class="w-10 px-6 py-3 text-left"><x-table-select-all /></th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Display Name</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Mobile</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Outstanding</th>
@@ -137,8 +116,7 @@
                 @foreach ($customers as $customer)
                     <tr class="group hover:bg-muted/50">
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <input type="radio" name="customer" value="{{ $customer->id }}" x-model="selectedId"
-                                   class="h-4 w-4 rounded-full border-input text-primary focus:ring-ring cursor-pointer">
+                            <x-table-checkbox :id="$customer->id" />
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <a href="{{ route('customers.show', $customer) }}"
@@ -233,12 +211,11 @@
             const jobCardsCreate = '{{ route('job-cards.create') }}';
 
             return {
-                selectedId: '',
                 expandedId: '',
                 customersData: customersData,
 
                 get selectedCustomer() {
-                    return this.customersData.find(c => c.id === this.selectedId) || null;
+                    return this.customersData.find(c => c.id === this.singleId) || null;
                 },
 
                 toggleExpand(id) {
@@ -259,18 +236,18 @@
                 },
 
                 goToJobCard(vehicleId) {
-                    window.location.href = jobCardsCreate + '?customer_id=' + this.selectedId + '&vehicle_id=' + vehicleId;
+                    window.location.href = jobCardsCreate + '?customer_id=' + this.singleId + '&vehicle_id=' + vehicleId;
                 },
 
                 addVehicle() {
-                    if (this.selectedId) {
-                        window.location.href = vehiclesBase + '/create?customer_id=' + this.selectedId;
+                    if (this.singleId) {
+                        window.location.href = vehiclesBase + '/create?customer_id=' + this.singleId;
                     }
                 },
 
                 editSelected() {
-                    if (this.selectedId) {
-                        window.location.href = customersBase + '/' + this.selectedId + '/edit';
+                    if (this.singleId) {
+                        window.location.href = customersBase + '/' + this.singleId + '/edit';
                     }
                 },
             };

@@ -8,9 +8,7 @@ use App\ImportExport\Exceptions\ImportException;
  * Picks the right reader for an uploaded file based on its extension and,
  * best-effort, its declared MIME type.
  *
- * CSV is currently the only registered format. The architecture is ready for
- * .xlsx: add the extension to config, register an Xlsx reader (PhpSpreadsheet)
- * here, and the rest of the pipeline is format-agnostic.
+ * CSV is the only supported format; anything else is rejected up front.
  */
 class FileFormatDetector
 {

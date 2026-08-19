@@ -10,10 +10,13 @@
     </x-slot>
 
     <div class="py-6" x-data="{
-        tab: window.location.hash === '#labours' ? 'labours' : 'parts',
+        tab: {{ Js::from($tab) }},
         setTab(tab) {
             this.tab = tab;
-            history.replaceState(null, '', '#' + tab);
+            const url = new URL(window.location.href);
+            url.searchParams.set('tab', tab);
+            url.hash = '';
+            history.replaceState(null, '', url.toString());
         },
     }">
         <div class="max-w-full sm:px-6 lg:px-8 space-y-4">
@@ -41,13 +44,13 @@
                         {{ $spareParts->total() }}
                     </span>
                 </button>
-                <button type="button" @click="setTab('labours')"
+                <button type="button" @click="setTab('labour')"
                         class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors duration-150"
-                        :class="tab === 'labours' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-border'">
+                        :class="tab === 'labour' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-border'">
                     <x-heroicon-o-clipboard-document-list class="w-4 h-4" />
                     Labour Services
                     <span class="text-xs px-1.5 py-0.5 rounded-full"
-                          :class="tab === 'labours' ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground'">
+                          :class="tab === 'labour' ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground'">
                         {{ $labourMasters->total() }}
                     </span>
                 </button>
@@ -57,7 +60,7 @@
                 @include('spare_parts._table', ['indexRoute' => 'inventory.index'])
             </div>
 
-            <div x-show="tab === 'labours'" x-cloak>
+            <div x-show="tab === 'labour'" x-cloak>
                 @include('labour_masters._table')
             </div>
 

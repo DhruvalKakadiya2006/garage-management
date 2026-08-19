@@ -177,6 +177,160 @@ document.addEventListener('alpine:init', () => {
             }
         },
     }));
+
+    /**
+     * Shared multi-select table state for the data-table pattern.
+     *
+     * Modules wrap their <x-data-table> (plus <x-table-selection-bar> and the
+     * shared checkboxes) in this scope:
+     *
+     *     x-data="tableSelection({ bulkEndpoint: '{{ route('customers.bulk-delete') }}' })"
+     *
+     * or merge it with their own page state:
+     *
+     *     x-data="{ ...tableSelection({...}), ...moduleList() }"
+     *
+     * Selection is an array of record id strings that may span pages. The
+     * visible rows on the current page (`pageIds`, read from the row
+     * checkboxes' `data-row-id`) drive the header select-all / indeterminate
+     * checkbox.
+     *
+     * `bulkEndpoint` is optional; without it the selection bar renders no
+     * Delete button. When present, one request deletes every selected record
+     * (ids[]), each deletion guarded per-record on the server — protected
+     * records are skipped, never aborting the batch. The shared response
+     * shape is surfaced as a dismissible result banner.
+     */
+    const tableSelection = (config = {}) => ({
+        config: config,
+        bulkEndpoint: config.bulkEndpoint || '',
+        rowAttr: config.rowAttr || 'data-row-id',
+        modalName: config.modalName || 'bulk-delete-confirm',
+        selected: [],
+        busy: false,
+        result: null,
+
+        init() {
+            // A bulk delete just ran on the previous page load; surface its
+            // result banner after the reload that followed the deletion.
+            const raw = sessionStorage.getItem('gms.bulkResult');
+            if (raw) {
+                sessionStorage.removeItem('gms.bulkResult');
+                try {
+                    const data = JSON.parse(raw);
+                    this.result = {
+                        type: data.skipped_count > 0 ? 'warning' : 'success',
+                        message: data.message || 'Records deleted.',
+                    };
+                } catch (e) {
+                    this.result = null;
+                }
+            }
+        },
+
+        get pageIds() {
+            return Array.from(this.$root.querySelectorAll('[' + this.rowAttr + ']'))
+                .map((el) => el.getAttribute(this.rowAttr));
+        },
+
+        get pageIdSet() {
+            return new Set(this.pageIds);
+        },
+
+        get selectedCount() {
+            return this.selected.length;
+        },
+
+        get singleId() {
+            return this.selectedCount === 1 ? this.selected[0] : null;
+        },
+
+        get allSelected() {
+            return this.pageIds.length > 0
+                && this.pageIds.every((id) => this.selected.includes(id));
+        },
+
+        get someSelected() {
+            return this.pageIds.some((id) => this.selected.includes(id));
+        },
+
+        get resultMessage() {
+            return this.result ? this.result.message : '';
+        },
+
+        get resultType() {
+            return this.result ? this.result.type : 'success';
+        },
+
+        isSelected(id) {
+            return this.selected.includes(String(id));
+        },
+
+        toggleRow(id) {
+            id = String(id);
+            this.selected = this.selected.includes(id)
+                ? this.selected.filter((x) => x !== id)
+                : [...this.selected, id];
+        },
+
+        toggleAll() {
+            const page = this.pageIdSet;
+            if (this.allSelected) {
+                this.selected = this.selected.filter((id) => !page.has(id));
+            } else {
+                const merged = new Set(this.selected);
+                page.forEach((id) => merged.add(id));
+                this.selected = Array.from(merged);
+            }
+        },
+
+        clearSelection() {
+            this.selected = [];
+        },
+
+        dismissResult() {
+            this.result = null;
+        },
+
+        async bulkDelete() {
+            if (!this.bulkEndpoint || this.selected.length === 0 || this.busy) return;
+            this.busy = true;
+            this.$dispatch('close-modal', this.modalName);
+            try {
+                const form = new FormData();
+                this.selected.forEach((id) => form.append('ids[]', id));
+
+                const meta = document.querySelector('meta[name="csrf-token"]');
+                const res = await fetch(this.bulkEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': meta ? meta.getAttribute('content') : '',
+                    },
+                    body: form,
+                });
+                const data = await res.json().catch(() => ({}));
+
+                if (!res.ok) {
+                    this.result = { type: 'error', message: data.message || 'Bulk delete failed.' };
+                    return;
+                }
+
+                // Deletions happened server-side; reload the list and show the
+                // result banner carried across the reload via sessionStorage.
+                sessionStorage.setItem('gms.bulkResult', JSON.stringify(data));
+                window.location.reload();
+            } catch (e) {
+                this.result = { type: 'error', message: 'Bulk delete failed. Please try again.' };
+            } finally {
+                this.busy = false;
+            }
+        },
+    });
+
+    Alpine.data('tableSelection', tableSelection);
+    window.tableSelection = tableSelection;
 });
 
 Alpine.start();

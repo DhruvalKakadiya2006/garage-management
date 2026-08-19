@@ -2,12 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\BulkDeletesRecords;
 use App\Models\VehicleBrand;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 
 class VehicleBrandController extends Controller
 {
+    use BulkDeletesRecords;
+
+    protected function bulkDeleteModel(): string
+    {
+        return VehicleBrand::class;
+    }
+
     /**
      * Show the Vehicle Catalog: brands as expandable rows with their models.
      */

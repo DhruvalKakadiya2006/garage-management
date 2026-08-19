@@ -116,29 +116,17 @@
                                     </x-button>
                                 </x-slot>
                                 <x-slot name="content">
-                                    <x-dropdown-link :href="route('import-export.export', ['entity' => $entity['key'], 'format' => 'csv'])">
+                                    <x-dropdown-link :href="route('import-export.export', ['entity' => $entity['key']])">
                                         <span class="inline-flex items-center gap-2">
                                             <x-heroicon-o-document-text class="w-4 h-4" />
                                             Export CSV
                                         </span>
                                     </x-dropdown-link>
-                                    <x-dropdown-link :href="route('import-export.export', ['entity' => $entity['key'], 'format' => 'xlsx'])">
-                                        <span class="inline-flex items-center gap-2">
-                                            <x-heroicon-o-document-text class="w-4 h-4" />
-                                            Export Excel
-                                        </span>
-                                    </x-dropdown-link>
                                     <div class="my-1 border-t border-border"></div>
-                                    <x-dropdown-link :href="route('import-export.template', ['entity' => $entity['key'], 'format' => 'csv'])">
+                                    <x-dropdown-link :href="route('import-export.template', ['entity' => $entity['key']])">
                                         <span class="inline-flex items-center gap-2">
                                             <x-heroicon-o-clipboard-document-list class="w-4 h-4" />
                                             Download Import Template (CSV)
-                                        </span>
-                                    </x-dropdown-link>
-                                    <x-dropdown-link :href="route('import-export.template', ['entity' => $entity['key'], 'format' => 'xlsx'])">
-                                        <span class="inline-flex items-center gap-2">
-                                            <x-heroicon-o-clipboard-document-list class="w-4 h-4" />
-                                            Download Import Template (Excel)
                                         </span>
                                     </x-dropdown-link>
                                 </x-slot>

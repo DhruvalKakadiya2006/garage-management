@@ -222,7 +222,7 @@ class MasterDeletionRestrictTest extends TestCase
 
         $this->actingAs($user)
             ->delete(route('spare-parts.destroy', $part))
-            ->assertRedirect(route('spare-parts.index'))
+            ->assertRedirect(route('inventory.index', ['tab' => 'parts']))
             ->assertSessionHas('success', 'Spare part deleted.');
 
         $this->assertDatabaseMissing('spare_parts', ['id' => $part->id]);
@@ -235,7 +235,7 @@ class MasterDeletionRestrictTest extends TestCase
 
         $this->actingAs($user)
             ->delete(route('labour-masters.destroy', $labour))
-            ->assertRedirect(route('labour-masters.index'))
+            ->assertRedirect(route('inventory.index', ['tab' => 'labour']))
             ->assertSessionHas('success', 'Labour service deleted.');
 
         $this->assertDatabaseMissing('labour_masters', ['id' => $labour->id]);

@@ -103,20 +103,16 @@ class InventoryPageTest extends TestCase
             ->assertSee($labour->service_name);
     }
 
-    public function test_standalone_spare_parts_and_labour_master_pages_still_render()
+    public function test_standalone_spare_parts_and_labour_master_pages_redirect_to_inventory_tabs()
     {
         $user = $this->makeUser();
-        $part = $this->makePart('BRK-01', 'Brake Shoe', 10);
-        $labour = $this->makeLabour('General Service');
 
         $this->actingAs($user)
             ->get(route('spare-parts.index'))
-            ->assertOk()
-            ->assertSee($part->part_name);
+            ->assertRedirect(route('inventory.index', ['tab' => 'parts']));
 
         $this->actingAs($user)
             ->get(route('labour-masters.index'))
-            ->assertOk()
-            ->assertSee($labour->service_name);
+            ->assertRedirect(route('inventory.index', ['tab' => 'labour']));
     }
 }

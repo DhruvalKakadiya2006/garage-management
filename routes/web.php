@@ -31,6 +31,7 @@ Route::middleware(['auth'])->group(function () {
     // "search" segment is not captured by the {customer} wildcard.
     Route::get('customers/search', [CustomerController::class, 'search'])->name('customers.search');
     Route::get('customers/{customer}/vehicles', [CustomerController::class, 'vehicles'])->name('customers.vehicles');
+    Route::post('customers/bulk-delete', [CustomerController::class, 'bulkDestroy'])->name('customers.bulk-delete');
 
     Route::resource('customers', CustomerController::class);
     Route::get('customers/{customer}/statement', [CustomerController::class, 'statement'])->name('customers.statement');
@@ -44,6 +45,8 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('vehicles/{vehicle}', [CustomerVehicleController::class, 'destroy'])->name('vehicles.destroy');
 
     // Vehicle Catalog: master data of brands and models.
+    Route::post('vehicle-brands/bulk-delete', [VehicleBrandController::class, 'bulkDestroy'])->name('vehicle-brands.bulk-delete');
+    Route::post('vehicle-models/bulk-delete', [VehicleModelController::class, 'bulkDestroy'])->name('vehicle-models.bulk-delete');
     Route::get('vehicle-catalog', [VehicleBrandController::class, 'index'])->name('vehicle-catalog.index');
     Route::get('vehicle-brands/create', [VehicleBrandController::class, 'create'])->name('vehicle-brands.create');
     Route::post('vehicle-brands', [VehicleBrandController::class, 'store'])->name('vehicle-brands.store');
@@ -56,12 +59,16 @@ Route::middleware(['auth'])->group(function () {
     Route::put('vehicle-models/{vehicleModel}', [VehicleModelController::class, 'update'])->name('vehicle-models.update');
     Route::delete('vehicle-models/{vehicleModel}', [VehicleModelController::class, 'destroy'])->name('vehicle-models.destroy');
 
+    Route::post('employees/bulk-delete', [EmployeeController::class, 'bulkDestroy'])->name('employees.bulk-delete');
     Route::resource('employees', EmployeeController::class);
+    Route::post('labour-masters/bulk-delete', [LabourMasterController::class, 'bulkDestroy'])->name('labour-masters.bulk-delete');
     Route::resource('labour-masters', LabourMasterController::class);
     Route::get('spare-parts/search', [SparePartController::class, 'search'])->name('spare-parts.search');
+    Route::post('spare-parts/bulk-delete', [SparePartController::class, 'bulkDestroy'])->name('spare-parts.bulk-delete');
     Route::resource('spare-parts', SparePartController::class);
     Route::get('inventory', [InventoryController::class, 'index'])->name('inventory.index');
     Route::get('job-cards', [JobCardController::class, 'index'])->name('job-cards.index');
+    Route::post('job-cards/bulk-delete', [JobCardController::class, 'bulkDestroy'])->name('job-cards.bulk-delete');
     Route::get('job-cards/create', [JobCardController::class, 'create'])->name('job-cards.create');
     Route::post('job-cards', [JobCardController::class, 'store'])->name('job-cards.store');
     Route::get('job-cards/{jobCard}/assign', [JobCardController::class, 'assign'])->name('job-cards.assign');
@@ -72,10 +79,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('job-cards/{jobCard}/edit', [JobCardController::class, 'edit'])->name('job-cards.edit');
     Route::put('job-cards/{jobCard}', [JobCardController::class, 'update'])->name('job-cards.update');
     Route::delete('job-cards/{jobCard}', [JobCardController::class, 'destroy'])->name('job-cards.destroy');
+    Route::post('counter-invoices/bulk-delete', [CounterInvoiceController::class, 'bulkDestroy'])->name('counter-invoices.bulk-delete');
     Route::resource('counter-invoices', CounterInvoiceController::class);
     
     // Payments routes
     Route::get('payments', [PaymentController::class, 'index'])->name('payments.index');
+    Route::post('payments/bulk-delete', [PaymentController::class, 'bulkDestroy'])->name('payments.bulk-delete');
     Route::post('payments', [PaymentController::class, 'store'])->name('payments.store');
     Route::get('payments/{payment}/edit', [PaymentController::class, 'edit'])->name('payments.edit');
     Route::put('payments/{payment}', [PaymentController::class, 'update'])->name('payments.update');

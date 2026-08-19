@@ -41,7 +41,7 @@
                     </div>
 
                     <div class="flex justify-end gap-3 pt-2">
-                        <x-button variant="secondary" :href="route('spare-parts.index')">
+                        <x-button variant="secondary" :href="route('inventory.index', ['tab' => 'parts'])">
                             Cancel
                         </x-button>
                         <x-button type="submit">

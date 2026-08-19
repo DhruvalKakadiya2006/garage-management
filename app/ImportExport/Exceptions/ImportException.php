@@ -12,10 +12,7 @@ class ImportException extends RuntimeException
 {
     public static function unsupportedFormat(string $extension): self
     {
-        return new self(
-            "Unsupported file format '{$extension}'. Only CSV is currently supported — "
-            .'Excel (.xlsx) requires enabling the PHP zip extension and adding a spreadsheet reader.'
-        );
+        return new self("Unsupported file format '{$extension}'. Only CSV files are supported.");
     }
 
     public static function unsupportedMime(string $mime): self

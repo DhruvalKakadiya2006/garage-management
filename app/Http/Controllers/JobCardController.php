@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\BulkDeletesRecords;
 use App\Models\Customer;
 use App\Models\Employee;
 use App\Models\JobCard;
@@ -21,6 +22,32 @@ use Illuminate\Support\Facades\Validator;
 
 class JobCardController extends Controller
 {
+    use BulkDeletesRecords;
+
+    protected function bulkDeleteModel(): string
+    {
+        return JobCard::class;
+    }
+
+    /**
+     * Job Cards cannot be plain-deleted: the job_card_parts FK is restrict, so
+     * part rows must be deleted one-by-one first (which returns stock to
+     * inventory via the JobCardPart::deleting boot event) before the parent.
+     * The JobCard::deleting boot event cleans up related payments, and the
+     * labours / complaints rows cascade at the DB level.
+     */
+    protected function bulkDeleteDeleter(): ?callable
+    {
+        return function (JobCard $jobCard) {
+            DB::transaction(function () use ($jobCard) {
+                foreach ($jobCard->parts as $part) {
+                    $part->delete();
+                }
+                $jobCard->delete();
+            });
+        };
+    }
+
     public function index(Request $request)
     {
         // Reject malformed / one-sided date filters with a friendly redirect

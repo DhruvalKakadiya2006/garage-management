@@ -2,23 +2,29 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\BulkDeletesRecords;
 use App\Models\SparePart;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 
 class SparePartController extends Controller
 {
+    use BulkDeletesRecords;
+
+    protected function bulkDeleteModel(): string
+    {
+        return SparePart::class;
+    }
+
     public function index(Request $request)
     {
-        $lowStock = $request->boolean('low_stock');
+        $params = ['tab' => 'parts'];
 
-        $spareParts = SparePart::when($lowStock, function ($query) {
-            $query->whereColumn('current_stock_qty', '<=', 'reorder_level');
-        })
-            ->latest()
-            ->paginate(15);
+        if ($request->boolean('low_stock')) {
+            $params['low_stock'] = 1;
+        }
 
-        return view('spare_parts.index', compact('spareParts', 'lowStock'));
+        return redirect()->route('inventory.index', $params);
     }
 
     /**
@@ -84,7 +90,7 @@ class SparePartController extends Controller
 
         SparePart::create($validated);
 
-        return redirect()->route('spare-parts.index')->with('success', 'Spare part added successfully.');
+        return redirect()->route('inventory.index', ['tab' => 'parts'])->with('success', 'Spare part added successfully.');
     }
 
     public function edit(SparePart $sparePart)
@@ -116,7 +122,7 @@ class SparePartController extends Controller
 
         $sparePart->update($validated);
 
-        return redirect()->route('spare-parts.index')->with('success', 'Spare part updated successfully.');
+        return redirect()->route('inventory.index', ['tab' => 'parts'])->with('success', 'Spare part updated successfully.');
     }
 
     public function destroy(SparePart $sparePart)
@@ -124,7 +130,7 @@ class SparePartController extends Controller
         try {
             $sparePart->delete();
 
-            return redirect()->route('spare-parts.index')->with('success', 'Spare part deleted.');
+            return redirect()->route('inventory.index', ['tab' => 'parts'])->with('success', 'Spare part deleted.');
         } catch (QueryException $e) {
             return back()->with('error', 'Cannot delete — this part has existing job cards or invoices linked to it.');
         }

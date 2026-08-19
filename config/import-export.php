@@ -41,12 +41,7 @@ return [
     | Allowed file formats
     |--------------------------------------------------------------------------
     |
-    | CSV is the only format currently enabled. Excel (.xlsx) support is
-    | designed into the reader architecture (FileFormatDetector +
-    | SpreadsheetReaderInterface) but requires PHP's ext-zip extension and a
-    | spreadsheet library (e.g. phpoffice/phpspreadsheet), both of which are
-    | not currently available in this environment. Once available, add the
-    | format here and register an Xlsx reader.
+    | CSV is the only supported format for imports and exports.
     |
     */
 

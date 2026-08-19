@@ -13,11 +13,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * Both use the exact same column list the importer understands
  * (definition.exportColumns() must equal the import columns' headers) so a
  * file the app exports is always directly re-importable without manual
- * column editing.
- *
- * Excel (.xlsx) is intentionally not generated here yet: it requires PHP's
- * zip extension and a spreadsheet library. The CSV writer is the single source
- * of truth for headers and row values.
+ * column editing. CSV is the only supported format.
  */
 class ExportService
 {

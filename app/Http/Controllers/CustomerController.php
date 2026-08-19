@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\BulkDeletesRecords;
 use App\Models\CounterInvoice;
 use App\Models\Customer;
 use App\Models\JobCard;
@@ -15,6 +16,13 @@ use Illuminate\Support\Str;
 
 class CustomerController extends Controller
 {
+    use BulkDeletesRecords;
+
+    protected function bulkDeleteModel(): string
+    {
+        return Customer::class;
+    }
+
     public function index()
     {
         // Full-collection loads (chipping every job card / invoice row into

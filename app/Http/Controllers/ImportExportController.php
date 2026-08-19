@@ -19,8 +19,8 @@ use Illuminate\Support\Str;
  *  - preview        POST upload → stores file + session, redirects to preview
  *  - preview/{token} dry-run report (safe to refresh; writes nothing)
  *  - confirm/{token} POST confirm → applies safe rows in a transaction
- *  - export         CSV download (Excel is a documented stub for now)
- *  - template       CSV import template (Excel is a documented stub for now)
+ *  - export         CSV download
+ *  - template       CSV import template
  *  - error-report/{token} downloadable row-level issue list
  */
 class ImportExportController extends Controller
@@ -121,18 +121,9 @@ class ImportExportController extends Controller
     public function export(Request $request)
     {
         $entity = (string) $request->query('entity', '');
-        $format = strtolower((string) $request->query('format', 'csv'));
 
         if (! $this->registry->has($entity)) {
             abort(404);
-        }
-
-        if ($format === 'xlsx') {
-            return back()->with('error', 'Excel export requires enabling the PHP zip extension and adding a spreadsheet reader. CSV is fully supported.');
-        }
-
-        if ($format !== 'csv') {
-            abort(422, 'Unsupported export format.');
         }
 
         return $this->exportService->exportCsv($entity, $request->query());
@@ -141,18 +132,9 @@ class ImportExportController extends Controller
     public function template(Request $request)
     {
         $entity = (string) $request->query('entity', '');
-        $format = strtolower((string) $request->query('format', 'csv'));
 
         if (! $this->registry->has($entity)) {
             abort(404);
-        }
-
-        if ($format === 'xlsx') {
-            return back()->with('error', 'Excel template requires enabling the PHP zip extension and adding a spreadsheet reader. CSV is fully supported.');
-        }
-
-        if ($format !== 'csv') {
-            abort(422, 'Unsupported template format.');
         }
 
         return $this->exportService->templateCsv($entity);

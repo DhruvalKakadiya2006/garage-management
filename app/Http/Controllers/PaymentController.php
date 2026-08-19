@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\BulkDeletesRecords;
 use App\Models\CounterInvoice;
 use App\Models\JobCard;
 use App\Models\Payment;
@@ -11,6 +12,13 @@ use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
+    use BulkDeletesRecords;
+
+    protected function bulkDeleteModel(): string
+    {
+        return Payment::class;
+    }
+
     /**
      * Display a listing of all payments (read-only view).
      */

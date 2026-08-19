@@ -10,6 +10,12 @@ class InventoryController extends Controller
 {
     public function index(Request $request)
     {
+        $tab = $request->query('tab', 'parts');
+
+        if (! in_array($tab, ['parts', 'labour'], true)) {
+            $tab = 'parts';
+        }
+
         $lowStock = $request->boolean('low_stock');
 
         $spareParts = SparePart::when($lowStock, function ($query) {
@@ -23,6 +29,6 @@ class InventoryController extends Controller
             ->paginate(15, ['*'], 'labours_page')
             ->withQueryString();
 
-        return view('inventory.index', compact('spareParts', 'labourMasters', 'lowStock'));
+        return view('inventory.index', compact('spareParts', 'labourMasters', 'lowStock', 'tab'));
     }
 }

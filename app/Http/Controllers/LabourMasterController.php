@@ -2,16 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\BulkDeletesRecords;
 use App\Models\LabourMaster;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 
 class LabourMasterController extends Controller
 {
+    use BulkDeletesRecords;
+
+    protected function bulkDeleteModel(): string
+    {
+        return LabourMaster::class;
+    }
+
     public function index()
     {
-        $labourMasters = LabourMaster::latest()->paginate(15);
-        return view('labour_masters.index', compact('labourMasters'));
+        return redirect()->route('inventory.index', ['tab' => 'labour']);
     }
 
     public function create()
@@ -41,7 +48,7 @@ class LabourMasterController extends Controller
 
         LabourMaster::create($validated);
 
-        return redirect()->route('labour-masters.index')->with('success', 'Labour service added successfully.');
+        return redirect()->route('inventory.index', ['tab' => 'labour'])->with('success', 'Labour service added successfully.');
     }
 
     public function edit(LabourMaster $labourMaster)
@@ -71,14 +78,14 @@ class LabourMasterController extends Controller
 
         $labourMaster->update($validated);
 
-        return redirect()->route('labour-masters.index')->with('success', 'Labour service updated successfully.');
+        return redirect()->route('inventory.index', ['tab' => 'labour'])->with('success', 'Labour service updated successfully.');
     }
 
     public function destroy(LabourMaster $labourMaster)
     {
         try {
             $labourMaster->delete();
-            return redirect()->route('labour-masters.index')->with('success', 'Labour service deleted.');
+            return redirect()->route('inventory.index', ['tab' => 'labour'])->with('success', 'Labour service deleted.');
         } catch (QueryException $e) {
             return back()->with('error', 'Cannot delete — this labour service has existing job cards or invoices linked to it.');
         }

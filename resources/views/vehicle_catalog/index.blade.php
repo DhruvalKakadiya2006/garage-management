@@ -13,7 +13,8 @@
     </x-slot>
 
     <div class="py-6">
-        <div class="max-w-full sm:px-6 lg:px-8" x-data="vehicleCatalog()">
+        <div class="max-w-full sm:px-6 lg:px-8"
+             x-data="{ ...tableSelection({ bulkEndpoint: '{{ route('vehicle-brands.bulk-delete') }}', rowAttr: 'data-brand-id', modalName: 'bulk-delete-confirm-brands' }), ...vehicleCatalog() }">
 
             @if (session('success'))
                 <div class="mb-4 bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-md">
@@ -28,59 +29,26 @@
             @endif
 
             {{-- Contextual action bar --}}
-            <div x-show="selectedBrandId || selectedModelId" x-transition.opacity.duration.150
-                 class="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-primary-200 bg-primary-50 px-4 py-3 shadow-sm">
-
-                {{-- Model actions --}}
-                <template x-if="selectedModelId">
-                    <div class="flex flex-wrap items-center gap-3 w-full">
-                        <span class="text-sm font-medium text-primary-800 mr-auto">
-                            <span class="text-primary">Selected Model:</span>
-                            <span class="font-semibold" x-text="selectedModel ? selectedModel.name + ' (' + selectedModel.brand_name + ')' : ''"></span>
-                        </span>
-                        <x-button variant="secondary" type="button" @click="goEditModel()">
-                            <x-heroicon-o-pencil-square class="w-4 h-4" />
-                            Edit
-                        </x-button>
-                        <form :action="'{{ url('vehicle-models') }}' + '/' + selectedModelId" method="POST"
-                              onsubmit="return confirm('Delete this model?');" class="inline">
-                            @csrf
-                            @method('DELETE')
-                            <x-button variant="danger" type="submit">
-                                <x-heroicon-o-trash class="w-4 h-4" />
-                                Delete
-                            </x-button>
-                        </form>
-                    </div>
-                </template>
-
-                {{-- Brand actions --}}
-                <template x-if="selectedBrandId && !selectedModelId">
-                    <div class="flex flex-wrap items-center gap-3 w-full">
-                        <span class="text-sm font-medium text-primary-800 mr-auto">
-                            <span class="text-primary">Selected Brand:</span>
-                            <span class="font-semibold" x-text="selectedBrand ? selectedBrand.name : ''"></span>
-                        </span>
-                        <x-button type="button" @click="goAddModel()">
-                            <x-heroicon-o-plus class="w-4 h-4" />
-                            Add Model
-                        </x-button>
-                        <x-button variant="secondary" type="button" @click="goEditBrand()">
-                            <x-heroicon-o-pencil-square class="w-4 h-4" />
-                            Edit
-                        </x-button>
-                        <form :action="'{{ url('vehicle-brands') }}' + '/' + selectedBrandId" method="POST"
-                              onsubmit="return confirm('Delete this brand? Models under it must be deleted first.');" class="inline">
-                            @csrf
-                            @method('DELETE')
-                            <x-button variant="danger" type="submit">
-                                <x-heroicon-o-trash class="w-4 h-4" />
-                                Delete
-                            </x-button>
-                        </form>
-                    </div>
-                </template>
-            </div>
+            <x-table-selection-bar
+                :bulk-endpoint="route('vehicle-brands.bulk-delete')"
+                modal-name="bulk-delete-confirm-brands"
+                bulkConfirmMessage="Brands with models under them will be skipped."
+            >
+                <x-slot name="single">
+                    <span class="text-sm font-medium text-primary-800">
+                        Selected:
+                        <span class="font-semibold" x-text="selectedBrand ? selectedBrand.name : ''"></span>
+                    </span>
+                    <x-button type="button" @click="goAddModel()">
+                        <x-heroicon-o-plus class="w-4 h-4" />
+                        Add Model
+                    </x-button>
+                    <x-button variant="secondary" type="button" @click="goEditBrand()">
+                        <x-heroicon-o-pencil-square class="w-4 h-4" />
+                        Edit
+                    </x-button>
+                </x-slot>
+            </x-table-selection-bar>
 
             <x-data-table
                 :empty="$brands->isEmpty()"
@@ -92,7 +60,7 @@
             >
                 <x-slot name="header">
                     <tr>
-                        <th class="w-10 px-6 py-3 text-left"></th>
+                        <th class="w-10 px-6 py-3 text-left"><x-table-select-all /></th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Brand</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Models</th>
                         <th class="w-10 px-6 py-3 text-right"></th>
@@ -102,9 +70,7 @@
                 @foreach ($brands as $brand)
                     <tr class="group hover:bg-muted/50">
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <input type="radio" name="vehicle_brand" value="{{ $brand->id }}" x-model="selectedBrandId"
-                                   @change="selectedModelId = ''"
-                                   class="h-4 w-4 rounded-full border-input text-primary focus:ring-ring cursor-pointer">
+                            <x-table-checkbox :id="$brand->id" attr="data-brand-id" />
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {{ $brand->name }}
@@ -122,22 +88,43 @@
                     </tr>
                     <tr x-show="expandedId === '{{ $brand->id }}'" class="bg-muted/60">
                         <td colspan="4" class="px-6 py-4">
-                            <div class="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-                                Models under {{ $brand->name }} ({{ $brand->models->count() }})
-                            </div>
-                            @forelse ($brand->models as $model)
-                                <div class="flex items-center gap-3 py-2 border-b border-border last:border-0">
-                                    <input type="radio" name="vehicle_model" value="{{ $model->id }}" x-model="selectedModelId"
-                                           @change="selectedBrandId = ''"
-                                           class="h-4 w-4 rounded-full border-input text-primary focus:ring-ring cursor-pointer">
-                                    <span class="text-sm font-medium text-gray-900">{{ $model->name }}</span>
-                                    @if ($model->battery_type)
-                                        <x-badge color="gray">{{ ucwords(str_replace('-', ' ', $model->battery_type)) }}</x-badge>
-                                    @endif
+                            <div x-data="tableSelection({ bulkEndpoint: '{{ route('vehicle-models.bulk-delete') }}', rowAttr: 'data-model-id', modalName: 'bulk-delete-confirm-models-{{ $brand->id }}' })">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                        Models under {{ $brand->name }} ({{ $brand->models->count() }})
+                                    </div>
+                                    <label class="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                                        <x-table-select-all />
+                                        Select all models
+                                    </label>
                                 </div>
-                            @empty
-                                <div class="text-sm text-gray-500">No models yet. Select this brand and click "Add Model".</div>
-                            @endforelse
+
+                                <x-table-selection-bar
+                                    :bulk-endpoint="route('vehicle-models.bulk-delete')"
+                                    modal-name="bulk-delete-confirm-models-{{ $brand->id }}"
+                                    bulkConfirmMessage="Models linked to existing vehicles will be skipped."
+                                >
+                                    <x-slot name="single">
+                                        <x-button variant="secondary" type="button"
+                                                  @click="window.location.href = '{{ url('vehicle-models') }}' + '/' + singleId + '/edit'">
+                                            <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                            Edit
+                                        </x-button>
+                                    </x-slot>
+                                </x-table-selection-bar>
+
+                                @forelse ($brand->models as $model)
+                                    <div class="flex items-center gap-3 py-2 border-b border-border last:border-0">
+                                        <x-table-checkbox :id="$model->id" attr="data-model-id" />
+                                        <span class="text-sm font-medium text-gray-900">{{ $model->name }}</span>
+                                        @if ($model->battery_type)
+                                            <x-badge color="gray">{{ ucwords(str_replace('-', ' ', $model->battery_type)) }}</x-badge>
+                                        @endif
+                                    </div>
+                                @empty
+                                    <div class="text-sm text-gray-500">No models yet. Select this brand and click "Add Model".</div>
+                                @endforelse
+                            </div>
                         </td>
                     </tr>
                 @endforeach
@@ -152,24 +139,13 @@
 
             const brandsBase = '{{ url('vehicle-brands') }}';
             const modelsCreate = '{{ url('vehicle-models/create') }}';
-            const modelsBase = '{{ url('vehicle-models') }}';
 
             return {
-                selectedBrandId: '',
-                selectedModelId: '',
                 expandedId: '',
                 catalogData: catalogData,
 
                 get selectedBrand() {
-                    return this.catalogData.find(b => b.id === this.selectedBrandId) || null;
-                },
-
-                get selectedModel() {
-                    for (const b of this.catalogData) {
-                        const m = b.models.find(m => m.id === this.selectedModelId);
-                        if (m) return { ...m, brand_name: b.name };
-                    }
-                    return null;
+                    return this.catalogData.find(b => b.id === this.singleId) || null;
                 },
 
                 toggleExpand(id) {
@@ -177,20 +153,14 @@
                 },
 
                 goAddModel() {
-                    if (this.selectedBrandId) {
-                        window.location.href = modelsCreate + '?brand_id=' + this.selectedBrandId;
+                    if (this.singleId) {
+                        window.location.href = modelsCreate + '?brand_id=' + this.singleId;
                     }
                 },
 
                 goEditBrand() {
-                    if (this.selectedBrandId) {
-                        window.location.href = brandsBase + '/' + this.selectedBrandId + '/edit';
-                    }
-                },
-
-                goEditModel() {
-                    if (this.selectedModelId) {
-                        window.location.href = modelsBase + '/' + this.selectedModelId + '/edit';
+                    if (this.singleId) {
+                        window.location.href = brandsBase + '/' + this.singleId + '/edit';
                     }
                 },
             };

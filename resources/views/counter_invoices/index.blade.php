@@ -12,13 +12,41 @@
         </div>
     </x-slot>
 
+    @php
+        $invoicesData = $invoices->getCollection()->map(fn ($inv) => [
+            'id' => (string) $inv->id,
+            'invoice_no' => $inv->invoice_no,
+        ])->values();
+    @endphp
+
     <div class="py-6">
-        <div class="max-w-full sm:px-6 lg:px-8">
+        <div class="max-w-full sm:px-6 lg:px-8"
+             x-data="{ ...tableSelection({ bulkEndpoint: '{{ route('counter-invoices.bulk-delete') }}' }), ...counterInvoiceList() }">
             @if (session('success'))
                 <div class="mb-4 bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-md">
                     {{ session('success') }}
                 </div>
             @endif
+
+            <x-table-selection-bar
+                :bulk-endpoint="route('counter-invoices.bulk-delete')"
+                bulkConfirmMessage="Item stock will be returned and related payments will be removed."
+            >
+                <x-slot name="single">
+                    <span class="text-sm font-medium text-primary-800">
+                        Selected:
+                        <span x-text="selectedInvoice ? selectedInvoice.invoice_no : ''" class="font-semibold"></span>
+                    </span>
+                    <x-button x-bind:href="base + '/' + singleId">
+                        <x-heroicon-o-eye class="w-4 h-4" />
+                        View
+                    </x-button>
+                    <x-button variant="secondary" x-bind:href="base + '/' + singleId + '/edit'">
+                        <x-heroicon-o-pencil-square class="w-4 h-4" />
+                        Edit
+                    </x-button>
+                </x-slot>
+            </x-table-selection-bar>
 
             <x-data-table
                 :empty="$invoices->isEmpty()"
@@ -30,17 +58,20 @@
             >
                 <x-slot name="header">
                     <tr>
+                        <th class="w-10 px-6 py-3 text-left"><x-table-select-all /></th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Invoice No.</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Customer</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Payment</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Grand Total</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
                     </tr>
                 </x-slot>
 
                 @foreach ($invoices as $invoice)
                     <tr class="hover:bg-muted/50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <x-table-checkbox :id="$invoice->id" />
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {{ $invoice->invoice_no }}
                         </td>
@@ -79,16 +110,25 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
                             {{ config('garage.currency_symbol') }}{{ number_format($invoice->grand_total, 2) }}
                         </td>
-                        <x-data-table-actions
-                            :model="$invoice"
-                            :viewRoute="fn ($i) => route('counter-invoices.show', $i)"
-                            :editRoute="fn ($i) => route('counter-invoices.edit', $i)"
-                            :deleteRoute="fn ($i) => route('counter-invoices.destroy', $i)"
-                            confirm="Delete this invoice?"
-                        />
                     </tr>
                 @endforeach
             </x-data-table>
         </div>
     </div>
+
+    <script>
+        function counterInvoiceList() {
+            const invoices = @json($invoicesData);
+            const base = '{{ url('counter-invoices') }}';
+
+            return {
+                base: base,
+                invoices: invoices,
+
+                get selectedInvoice() {
+                    return this.invoices.find(i => i.id === this.singleId) || null;
+                },
+            };
+        }
+    </script>
 </x-app-layout>

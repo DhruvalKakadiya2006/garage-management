@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\BulkDeletesRecords;
 use App\Models\CounterInvoice;
 use App\Models\SparePart;
 use App\Rules\DiscountWithinSubtotal;
@@ -15,6 +16,32 @@ use Illuminate\Support\Facades\Validator;
 
 class CounterInvoiceController extends Controller
 {
+    use BulkDeletesRecords;
+
+    protected function bulkDeleteModel(): string
+    {
+        return CounterInvoice::class;
+    }
+
+    /**
+     * Counter Invoices cannot be plain-deleted: the counter_invoice_items FK
+     * is restrict, so item rows must be deleted one-by-one first (which
+     * returns stock to inventory via the CounterInvoiceItem::deleting boot
+     * event) before the parent. The CounterInvoice::deleting boot event cleans
+     * up related payments.
+     */
+    protected function bulkDeleteDeleter(): ?callable
+    {
+        return function (CounterInvoice $counterInvoice) {
+            DB::transaction(function () use ($counterInvoice) {
+                foreach ($counterInvoice->items as $item) {
+                    $item->delete();
+                }
+                $counterInvoice->delete();
+            });
+        };
+    }
+
     public function index()
     {
         $invoices = CounterInvoice::with('customer')

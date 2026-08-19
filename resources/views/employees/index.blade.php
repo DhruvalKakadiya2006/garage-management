@@ -13,7 +13,8 @@
     </x-slot>
 
     <div class="py-6">
-        <div class="max-w-full sm:px-6 lg:px-8">
+        <div class="max-w-full sm:px-6 lg:px-8"
+             x-data="{ ...tableSelection({ bulkEndpoint: '{{ route('employees.bulk-delete') }}' }), ...employeeList() }">
 
             @if (session('success'))
                 <div class="mb-4 bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-md">
@@ -37,6 +38,23 @@
                 </a>
             </div>
 
+            <x-table-selection-bar
+                :bulk-endpoint="route('employees.bulk-delete')"
+                bulkConfirmMessage="Employees assigned to job cards will have their assignment cleared."
+            >
+                <x-slot name="single">
+                    <span class="text-sm font-medium text-primary-800">
+                        Selected:
+                        <span x-text="selectedEmployee ? selectedEmployee.name : ''" class="font-semibold"></span>
+                    </span>
+                    <x-button variant="secondary" type="button"
+                              @click="window.location.href = base + '/' + singleId + '/edit'">
+                        <x-heroicon-o-pencil-square class="w-4 h-4" />
+                        Edit
+                    </x-button>
+                </x-slot>
+            </x-table-selection-bar>
+
             <x-data-table
                 :empty="$employees->isEmpty()"
                 emptyMessage='No employees yet. Click "Add Employee" to create one.'
@@ -47,17 +65,20 @@
             >
                 <x-slot name="header">
                     <tr>
+                        <th class="w-10 px-6 py-3 text-left"><x-table-select-all /></th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Name</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Role</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Specialization</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Mobile</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Active</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
                     </tr>
                 </x-slot>
 
                 @foreach ($employees as $employee)
                     <tr class="hover:bg-muted/50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <x-table-checkbox :id="$employee->id" />
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {{ $employee->name }}
                         </td>
@@ -91,16 +112,29 @@
                                 </x-badge>
                             @endif
                         </td>
-                        <x-data-table-actions
-                            :model="$employee"
-                            :editRoute="fn ($e) => route('employees.edit', $e)"
-                            :deleteRoute="fn ($e) => route('employees.destroy', $e)"
-                            confirm="Delete this employee?"
-                        />
                     </tr>
                 @endforeach
             </x-data-table>
 
         </div>
     </div>
+
+    <script>
+        function employeeList() {
+            const employees = @json($employees->getCollection()->map(fn ($e) => [
+                'id' => (string) $e->id,
+                'name' => $e->name,
+            ])->values());
+            const base = '{{ url('employees') }}';
+
+            return {
+                base: base,
+                employees: employees,
+
+                get selectedEmployee() {
+                    return this.employees.find(e => e.id === this.singleId) || null;
+                },
+            };
+        }
+    </script>
 </x-app-layout>

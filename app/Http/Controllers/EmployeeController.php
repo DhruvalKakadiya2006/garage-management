@@ -2,11 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\BulkDeletesRecords;
 use App\Models\Employee;
 use Illuminate\Http\Request;
 
 class EmployeeController extends Controller
 {
+    use BulkDeletesRecords;
+
+    protected function bulkDeleteModel(): string
+    {
+        return Employee::class;
+    }
+
     public function index(Request $request)
     {
         $query = Employee::query();

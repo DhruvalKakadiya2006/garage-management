@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\BulkDeletesRecords;
 use App\Models\VehicleBrand;
 use App\Models\VehicleModel;
 use Illuminate\Database\QueryException;
@@ -10,6 +11,13 @@ use Illuminate\Validation\Rule;
 
 class VehicleModelController extends Controller
 {
+    use BulkDeletesRecords;
+
+    protected function bulkDeleteModel(): string
+    {
+        return VehicleModel::class;
+    }
+
     public function create(Request $request)
     {
         $brands = VehicleBrand::orderBy('name')->get();

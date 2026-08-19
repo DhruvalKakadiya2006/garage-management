@@ -232,7 +232,7 @@ class JobCardImportExportTest extends TestCase
     public function test_export_empty_dataset_returns_only_headers()
     {
         $response = $this->actingAs($this->user)
-            ->get(route('import-export.export', ['entity' => 'job_cards', 'format' => 'csv']));
+            ->get(route('import-export.export', ['entity' => 'job_cards']));
 
         $response->assertOk();
         $rows = $this->parseCsv($response->streamedContent());
@@ -258,7 +258,7 @@ class JobCardImportExportTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->user)
-            ->get(route('import-export.export', ['entity' => 'job_cards', 'format' => 'csv']));
+            ->get(route('import-export.export', ['entity' => 'job_cards']));
 
         $rows = $this->parseCsv($response->streamedContent());
         $this->assertCount(2, $rows);
@@ -288,7 +288,7 @@ class JobCardImportExportTest extends TestCase
         $this->makeJobCard(['customer_id' => $customer->id, 'vehicle_id' => $vehicle->id, 'status' => 'in_progress', 'external_ref' => 'JC-B']);
 
         $response = $this->actingAs($this->user)
-            ->get(route('import-export.export', ['entity' => 'job_cards', 'format' => 'csv', 'status' => 'in_progress']));
+            ->get(route('import-export.export', ['entity' => 'job_cards', 'status' => 'in_progress']));
 
         $rows = $this->parseCsv($response->streamedContent());
         $this->assertCount(2, $rows); // header + 1 filtered row
@@ -297,21 +297,12 @@ class JobCardImportExportTest extends TestCase
         $this->assertSame('JC-B', $rows[1][$idx['external_ref']]);
     }
 
-    public function test_excel_export_is_a_documented_stub()
-    {
-        $response = $this->actingAs($this->user)
-            ->get(route('import-export.export', ['entity' => 'job_cards', 'format' => 'xlsx']));
-
-        $response->assertRedirect()->assertSessionHas('error');
-        $this->assertStringContainsString('Excel', session('error'));
-    }
-
     // ------------------------------------------------------------- template
 
     public function test_template_uses_exact_import_headers_and_has_sample_rows()
     {
         $response = $this->actingAs($this->user)
-            ->get(route('import-export.template', ['entity' => 'job_cards', 'format' => 'csv']));
+            ->get(route('import-export.template', ['entity' => 'job_cards']));
 
         $response->assertOk();
         $rows = $this->parseCsv($response->streamedContent());
@@ -325,7 +316,7 @@ class JobCardImportExportTest extends TestCase
         $this->seedReferences();
 
         $template = $this->actingAs($this->user)
-            ->get(route('import-export.template', ['entity' => 'job_cards', 'format' => 'csv']));
+            ->get(route('import-export.template', ['entity' => 'job_cards']));
 
         $token = $this->upload($template->streamedContent(), 'create_or_update');
 
@@ -405,7 +396,7 @@ class JobCardImportExportTest extends TestCase
         $this->makeJobCard(['external_ref' => 'JC-EXP-0001', 'status' => 'received']);
 
         $export = $this->actingAs($this->user)
-            ->get(route('import-export.export', ['entity' => 'job_cards', 'format' => 'csv']));
+            ->get(route('import-export.export', ['entity' => 'job_cards']));
 
         $token = $this->upload($export->streamedContent(), 'create_or_update');
 
@@ -741,11 +732,11 @@ class JobCardImportExportTest extends TestCase
 
         // 2. Export both entities.
         $customersExport = $this->actingAs($this->user)
-            ->get(route('import-export.export', ['entity' => 'customers', 'format' => 'csv']))
+            ->get(route('import-export.export', ['entity' => 'customers']))
             ->streamedContent();
 
         $jobCardsExport = $this->actingAs($this->user)
-            ->get(route('import-export.export', ['entity' => 'job_cards', 'format' => 'csv']))
+            ->get(route('import-export.export', ['entity' => 'job_cards']))
             ->streamedContent();
 
         // 3. Wipe to a clean database (child tables first for FK safety).

@@ -116,7 +116,7 @@ class CustomerImportExportTest extends TestCase
     public function test_import_export_routes_require_authentication()
     {
         $this->get(route('import-export.index'))->assertRedirect(route('login'));
-        $this->get(route('import-export.export', ['entity' => 'customers', 'format' => 'csv']))->assertRedirect(route('login'));
+        $this->get(route('import-export.export', ['entity' => 'customers']))->assertRedirect(route('login'));
     }
 
     public function test_customer_list_has_import_and_export_actions()
@@ -142,7 +142,7 @@ class CustomerImportExportTest extends TestCase
     public function test_export_empty_dataset_returns_only_headers()
     {
         $response = $this->actingAs($this->user)
-            ->get(route('import-export.export', ['entity' => 'customers', 'format' => 'csv']));
+            ->get(route('import-export.export', ['entity' => 'customers']));
 
         $response->assertOk();
         $rows = $this->parseCsv($response->streamedContent());
@@ -156,7 +156,7 @@ class CustomerImportExportTest extends TestCase
         Customer::create($this->customerFields(['external_ref' => 'EXT-77']));
 
         $response = $this->actingAs($this->user)
-            ->get(route('import-export.export', ['entity' => 'customers', 'format' => 'csv']));
+            ->get(route('import-export.export', ['entity' => 'customers']));
 
         $rows = $this->parseCsv($response->streamedContent());
         $this->assertCount(2, $rows);
@@ -177,7 +177,7 @@ class CustomerImportExportTest extends TestCase
         Customer::create($this->customerFields(['mobile' => '9876543212', 'first_name' => 'Ravi']));
 
         $response = $this->actingAs($this->user)
-            ->get(route('import-export.export', ['entity' => 'customers', 'format' => 'csv']));
+            ->get(route('import-export.export', ['entity' => 'customers']));
 
         $rows = $this->parseCsv($response->streamedContent());
         $this->assertCount(4, $rows);
@@ -188,19 +188,10 @@ class CustomerImportExportTest extends TestCase
         Customer::create($this->customerFields(['first_name' => '=1+1', 'last_name' => '', 'surname' => '']));
 
         $response = $this->actingAs($this->user)
-            ->get(route('import-export.export', ['entity' => 'customers', 'format' => 'csv']));
+            ->get(route('import-export.export', ['entity' => 'customers']));
 
         $content = $response->streamedContent();
         $this->assertStringContainsString("'=1+1", $content);
-    }
-
-    public function test_excel_export_is_a_documented_stub()
-    {
-        $response = $this->actingAs($this->user)
-            ->get(route('import-export.export', ['entity' => 'customers', 'format' => 'xlsx']));
-
-        $response->assertRedirect()->assertSessionHas('error');
-        $this->assertStringContainsString('Excel', session('error'));
     }
 
     // ------------------------------------------------------------- template
@@ -208,7 +199,7 @@ class CustomerImportExportTest extends TestCase
     public function test_template_uses_exact_import_headers_and_has_sample_rows()
     {
         $response = $this->actingAs($this->user)
-            ->get(route('import-export.template', ['entity' => 'customers', 'format' => 'csv']));
+            ->get(route('import-export.template', ['entity' => 'customers']));
 
         $response->assertOk();
         $rows = $this->parseCsv($response->streamedContent());
@@ -220,7 +211,7 @@ class CustomerImportExportTest extends TestCase
     public function test_template_can_be_imported()
     {
         $template = $this->actingAs($this->user)
-            ->get(route('import-export.template', ['entity' => 'customers', 'format' => 'csv']));
+            ->get(route('import-export.template', ['entity' => 'customers']));
 
         $token = $this->upload($template->streamedContent(), 'create_or_update');
 
@@ -230,15 +221,6 @@ class CustomerImportExportTest extends TestCase
         $this->assertSame(2, Customer::count());
         $this->assertDatabaseHas('customers', ['external_ref' => 'CUS-0001', 'mobile' => '9876543210']);
         $this->assertDatabaseHas('customers', ['external_ref' => 'CUS-0002', 'mobile' => '9876543211']);
-    }
-
-    public function test_excel_template_is_a_documented_stub()
-    {
-        $response = $this->actingAs($this->user)
-            ->get(route('import-export.template', ['entity' => 'customers', 'format' => 'xlsx']));
-
-        $response->assertRedirect()->assertSessionHas('error');
-        $this->assertStringContainsString('Excel', session('error'));
     }
 
     // ------------------------------------------------------------- import flow
@@ -290,7 +272,7 @@ class CustomerImportExportTest extends TestCase
         ]));
 
         $export = $this->actingAs($this->user)
-            ->get(route('import-export.export', ['entity' => 'customers', 'format' => 'csv']));
+            ->get(route('import-export.export', ['entity' => 'customers']));
 
         $token = $this->upload($export->streamedContent(), 'create_or_update');
 
@@ -607,31 +589,5 @@ class CustomerImportExportTest extends TestCase
             ->post(route('import-export.confirm', $token))
             ->assertRedirect(route('import-export.index'))
             ->assertSessionHas('error');
-    }
-
-    // ------------------------------------------------------------- xlsx stub
-
-    public function test_excel_import_is_a_documented_stub()
-    {
-        Storage::fake('local');
-
-        $file = UploadedFile::fake()->createWithContent('customers.xlsx', 'not-a-real-xlsx');
-
-        $response = $this->actingAs($this->user)
-            ->post(route('import-export.preview'), [
-                'entity' => 'customers',
-                'mode' => 'create_or_update',
-                'file' => $file,
-            ]);
-
-        $response->assertRedirect();
-        $token = Str::afterLast((string) $response->headers->get('Location'), '/');
-
-        $this->actingAs($this->user)
-            ->get(route('import-export.preview.show', $token))
-            ->assertRedirect(route('import-export.index'))
-            ->assertSessionHas('error');
-
-        $this->assertStringContainsString('Excel', session('error'));
     }
 }

@@ -19,20 +19,20 @@
                         </x-button>
                     </x-slot>
                     <x-slot name="content">
-                        <x-dropdown-link :href="route('import-export.export', ['entity' => 'job_cards', 'format' => 'csv'])">
+                        <x-dropdown-link :href="route('import-export.export', ['entity' => 'job_cards'])">
                             <span class="inline-flex items-center gap-2">
                                 <x-heroicon-o-document-text class="w-4 h-4" />
                                 Export All (CSV)
                             </span>
                         </x-dropdown-link>
-                        <x-dropdown-link :href="route('import-export.export', array_merge(['entity' => 'job_cards', 'format' => 'csv'], request()->query()))">
+                        <x-dropdown-link :href="route('import-export.export', array_merge(['entity' => 'job_cards'], request()->query()))">
                             <span class="inline-flex items-center gap-2">
                                 <x-heroicon-o-funnel class="w-4 h-4" />
                                 Export Filtered Results (CSV)
                             </span>
                         </x-dropdown-link>
                         <div class="my-1 border-t border-border"></div>
-                        <x-dropdown-link :href="route('import-export.template', ['entity' => 'job_cards', 'format' => 'csv'])">
+                        <x-dropdown-link :href="route('import-export.template', ['entity' => 'job_cards'])">
                             <span class="inline-flex items-center gap-2">
                                 <x-heroicon-o-clipboard-document-list class="w-4 h-4" />
                                 Download Import Template (CSV)
@@ -40,10 +40,6 @@
                         </x-dropdown-link>
                     </x-slot>
                 </x-dropdown>
-                <x-button :href="route('job-cards.create')">
-                    <x-heroicon-o-plus class="w-4 h-4" />
-                    New Job Card
-                </x-button>
             </div>
         </div>
     </x-slot>
@@ -57,7 +53,8 @@
     @endphp
 
     <div class="py-6">
-        <div class="max-w-full sm:px-6 lg:px-8 space-y-4" x-data="jobCardList()">
+        <div class="max-w-full sm:px-6 lg:px-8 space-y-4"
+             x-data="{ ...tableSelection({ bulkEndpoint: '{{ route('job-cards.bulk-delete') }}' }), ...jobCardList() }">
 
             @if (session('success'))
                 <div class="bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-md">
@@ -82,41 +79,35 @@
             @endif
 
             <!-- Contextual action bar -->
-            <div x-show="selectedId" x-transition.opacity.duration.150
-                 class="flex flex-wrap items-center gap-3 rounded-xl border border-primary-200 bg-primary-50 px-4 py-3 shadow-sm">
-                <span class="text-sm font-medium text-primary-800 mr-auto">
-                    <span class="text-primary">Selected:</span>
-                    <span x-text="selectedCard ? selectedCard.job_card_no : ''" class="font-semibold"></span>
-                </span>
-                <x-button x-bind:href="assignBase + '/' + selectedId + '/assign'">
-                    <x-heroicon-o-wrench-screwdriver class="w-4 h-4" />
-                    Assign / Add Items
-                </x-button>
-                <x-button variant="secondary" x-bind:href="editBase + '/' + selectedId + '/edit'">
-                    <x-heroicon-o-pencil-square class="w-4 h-4" />
-                    Edit
-                </x-button>
-                <x-button variant="secondary" type="button" @click="goToDocument('invoice')" x-bind:disabled="!hasLineItems"
-                        x-bind:title="hasLineItems ? 'Download TAX INVOICE PDF' : 'Add at least one part or labour line to generate'">
-                    <x-heroicon-o-document-text class="w-4 h-4" />
-                    Generate Invoice
-                </x-button>
-                <x-button variant="secondary" type="button" @click="goToDocument('estimate')" x-bind:disabled="!hasLineItems"
-                        x-bind:title="hasLineItems ? 'Download ESTIMATE PDF' : 'Add at least one part or labour line to generate'">
-                    <x-heroicon-o-document-chart-bar class="w-4 h-4" />
-                    Generate Estimate
-                </x-button>
-                <form :action="'{{ url('job-cards') }}' + '/' + selectedId" method="POST"
-                      onsubmit="return confirm('Delete this job card? Parts stock will be returned and related payments will be removed.');"
-                      class="inline">
-                    @csrf
-                    @method('DELETE')
-                    <x-button variant="danger" type="submit">
-                        <x-heroicon-o-trash class="w-4 h-4" />
-                        Delete
+            <x-table-selection-bar
+                :bulk-endpoint="route('job-cards.bulk-delete')"
+                bulkConfirmMessage="Parts stock will be returned and related payments will be removed."
+            >
+                <x-slot name="single">
+                    <span class="text-sm font-medium text-primary-800">
+                        Selected:
+                        <span x-text="selectedCard ? selectedCard.job_card_no : ''" class="font-semibold"></span>
+                    </span>
+                    <x-button x-bind:href="assignBase + '/' + singleId + '/assign'">
+                        <x-heroicon-o-wrench-screwdriver class="w-4 h-4" />
+                        Assign / Add Items
                     </x-button>
-                </form>
-            </div>
+                    <x-button variant="secondary" x-bind:href="editBase + '/' + singleId + '/edit'">
+                        <x-heroicon-o-pencil-square class="w-4 h-4" />
+                        Edit
+                    </x-button>
+                    <x-button variant="secondary" type="button" @click="goToDocument('invoice')" x-bind:disabled="!hasLineItems"
+                            x-bind:title="hasLineItems ? 'Download TAX INVOICE PDF' : 'Add at least one part or labour line to generate'">
+                        <x-heroicon-o-document-text class="w-4 h-4" />
+                        Generate Invoice
+                    </x-button>
+                    <x-button variant="secondary" type="button" @click="goToDocument('estimate')" x-bind:disabled="!hasLineItems"
+                            x-bind:title="hasLineItems ? 'Download ESTIMATE PDF' : 'Add at least one part or labour line to generate'">
+                        <x-heroicon-o-document-chart-bar class="w-4 h-4" />
+                        Generate Estimate
+                    </x-button>
+                </x-slot>
+            </x-table-selection-bar>
 
             <!-- Filters -->
             <div class="bg-white rounded-xl border border-border shadow-sm p-4">
@@ -173,15 +164,13 @@
 
             <x-data-table
                 :empty="$jobCards->isEmpty()"
-                emptyMessage='No job cards found. Click "New Job Card" to create one.'
+                emptyMessage='No job cards yet. Create one from a customer&#039;s page.'
                 emptyIcon="wrench-screwdriver"
-                :emptyHref="route('job-cards.create')"
-                emptyLabel="New Job Card"
                 :paginator="$jobCards"
             >
                 <x-slot name="header">
                     <tr>
-                        <th class="w-10 px-6 py-3 text-left"></th>
+                        <th class="w-10 px-6 py-3 text-left"><x-table-select-all /></th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Job No.</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Customer</th>
@@ -198,8 +187,7 @@
                 @foreach ($jobCards as $jc)
                     <tr class="group hover:bg-muted/50">
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <input type="radio" name="job_card" value="{{ $jc->id }}" x-model="selectedId"
-                                   class="h-4 w-4 rounded-full border-input text-primary focus:ring-ring cursor-pointer">
+                            <x-table-checkbox :id="$jc->id" />
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <a href="{{ route('job-cards.show', $jc) }}"
@@ -284,13 +272,12 @@
             const base = '{{ url('job-cards') }}';
 
             return {
-                selectedId: '',
                 cards: cards,
                 assignBase: base,
                 editBase: base,
 
                 get selectedCard() {
-                    return this.cards.find(c => c.id === this.selectedId) || null;
+                    return this.cards.find(c => c.id === this.singleId) || null;
                 },
 
                 get hasLineItems() {
@@ -298,8 +285,8 @@
                 },
 
                 goToDocument(type) {
-                    if (this.selectedId && this.hasLineItems) {
-                        window.location.href = base + '/' + this.selectedId + '/' + type;
+                    if (this.singleId && this.hasLineItems) {
+                        window.location.href = base + '/' + this.singleId + '/' + type;
                     }
                 },
             };
