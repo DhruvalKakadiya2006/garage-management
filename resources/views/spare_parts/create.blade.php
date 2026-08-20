@@ -14,17 +14,32 @@
 
                     <div class="grid grid-cols-2 gap-4">
                         <x-input name="part_name" label="Part Name" :required="true" />
-                        <x-input name="part_code" label="Part Code" :required="true" />
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
-                        <x-input name="category" label="Category" placeholder="e.g., Battery, Motor, Brakes" />
-                        <x-input name="compatible_vehicle_brand" label="Compatible Vehicle Brand" placeholder="e.g., Ola, Ather, All" />
+                        <x-select name="category" label="Category" :required="true" placeholder="-- Select --"
+                                  :options="[
+                                    'accessories' => 'Accessories',
+                                    'battery-and-bms' => 'Battery & BMS',
+                                    'brake-system' => 'Brake System',
+                                    'brakes' => 'Brakes',
+                                    'cables-and-wiring' => 'Cables & Wiring',
+                                    'charger-and-charging' => 'Charger & Charging',
+                                    'drive-system' => 'Drive System',
+                                    'electrical' => 'Electrical',
+                                    'fasteners-and-hardware' => 'Fasteners & Hardware',
+                                    'instruments-and-meters' => 'Instruments & Meters',
+                                    'lighting-and-horns' => 'Lighting & Horns',
+                                    'motor-and-motor-parts' => 'Motor & Motor Parts',
+                                    'suspension-and-steering' => 'Suspension & Steering',
+                                    'switches-and-controls' => 'Switches & Controls',
+                                    'wheels-tyres-and-bearings' => 'Wheels, Tyres & Bearings',
+                                  ]" />
                     </div>
 
                     <div class="grid grid-cols-3 gap-4">
                         <x-select name="unit" label="Unit" :required="true" placeholder="-- Select --"
-                                  :options="config('garage.option_lists.spare_part_unit')" />
+                              :options="config('garage.option_lists.spare_part_unit')" />
                         <x-input name="purchase_price" label="Purchase Price ({{ config('garage.currency_symbol') }})" :required="true" type="number" step="0.01" />
                         <x-input name="mrp" label="MRP ({{ config('garage.currency_symbol') }})" :required="true" type="number" step="0.01" />
                     </div>

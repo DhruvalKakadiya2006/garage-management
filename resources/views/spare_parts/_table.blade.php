@@ -1,5 +1,6 @@
 @php
     $indexRoute = $indexRoute ?? 'inventory.index';
+    $lowStock = $lowStock ?? false;
 @endphp
 
 <div x-data="tableSelection({ bulkEndpoint: '{{ route('spare-parts.bulk-delete') }}', modalName: 'bulk-delete-confirm-parts' })">
@@ -15,10 +16,48 @@
                 Low Stock
             </a>
         </div>
-        <x-button :href="route('spare-parts.create')">
-            <x-heroicon-o-plus class="w-4 h-4" />
-            Add Spare Part
-        </x-button>
+        <div class="flex flex-wrap items-center gap-2">
+            <x-button variant="secondary" :href="route('import-export.index', ['entity' => 'spare_parts'])">
+                <x-heroicon-o-arrow-up-tray class="w-4 h-4" />
+                Import
+            </x-button>
+            <x-dropdown align="left" width="56">
+                <x-slot name="trigger">
+                    <x-button variant="secondary" type="button">
+                        <x-heroicon-o-arrow-down-tray class="w-4 h-4" />
+                        Export
+                        <x-heroicon-o-chevron-down class="w-4 h-4" />
+                    </x-button>
+                </x-slot>
+                <x-slot name="content">
+                    <x-dropdown-link :href="route('import-export.export', array_merge(['entity' => 'spare_parts'], request()->query()))">
+                        <span class="inline-flex items-center gap-2">
+                            <x-heroicon-o-document-text class="w-4 h-4" />
+                            Export CSV{{ $lowStock ? ' (Low Stock)' : '' }}
+                        </span>
+                    </x-dropdown-link>
+                    @if (! $lowStock)
+                        <x-dropdown-link :href="route('import-export.export', ['entity' => 'spare_parts', 'low_stock' => 1])">
+                            <span class="inline-flex items-center gap-2">
+                                <x-heroicon-o-exclamation-triangle class="w-4 h-4" />
+                                Export Low Stock
+                            </span>
+                        </x-dropdown-link>
+                    @endif
+                    <div class="my-1 border-t border-border"></div>
+                    <x-dropdown-link :href="route('import-export.template', ['entity' => 'spare_parts'])">
+                        <span class="inline-flex items-center gap-2">
+                            <x-heroicon-o-clipboard-document-list class="w-4 h-4" />
+                            Download Import Template (CSV)
+                        </span>
+                    </x-dropdown-link>
+                </x-slot>
+            </x-dropdown>
+            <x-button :href="route('spare-parts.create')">
+                <x-heroicon-o-plus class="w-4 h-4" />
+                Add Spare Part
+            </x-button>
+        </div>
     </div>
 
     <x-table-selection-bar

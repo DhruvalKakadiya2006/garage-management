@@ -70,9 +70,7 @@ class SparePartController extends Controller
     {
         $validated = $request->validate([
             'part_name' => 'required|string|max:255',
-            'part_code' => 'required|string|max:100|unique:spare_parts,part_code',
             'category' => 'nullable|string|max:100',
-            'compatible_vehicle_brand' => 'nullable|string|max:100',
             'unit' => 'required|in:'.implode(',', array_keys(config('garage.option_lists.spare_part_unit'))),
             'purchase_price' => 'required|numeric|min:0',
             'mrp' => 'required|numeric|min:0',
@@ -88,6 +86,18 @@ class SparePartController extends Controller
         $validated['current_stock_qty'] = $validated['current_stock_qty'] ?? 0;
         $validated['reorder_level'] = $validated['reorder_level'] ?? 0;
 
+        // Auto-generate part_code if not provided (prefix from category)
+        $categoryPrefix = $validated['category'] ? strtoupper(substr($validated['category'], 0, 3)) : 'PART';
+        $lastPart = SparePart::max('part_code');
+
+        if ($lastPart && preg_match('/^[A-Z]{2,3}-\d+$/', $lastPart)) {
+            $lastNum = (int) explode('-', $lastPart)[1];
+            $newNum = sprintf('%03d', $lastNum + 1);
+            $validated['part_code'] = "{$categoryPrefix}-{$newNum}";
+        } else {
+            $validated['part_code'] = "{$categoryPrefix}-001";
+        }
+
         SparePart::create($validated);
 
         return redirect()->route('inventory.index', ['tab' => 'parts'])->with('success', 'Spare part added successfully.');
@@ -102,9 +112,8 @@ class SparePartController extends Controller
     {
         $validated = $request->validate([
             'part_name' => 'required|string|max:255',
-            'part_code' => 'required|string|max:100|unique:spare_parts,part_code,'.$sparePart->id,
+            'part_code' => ['required', 'string', 'max:100', 'unique:spare_parts,part_code,'.$sparePart->id],
             'category' => 'nullable|string|max:100',
-            'compatible_vehicle_brand' => 'nullable|string|max:100',
             'unit' => 'required|in:'.implode(',', array_keys(config('garage.option_lists.spare_part_unit'))),
             'purchase_price' => 'required|numeric|min:0',
             'mrp' => 'required|numeric|min:0',

@@ -2,6 +2,7 @@
 
 use App\ImportExport\Definitions\CustomerDefinition;
 use App\ImportExport\Definitions\JobCardDefinition;
+use App\ImportExport\Definitions\SparePartDefinition;
 use App\ImportExport\Definitions\VehicleBrandDefinition;
 
 return [
@@ -26,6 +27,7 @@ return [
         'customers' => CustomerDefinition::class,
         'vehicle_brands' => VehicleBrandDefinition::class,
         'job_cards' => JobCardDefinition::class,
+        'spare_parts' => SparePartDefinition::class,
     ],
 
     /*

@@ -11,7 +11,7 @@ class SparePart extends Model
     use HasFactory;
 
     protected $fillable = [
-        'part_name', 'part_code', 'category', 'compatible_vehicle_brand', 'unit',
+        'part_name', 'category', 'unit',
         'purchase_price', 'mrp', 'labor_charge', 'hsn_code', 'gst_rate',
         'current_stock_qty', 'reorder_level', 'external_ref',
     ];
@@ -24,6 +24,27 @@ class SparePart extends Model
         'current_stock_qty' => 'integer',
         'reorder_level' => 'integer',
     ];
+
+    protected function partCode(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->getAttribute('part_code') ?? $this->generatePartCode(),
+        );
+    }
+
+    protected function generatePartCode(): string
+    {
+        $prefix = $this->category ? strtoupper(substr($this->category, 0, 3)) : 'PART';
+        $lastPart = SparePart::max('part_code');
+
+        if ($lastPart && preg_match('/^[A-Z]{2,3}-\d+$/', $lastPart)) {
+            $lastNum = (int) explode('-', $lastPart)[1];
+            $newNum = sprintf('%03d', $lastNum + 1);
+            return "{$prefix}-{$newNum}";
+        }
+
+        return "{$prefix}-001";
+    }
 
     /**
      * Accessor for total_price (MRP + Labor Charge)
