@@ -20,14 +20,22 @@ class CounterInvoiceItem extends Model
         'line_total' => 'decimal:2',
     ];
 
+    /**
+     * Spare part resolved during the "creating" event, reused by "created" so
+     * a single save performs one locked read instead of two identical finds.
+     */
+    private ?SparePart $resolvedSparePart = null;
+
     protected static function boot()
     {
         parent::boot();
 
-        // Guard against overselling before the row is inserted
+        // Guard against overselling before the row is inserted. The row lock
+        // serialises concurrent reservations against the same part as long as
+        // callers run inside a transaction (the controllers do).
         static::creating(function ($item) {
-            $sparePart = SparePart::find($item->spare_part_id);
-            if (!$sparePart) {
+            $sparePart = SparePart::whereKey($item->spare_part_id)->lockForUpdate()->first();
+            if (! $sparePart) {
                 throw new \RuntimeException('Spare part not found for counter invoice item.');
             }
             if ($item->quantity > $sparePart->current_stock_qty) {
@@ -38,19 +46,23 @@ class CounterInvoiceItem extends Model
 
             // The price is always sourced from the part master; a client can never override it.
             $item->mrp = $sparePart->mrp;
+            $item->resolvedSparePart = $sparePart;
         });
 
         // Deduct stock when created
         static::created(function ($item) {
-            $sparePart = SparePart::find($item->spare_part_id);
+            $sparePart = $item->resolvedSparePart
+                ?? SparePart::whereKey($item->spare_part_id)->lockForUpdate()->first();
+
             if ($sparePart) {
                 $sparePart->decrement('current_stock_qty', $item->quantity);
+                $item->resolvedSparePart = null;
             }
         });
 
         // Return stock when deleted
         static::deleting(function ($item) {
-            $sparePart = SparePart::find($item->spare_part_id);
+            $sparePart = SparePart::whereKey($item->spare_part_id)->lockForUpdate()->first();
             if ($sparePart) {
                 $sparePart->increment('current_stock_qty', $item->quantity);
             }

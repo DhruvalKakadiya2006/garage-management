@@ -105,7 +105,7 @@ class JobCardDocumentPdfTest extends TestCase
         $user = $this->makeUser();
         $jobCard = $this->makeBilledJobCard();
 
-        $response = $this->actingAs($user)->get(route('job-cards.invoice', $jobCard));
+        $response = $this->actingAs($user)->post(route('job-cards.invoice', $jobCard));
 
         $response->assertOk();
         $this->assertStringContainsString('application/pdf', $response->headers->get('content-type') ?? '');
@@ -123,7 +123,7 @@ class JobCardDocumentPdfTest extends TestCase
         $user = $this->makeUser();
         $jobCard = $this->makeBilledJobCard();
 
-        $response = $this->actingAs($user)->get(route('job-cards.estimate', $jobCard));
+        $response = $this->actingAs($user)->post(route('job-cards.estimate', $jobCard));
 
         $response->assertOk();
         $this->assertStringContainsString('application/pdf', $response->headers->get('content-type') ?? '');
@@ -173,7 +173,7 @@ class JobCardDocumentPdfTest extends TestCase
             'status' => 'received',
         ]);
 
-        $this->actingAs($user)->get(route('job-cards.invoice', $jobCard))
+        $this->actingAs($user)->post(route('job-cards.invoice', $jobCard))
             ->assertRedirect()
             ->assertSessionHas('error', 'Add at least one part or labour line before generating a document.');
 
@@ -188,7 +188,7 @@ class JobCardDocumentPdfTest extends TestCase
         $jobCard = $this->makeBilledJobCard();
         $extraPart = $this->makePart('BAT-01', 'Battery Cell', 100, 20);
 
-        $this->actingAs($user)->get(route('job-cards.invoice', $jobCard))->assertOk();
+        $this->actingAs($user)->post(route('job-cards.invoice', $jobCard))->assertOk();
 
         $this->actingAs($user)
             ->post(route('job-cards.assign-update', $jobCard), [

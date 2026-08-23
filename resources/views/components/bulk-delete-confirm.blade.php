@@ -29,7 +29,7 @@
         </div>
         <div class="mt-6 flex justify-end gap-2">
             <x-button variant="secondary" type="button" x-bind:disabled="busy"
-                      @click="$dispatch('close-modal', 'bulk-delete-confirm')">
+                      @click="$dispatch('close-modal', '{{ $name }}')">
                 Cancel
             </x-button>
             <x-button variant="danger" type="button" x-bind:disabled="busy" @click="bulkDelete()">

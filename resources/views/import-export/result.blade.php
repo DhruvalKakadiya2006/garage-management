@@ -16,6 +16,8 @@
             ['field' => 'external_ref', 'label' => 'External Ref'],
         ],
     };
+
+    $backRoute = route(config('import-export.module_routes.'.$report->entityKey, 'dashboard'));
 @endphp
 
 <x-app-layout>
@@ -25,7 +27,7 @@
                 <x-heroicon-o-check-circle class="w-6 h-6 text-primary" />
                 Import Result
             </h2>
-            <x-button variant="secondary" :href="route('import-export.index')">
+            <x-button variant="secondary" :href="$backRoute">
                 <x-heroicon-o-arrow-left class="w-4 h-4" />
                 Back
             </x-button>

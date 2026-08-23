@@ -14,7 +14,7 @@
 
     <div class="py-6">
         <div class="max-w-full sm:px-6 lg:px-8"
-             x-data="{ ...tableSelection({ bulkEndpoint: '{{ route('vehicle-brands.bulk-delete') }}', rowAttr: 'data-brand-id', modalName: 'bulk-delete-confirm-brands' }), ...vehicleCatalog() }">
+             x-data="mergeAlpineData(tableSelection({ bulkEndpoint: '{{ route('vehicle-brands.bulk-delete') }}', bulkExportEndpoint: '{{ route('vehicle-brands.bulk-export') }}', rowAttr: 'data-brand-id', modalName: 'bulk-delete-confirm-brands' }), vehicleCatalog())">
 
             @if (session('success'))
                 <div class="mb-4 bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-md">
@@ -31,6 +31,7 @@
             {{-- Contextual action bar --}}
             <x-table-selection-bar
                 :bulk-endpoint="route('vehicle-brands.bulk-delete')"
+                :bulk-export-endpoint="route('vehicle-brands.bulk-export')"
                 modal-name="bulk-delete-confirm-brands"
                 bulkConfirmMessage="Brands with models under them will be skipped."
             >
@@ -88,7 +89,7 @@
                     </tr>
                     <tr x-show="expandedId === '{{ $brand->id }}'" class="bg-muted/60">
                         <td colspan="4" class="px-6 py-4">
-                            <div x-data="tableSelection({ bulkEndpoint: '{{ route('vehicle-models.bulk-delete') }}', rowAttr: 'data-model-id', modalName: 'bulk-delete-confirm-models-{{ $brand->id }}' })">
+                            <div x-data="tableSelection({ bulkEndpoint: '{{ route('vehicle-models.bulk-delete') }}', bulkExportEndpoint: '{{ route('vehicle-models.bulk-export') }}', rowAttr: 'data-model-id', modalName: 'bulk-delete-confirm-models-{{ $brand->id }}' })">
                                 <div class="flex items-center justify-between mb-2">
                                     <div class="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                                         Models under {{ $brand->name }} ({{ $brand->models->count() }})
@@ -101,6 +102,7 @@
 
                                 <x-table-selection-bar
                                     :bulk-endpoint="route('vehicle-models.bulk-delete')"
+                                    :bulk-export-endpoint="route('vehicle-models.bulk-export')"
                                     modal-name="bulk-delete-confirm-models-{{ $brand->id }}"
                                     bulkConfirmMessage="Models linked to existing vehicles will be skipped."
                                 >

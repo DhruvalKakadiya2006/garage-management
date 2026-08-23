@@ -6,9 +6,9 @@
                 Job Cards
             </h2>
             <div class="flex items-center gap-2">
-                <x-button variant="secondary" :href="route('import-export.index', ['entity' => 'job_cards'])">
+                <x-button variant="secondary" type="button" @click="$dispatch('open-modal', 'import-csv-job-cards')">
                     <x-heroicon-o-arrow-up-tray class="w-4 h-4" />
-                    Import
+                    Import CSV
                 </x-button>
                 <x-dropdown align="left" width="64">
                     <x-slot name="trigger">
@@ -54,7 +54,7 @@
 
     <div class="py-6">
         <div class="max-w-full sm:px-6 lg:px-8 space-y-4"
-             x-data="{ ...tableSelection({ bulkEndpoint: '{{ route('job-cards.bulk-delete') }}' }), ...jobCardList() }">
+             x-data="mergeAlpineData(tableSelection({ bulkEndpoint: '{{ route('job-cards.bulk-delete') }}', bulkExportEndpoint: '{{ route('job-cards.bulk-export') }}' }), jobCardList())">
 
             @if (session('success'))
                 <div class="bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-md">
@@ -81,6 +81,7 @@
             <!-- Contextual action bar -->
             <x-table-selection-bar
                 :bulk-endpoint="route('job-cards.bulk-delete')"
+                :bulk-export-endpoint="route('job-cards.bulk-export')"
                 bulkConfirmMessage="Parts stock will be returned and related payments will be removed."
             >
                 <x-slot name="single">
@@ -265,6 +266,8 @@
             </x-data-table>
         </div>
     </div>
+
+    <x-import-csv-modal name="import-csv-job-cards" entity="job_cards" title="Import Job Cards" />
 
     <script>
         function jobCardList() {

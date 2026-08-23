@@ -29,22 +29,24 @@
         @endif
 
         @if ($deleteRoute)
-            <form
-                action="{{ $deleteRoute($model) }}"
-                method="POST"
-                onsubmit="return confirm('{{ addslashes($confirm) }}');"
-                class="inline"
-            >
-                @csrf
-                @method('DELETE')
-                <button
-                    type="submit"
-                    title="Delete"
-                    class="inline-flex items-center justify-center rounded-md p-2 text-red-600 transition-colors duration-150 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            @can('admin')
+                <form
+                    action="{{ $deleteRoute($model) }}"
+                    method="POST"
+                    onsubmit="return confirm('{{ addslashes($confirm) }}');"
+                    class="inline"
                 >
-                    <x-heroicon-o-trash class="w-5 h-5" />
-                </button>
-            </form>
+                    @csrf
+                    @method('DELETE')
+                    <button
+                        type="submit"
+                        title="Delete"
+                        class="inline-flex items-center justify-center rounded-md p-2 text-red-600 transition-colors duration-150 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                        <x-heroicon-o-trash class="w-5 h-5" />
+                    </button>
+                </form>
+            @endcan
         @endif
     </div>
 </td>

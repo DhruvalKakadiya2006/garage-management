@@ -6,7 +6,6 @@ use App\Models\Customer;
 use App\Models\Vehicle;
 use App\Models\VehicleBrand;
 use App\Models\VehicleModel;
-use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 
 class CustomerVehicleController extends Controller
@@ -95,12 +94,16 @@ class CustomerVehicleController extends Controller
 
     public function destroy(Vehicle $vehicle)
     {
-        try {
-            $vehicle->delete();
+        $this->authorize('admin');
 
-            return redirect()->route('customers.index')->with('success', 'Vehicle deleted.');
-        } catch (QueryException $e) {
-            return back()->with('error', 'Cannot delete — this vehicle has existing job cards or invoices linked to it.');
+        // Explicit pre-check keeps the user-facing reason accurate; anything
+        // else (unexpected DB failure) still surfaces as a real error.
+        if ($vehicle->jobCards()->exists()) {
+            return back()->with('error', 'Cannot delete — this vehicle has existing job cards linked to it.');
         }
+
+        $vehicle->delete();
+
+        return redirect()->route('customers.index')->with('success', 'Vehicle deleted.');
     }
 }

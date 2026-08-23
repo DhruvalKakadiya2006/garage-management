@@ -17,7 +17,7 @@ class SparePartImportExportTest extends TestCase
     private User $user;
 
     private const EXPORT_HEADERS = [
-        'external_ref', 'part_name', 'part_code', 'category', 'compatible_vehicle_brand',
+        'external_ref', 'part_name', 'part_code', 'category',
         'unit', 'purchase_price', 'mrp', 'labor_charge', 'hsn_code', 'gst_rate',
         'current_stock_qty', 'reorder_level', 'created_at', 'updated_at',
     ];
@@ -118,8 +118,8 @@ class SparePartImportExportTest extends TestCase
 
     public function test_import_export_routes_require_authentication()
     {
-        $this->get(route('import-export.index'))->assertRedirect(route('login'));
         $this->get(route('import-export.export', ['entity' => 'spare_parts']))->assertRedirect(route('login'));
+        $this->post(route('import-export.preview'))->assertRedirect(route('login'));
     }
 
     public function test_inventory_has_import_and_export_actions()
@@ -127,17 +127,11 @@ class SparePartImportExportTest extends TestCase
         $this->actingAs($this->user)
             ->get(route('inventory.index'))
             ->assertOk()
-            ->assertSee(route('import-export.index', ['entity' => 'spare_parts']))
+            ->assertSee('Import CSV')
+            ->assertSee(route('import-export.preview'), false)
+            ->assertSee('name="entity" value="spare_parts"', false)
             ->assertSee(route('import-export.export', ['entity' => 'spare_parts']))
             ->assertSee(route('import-export.template', ['entity' => 'spare_parts']));
-    }
-
-    public function test_hub_lists_spare_parts_entity()
-    {
-        $this->actingAs($this->user)
-            ->get(route('import-export.index'))
-            ->assertOk()
-            ->assertSee('Spare Parts');
     }
 
     // ------------------------------------------------------------- export
@@ -248,7 +242,7 @@ class SparePartImportExportTest extends TestCase
         $content = $this->csv([[
             'part_name' => 'Chain Kit',
             'part_code' => 'CHN-003',
-            'category' => 'Transmission',
+            'category' => 'drive-system',
             'unit' => 'pcs',
             'purchase_price' => '250',
             'mrp' => '320',
@@ -281,6 +275,7 @@ class SparePartImportExportTest extends TestCase
         $content = $this->csv([[
             'part_name' => 'Chain Kit',
             'part_code' => 'CHN-003',
+            'category' => 'brakes',
             'unit' => 'pcs',
             'purchase_price' => '250',
             'mrp' => '320',
@@ -316,6 +311,7 @@ class SparePartImportExportTest extends TestCase
             'external_ref' => 'EXT-1',
             'part_name' => 'New Name',
             'part_code' => 'BRK-001',
+            'category' => 'brakes',
             'unit' => 'set',
             'purchase_price' => '350',
             'mrp' => '450',
@@ -340,7 +336,7 @@ class SparePartImportExportTest extends TestCase
 
     public function test_headers_are_matched_case_insensitively()
     {
-        $content = "Part_Name,Part_Code,Unit,Purchase_Price,MRP\nChain Kit,CHN-003,pcs,250,320\n";
+        $content = "Part_Name,Part_Code,Category,Unit,Purchase_Price,MRP\nChain Kit,CHN-003,brakes,pcs,250,320\n";
 
         $token = $this->upload($content, 'create_or_update');
 
@@ -355,8 +351,8 @@ class SparePartImportExportTest extends TestCase
     public function test_duplicate_rows_inside_file_are_rejected()
     {
         $content = $this->csv([
-            ['part_name' => 'A', 'part_code' => 'BRK-001', 'unit' => 'set', 'purchase_price' => '10', 'mrp' => '20'],
-            ['part_name' => 'B', 'part_code' => 'BRK-001', 'unit' => 'set', 'purchase_price' => '10', 'mrp' => '20'],
+            ['part_name' => 'A', 'part_code' => 'BRK-001', 'category' => 'brakes', 'unit' => 'set', 'purchase_price' => '10', 'mrp' => '20'],
+            ['part_name' => 'B', 'part_code' => 'BRK-001', 'category' => 'brakes', 'unit' => 'set', 'purchase_price' => '10', 'mrp' => '20'],
         ]);
 
         $token = $this->upload($content, 'create_or_update');
@@ -378,6 +374,7 @@ class SparePartImportExportTest extends TestCase
         $content = $this->csv([[
             'part_name' => 'Chain Kit',
             'part_code' => 'CHN-003',
+            'category' => 'brakes',
             'unit' => 'box',
             'purchase_price' => '250',
             'mrp' => '320',
@@ -399,6 +396,7 @@ class SparePartImportExportTest extends TestCase
         $content = $this->csv([[
             'part_name' => 'Chain Kit',
             'part_code' => 'CHN-003',
+            'category' => 'brakes',
             'unit' => 'pcs',
             'purchase_price' => '250',
             'mrp' => '320',
@@ -442,6 +440,7 @@ class SparePartImportExportTest extends TestCase
         $content = $this->csv([[
             'part_name' => 'New',
             'part_code' => 'BRK-001',
+            'category' => 'brakes',
             'unit' => 'set',
             'purchase_price' => '10',
             'mrp' => '20',
@@ -467,6 +466,7 @@ class SparePartImportExportTest extends TestCase
         $content = $this->csv([[
             'part_name' => 'New',
             'part_code' => 'BRK-001',
+            'category' => 'brakes',
             'unit' => 'set',
             'purchase_price' => '10',
             'mrp' => '20',

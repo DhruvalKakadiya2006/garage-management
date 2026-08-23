@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\ImportExport\Enums\ImportMode;
 use App\ImportExport\Exceptions\ImportException;
 use App\ImportExport\ExportService;
 use App\ImportExport\ImportRegistry;
@@ -14,13 +13,16 @@ use Illuminate\Support\Str;
 /**
  * Web UI for the reusable import/export foundation.
  *
+ * There is no central Import/Export hub: each module's index page hosts its
+ * own import upload (a shared modal that POSTs to preview) and export actions,
+ * pointing at these entity-scoped routes with their own entity key.
+ *
  * Routes:
- *  - index          import/export hub (entity cards + upload form)
  *  - preview        POST upload → stores file + session, redirects to preview
  *  - preview/{token} dry-run report (safe to refresh; writes nothing)
  *  - confirm/{token} POST confirm → applies safe rows in a transaction
- *  - export         CSV download
- *  - template       CSV import template
+ *  - export         CSV download (entity query param)
+ *  - template       CSV import template (entity query param)
  *  - error-report/{token} downloadable row-level issue list
  */
 class ImportExportController extends Controller
@@ -29,34 +31,7 @@ class ImportExportController extends Controller
         private readonly ImportRegistry $registry,
         private readonly ImportService $importService,
         private readonly ExportService $exportService,
-    ) {
-    }
-
-    public function index(Request $request)
-    {
-        $entities = array_map(
-            fn (array $entity) => $this->registry->details($entity['key']),
-            $this->registry->available(),
-        );
-
-        $selected = (string) $request->query('entity', '');
-        if ($selected !== '' && ! $this->registry->has($selected)) {
-            $selected = '';
-        }
-
-        $limits = [
-            'max_file_size' => config('import-export.max_file_size_bytes'),
-            'allowed_extensions' => config('import-export.allowed_extensions', ['csv']),
-            'max_rows' => config('import-export.max_rows'),
-        ];
-
-        return view('import-export.index', compact('entities', 'selected', 'limits'));
-    }
-
-    public function guide()
-    {
-        return view('import-export.guide');
-    }
+    ) {}
 
     public function preview(Request $request)
     {
@@ -97,22 +72,28 @@ class ImportExportController extends Controller
         try {
             $report = $this->importService->previewForToken($token);
         } catch (ImportException $e) {
+            $home = $this->moduleRouteFor($this->entityKeyForToken($token));
             $this->cleanup($token);
 
-            return redirect()->route('import-export.index')->with('error', $e->getMessage());
+            return redirect()->route($home)->with('error', $e->getMessage());
         }
 
         return view('import-export.preview', compact('report', 'token'));
     }
 
-    public function confirm(string $token)
+    public function confirm(Request $request, string $token)
     {
         try {
             $report = $this->importService->confirm($token);
         } catch (ImportException $e) {
+            // The session file may already be gone (e.g. a replayed/expired
+            // token), so fall back to the entity the preview form posted.
+            $home = $this->moduleRouteFor(
+                $request->input('entity') ?: $this->entityKeyForToken($token)
+            );
             $this->cleanup($token);
 
-            return redirect()->route('import-export.index')->with('error', $e->getMessage());
+            return redirect()->route($home)->with('error', $e->getMessage());
         }
 
         return view('import-export.result', compact('report'));
@@ -122,7 +103,7 @@ class ImportExportController extends Controller
     {
         $entity = (string) $request->query('entity', '');
 
-        if (! $this->registry->has($entity)) {
+        if (! $this->registry->hasExport($entity)) {
             abort(404);
         }
 
@@ -168,5 +149,31 @@ class ImportExportController extends Controller
         }
 
         $disk->delete($sessionPath);
+    }
+
+    /**
+     * Entity key for a stored upload session, so a failed preview/confirm can
+     * redirect back to the module the import was started from.
+     */
+    private function entityKeyForToken(string $token): ?string
+    {
+        $disk = Storage::disk(config('import-export.storage.disk'));
+        $path = config('import-export.storage.sessions').'/'.$token.'.json';
+
+        if (! $disk->exists($path)) {
+            return null;
+        }
+
+        $session = json_decode($disk->get($path), true);
+
+        return is_array($session) ? ($session['entity_key'] ?? null) : null;
+    }
+
+    /**
+     * Module index route that hosts a given entity's import/export actions.
+     */
+    private function moduleRouteFor(?string $entityKey): string
+    {
+        return config("import-export.module_routes.{$entityKey}", 'dashboard');
     }
 }

@@ -16,6 +16,8 @@
             ['field' => 'external_ref', 'label' => 'External Ref'],
         ],
     };
+
+    $backRoute = route(config('import-export.module_routes.'.$report->entityKey, 'dashboard'));
 @endphp
 
 <x-app-layout>
@@ -25,7 +27,7 @@
                 <x-heroicon-o-magnifying-glass class="w-6 h-6 text-primary" />
                 Preview Import
             </h2>
-            <x-button variant="secondary" :href="route('import-export.index')">
+            <x-button variant="secondary" :href="$backRoute">
                 <x-heroicon-o-arrow-left class="w-4 h-4" />
                 Back
             </x-button>
@@ -138,6 +140,7 @@
             @if ($report->canConfirm())
                 <form method="POST" action="{{ route('import-export.confirm', $token) }}">
                     @csrf
+                    <input type="hidden" name="entity" value="{{ $report->entityKey }}">
                     <div class="flex items-center justify-between rounded-lg border border-primary-200 bg-primary-50 px-4 py-3">
                         <div class="text-sm text-primary-800">
                             <span class="font-semibold">{{ $report->plannedCreates() + $report->plannedUpdates() }} row(s)</span> will be applied.

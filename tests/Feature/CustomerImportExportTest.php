@@ -115,8 +115,8 @@ class CustomerImportExportTest extends TestCase
 
     public function test_import_export_routes_require_authentication()
     {
-        $this->get(route('import-export.index'))->assertRedirect(route('login'));
         $this->get(route('import-export.export', ['entity' => 'customers']))->assertRedirect(route('login'));
+        $this->post(route('import-export.preview'))->assertRedirect(route('login'));
     }
 
     public function test_customer_list_has_import_and_export_actions()
@@ -124,17 +124,11 @@ class CustomerImportExportTest extends TestCase
         $this->actingAs($this->user)
             ->get(route('customers.index'))
             ->assertOk()
-            ->assertSee('Import')
-            ->assertSee('Export');
-    }
-
-    public function test_hub_lists_registered_entities()
-    {
-        $this->actingAs($this->user)
-            ->get(route('import-export.index'))
-            ->assertOk()
-            ->assertSee('Customers')
-            ->assertSee('Vehicle Brands');
+            ->assertSee('Import CSV')
+            ->assertSee(route('import-export.preview'), false)
+            ->assertSee('name="entity" value="customers"', false)
+            ->assertSee(route('import-export.export', ['entity' => 'customers']))
+            ->assertSee(route('import-export.template', ['entity' => 'customers']));
     }
 
     // ------------------------------------------------------------- export
@@ -586,8 +580,8 @@ class CustomerImportExportTest extends TestCase
         $this->confirm($token)->assertOk();
 
         $this->actingAs($this->user)
-            ->post(route('import-export.confirm', $token))
-            ->assertRedirect(route('import-export.index'))
+            ->post(route('import-export.confirm', $token), ['entity' => 'customers'])
+            ->assertRedirect(route('customers.index'))
             ->assertSessionHas('error');
     }
 }

@@ -1,8 +1,9 @@
 @php
     $isInvoice = $documentType === 'invoice';
-    $company = config('garage.company');
+    $profile = \App\Models\CompanyProfile::profile();
     $currency = config('garage.currency_symbol');
     $money = fn ($value) => $currency . number_format((float) $value, 2);
+    $trimGst = fn ($value) => rtrim(rtrim(number_format((float) $value, 2), '0'), '.');
 
     $partsTotal = (float) $jobCard->parts->sum('line_total');
     $laboursTotal = (float) $jobCard->labours->sum('line_total');
@@ -21,6 +22,37 @@
 
     $vehicle = $jobCard->vehicle;
     $customer = $jobCard->customer;
+
+    // Recompute the GST split exactly as GstCalculator does, grouped by
+    // HSN/SAC + rate, so the summary rows reconcile with the document totals.
+    $discountRatio = $subtotal > 0 ? $discountAmount / $subtotal : 0;
+    $hsnRows = [];
+    if ($jobCard->gst_applicable) {
+        $collect = function ($lineTotal, $rate, $hsn, $description) use (&$hsnRows, $discountRatio) {
+            $rate = (float) $rate;
+            if ($rate <= 0) {
+                return;
+            }
+            $key = ($hsn ?: '—') . '|' . $rate;
+            $taxable = (float) $lineTotal * (1 - $discountRatio);
+            $half = round($taxable * $rate / 200, 2);
+            $hsnRows[$key]['hsn'] = $hsn ?: '—';
+            $hsnRows[$key]['descriptions'][$description] = true;
+            $hsnRows[$key]['rate'] = $rate;
+            $hsnRows[$key]['taxable'] = ($hsnRows[$key]['taxable'] ?? 0) + $taxable;
+            $hsnRows[$key]['cgst'] = ($hsnRows[$key]['cgst'] ?? 0) + $half;
+            $hsnRows[$key]['sgst'] = ($hsnRows[$key]['sgst'] ?? 0) + $half;
+        };
+
+        foreach ($jobCard->parts as $part) {
+            $collect($part->line_total, $part->sparePart->gst_rate, $part->sparePart->hsn_code, $part->sparePart->part_name);
+        }
+        foreach ($jobCard->labours as $labour) {
+            if ($labour->labourMaster->taxable) {
+                $collect($labour->line_total, $labour->labourMaster->gst_rate, $labour->labourMaster->hsn_sac_code, $labour->labourMaster->service_name);
+            }
+        }
+    }
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -28,177 +60,19 @@
     <meta charset="utf-8">
     <title>{{ $isInvoice ? 'TAX INVOICE' : 'ESTIMATE' }} — {{ $jobCard->job_card_no }}</title>
     <style>
-        @font-face {
-            font-family: 'Open Sans';
-            font-style: normal;
-            font-weight: 400;
-            src: url('storage/fonts/OpenSans-Regular.ttf') format('truetype');
-        }
-        @font-face {
-            font-family: 'Open Sans';
-            font-style: normal;
-            font-weight: 700;
-            src: url('storage/fonts/OpenSans-Bold.ttf') format('truetype');
-        }
-        @font-face {
-            font-family: 'Open Sans';
-            font-style: italic;
-            font-weight: 400;
-            src: url('storage/fonts/OpenSans-Italic.ttf') format('truetype');
-        }
-        @font-face {
-            font-family: 'Open Sans';
-            font-style: italic;
-            font-weight: 700;
-            src: url('storage/fonts/OpenSans-BoldItalic.ttf') format('truetype');
-        }
-        @page {
-            size: A4 portrait;
-            margin: 14mm 14mm 18mm 14mm;
-        }
-        * { box-sizing: border-box; }
-        body {
-            font-family: 'Open Sans', sans-serif;
-            font-size: 10pt;
-            color: #1f2937;
-            margin: 0;
-            padding: 0;
-            line-height: 1.4;
-        }
-        .doc-header {
-            width: 100%;
-            border-bottom: 2pt solid #145C9E;
-            padding-bottom: 8pt;
-            margin-bottom: 12pt;
-            overflow: hidden;
-        }
-        .doc-title {
-            font-size: 20pt;
-            font-weight: bold;
-            letter-spacing: 1pt;
-            color: #145C9E;
-        }
-        .doc-meta { text-align: right; }
-        .doc-meta .field { font-size: 9pt; color: #374151; margin-top: 2pt; }
-        .company-name { font-size: 14pt; font-weight: bold; color: #111827; }
-        .company-line { font-size: 8.5pt; color: #6b7280; }
-        .doc-subtitle {
-            font-size: 9pt;
-            color: #6b7280;
-            margin-bottom: 8pt;
-        }
-        .section {
-            margin-bottom: 10pt;
-            page-break-inside: avoid;
-        }
-        .section-title {
-            font-size: 9.5pt;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.5pt;
-            color: #145C9E;
-            border-bottom: 1pt solid #e5e7eb;
-            padding-bottom: 2pt;
-            margin-bottom: 5pt;
-        }
-        .grid-2 {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .grid-2 td {
-            vertical-align: top;
-            padding: 0 8pt 6pt 0;
-        }
-        .label { font-size: 8pt; text-transform: uppercase; color: #6b7280; }
-        .value { font-size: 10pt; color: #111827; }
-        .complaint { padding: 2pt 0; }
-        table.data {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 9pt;
-        }
-        table.data th {
-            background: #f3f4f6;
-            border: 1pt solid #e5e7eb;
-            padding: 4pt 6pt;
-            text-align: left;
-            font-size: 8.5pt;
-            text-transform: uppercase;
-            color: #374151;
-        }
-        table.data td {
-            border: 1pt solid #e5e7eb;
-            padding: 4pt 6pt;
-            vertical-align: top;
-        }
-        .right { text-align: right; }
-        .center { text-align: center; }
-        .totals {
-            width: 55%;
-            margin-left: auto;
-            border-collapse: collapse;
-            font-size: 9.5pt;
-        }
-        .totals td {
-            padding: 3pt 6pt;
-        }
-        .totals .grand td {
-            border-top: 2pt solid #145C9E;
-            font-weight: bold;
-            font-size: 11pt;
-        }
-        .terms {
-            margin-top: 14pt;
-            font-size: 9pt;
-            color: #374151;
-        }
-        .terms .title {
-            font-weight: bold;
-            color: #111827;
-        }
-        .footer {
-            position: fixed;
-            bottom: -14mm;
-            left: 0;
-            right: 0;
-            text-align: center;
-            font-size: 8pt;
-            color: #6b7280;
-        }
+        @include('pdf.partials.styles')
     </style>
 </head>
 <body>
 
-    <div class="doc-header">
-        <table style="width:100%; border-collapse:collapse;">
-            <tr>
-                <td style="width:60%;">
-                    <div class="company-name">{{ $company['name'] }}</div>
-                    @if ($company['address_line1'])
-                        <div class="company-line">{{ $company['address_line1'] }}</div>
-                    @endif
-                    @if ($company['address_line2'])
-                        <div class="company-line">{{ $company['address_line2'] }}</div>
-                    @endif
-                    @if ($company['city'] || $company['state'] || $company['pin'])
-                        <div class="company-line">{{ trim(implode(', ', array_filter([$company['city'], $company['state'], $company['pin']]))) }}</div>
-                    @endif
-                    @if ($company['gstin'])
-                        <div class="company-line">GSTIN: {{ $company['gstin'] }}</div>
-                    @endif
-                    @if ($company['phone'])
-                        <div class="company-line">Phone: {{ $company['phone'] }}</div>
-                    @endif
-                </td>
-                <td class="doc-meta">
-                    <div class="doc-title">{{ $isInvoice ? 'TAX INVOICE' : 'ESTIMATE' }}</div>
-                    <div class="field"><strong>{{ $isInvoice ? 'Invoice' : 'Estimate' }} No:</strong> {{ $jobCard->job_card_no }}</div>
-                    <div class="field"><strong>Date:</strong> {{ $documentDate->format('d M Y') }}</div>
-                    <div class="field"><strong>Job Card:</strong> {{ $jobCard->job_card_no }}</div>
-                </td>
-            </tr>
-        </table>
-    </div>
+    @include('pdf.partials.company-header', [
+        'documentTitle' => $isInvoice ? 'TAX INVOICE' : 'ESTIMATE',
+        'docMeta' => [
+            ($isInvoice ? 'Invoice No' : 'Estimate No') => $jobCard->job_card_no,
+            'Date' => $documentDate->format('d M Y'),
+            'Job Card' => $jobCard->job_card_no,
+        ],
+    ])
 
     <div class="doc-subtitle">
         {{ $isInvoice
@@ -291,7 +165,7 @@
                         <td>
                             {{ $part->sparePart->part_name }}
                             @if ($part->sparePart->part_code)
-                                <div style="font-size:8pt; color:#6b7280;">{{ $part->sparePart->part_code }}</div>
+                                <div style="font-size:8pt; color:#333333;">{{ $part->sparePart->part_code }}</div>
                             @endif
                         </td>
                         <td>{{ $part->sparePart->hsn_code ?? '-' }}</td>
@@ -299,7 +173,7 @@
                         <td>{{ $part->sparePart->unit ?? 'pcs' }}</td>
                         <td class="right">{{ $money($part->mrp) }}</td>
                         <td class="right">{{ $money($part->labor_charge) }}</td>
-                        <td class="right">{{ $jobCard->gst_applicable && $part->sparePart->gst_rate ? rtrim(rtrim(number_format($part->sparePart->gst_rate, 2), '0'), '.') : '—' }}</td>
+                        <td class="right">{{ $jobCard->gst_applicable && $part->sparePart->gst_rate ? $trimGst($part->sparePart->gst_rate) : '—' }}</td>
                         <td class="right">{{ $money($part->line_total) }}</td>
                     </tr>
                 @endforeach
@@ -329,12 +203,52 @@
                         <td>{{ $loop->iteration }}</td>
                         <td>{{ $labour->labourMaster->service_name }}</td>
                         <td>{{ $labour->technician->name ?? '—' }}</td>
-                        <td class="right">{{ rtrim(rtrim(number_format($labour->qty, 2), '0'), '.') }}</td>
+                        <td class="right">{{ $trimGst($labour->qty) }}</td>
                         <td class="right">{{ $money($labour->rate) }}</td>
-                        <td class="right">{{ $jobCard->gst_applicable && $labour->labourMaster->taxable && $labour->labourMaster->gst_rate ? rtrim(rtrim(number_format($labour->labourMaster->gst_rate, 2), '0'), '.') : '—' }}</td>
+                        <td class="right">{{ $jobCard->gst_applicable && $labour->labourMaster->taxable && $labour->labourMaster->gst_rate ? $trimGst($labour->labourMaster->gst_rate) : '—' }}</td>
                         <td class="right">{{ $money($labour->line_total) }}</td>
                     </tr>
                 @endforeach
+            </tbody>
+        </table>
+    </div>
+    @endif
+
+    @if ($jobCard->gst_applicable && count($hsnRows) > 0)
+    <div class="section">
+        <div class="section-title">GST Summary</div>
+        <table class="data">
+            <thead>
+                <tr>
+                    <th style="width:12%;">HSN / SAC</th>
+                    <th style="width:26%;">Description</th>
+                    <th class="right" style="width:16%;">Taxable Value</th>
+                    <th class="right" style="width:10%;">CGST %</th>
+                    <th class="right" style="width:12%;">CGST Amt</th>
+                    <th class="right" style="width:10%;">SGST %</th>
+                    <th class="right" style="width:12%;">SGST Amt</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($hsnRows as $row)
+                    <tr>
+                        <td>{{ $row['hsn'] }}</td>
+                        <td>{{ implode(', ', array_keys($row['descriptions'])) }}</td>
+                        <td class="right">{{ $money($row['taxable']) }}</td>
+                        <td class="right">{{ $trimGst($row['rate'] / 2) }}</td>
+                        <td class="right">{{ $money($row['cgst']) }}</td>
+                        <td class="right">{{ $trimGst($row['rate'] / 2) }}</td>
+                        <td class="right">{{ $money($row['sgst']) }}</td>
+                    </tr>
+                @endforeach
+                <tr>
+                    <td colspan="2" style="font-weight:bold;">Total</td>
+                    <td class="right" style="font-weight:bold;">{{ $money(array_sum(array_column($hsnRows, 'taxable'))) }}</td>
+                    <td></td>
+                    <td class="right" style="font-weight:bold;">{{ $money(array_sum(array_column($hsnRows, 'cgst'))) }}</td>
+                    <td></td>
+                    <td class="right" style="font-weight:bold;">{{ $money(array_sum(array_column($hsnRows, 'sgst'))) }}</td>
+                </tr>
             </tbody>
         </table>
     </div>
@@ -356,7 +270,7 @@
             </tr>
             @if ($discountAmount > 0)
             <tr>
-                <td>Discount{{ $discountPercent > 0 ? ' (' . rtrim(rtrim(number_format($discountPercent, 2), '0'), '.') . '%)' : '' }}</td>
+                <td>Discount{{ $discountPercent > 0 ? ' (' . $trimGst($discountPercent) . '%)' : '' }}</td>
                 <td class="right">-{{ $money($discountAmount) }}</td>
             </tr>
             @endif
@@ -381,6 +295,10 @@
         </table>
     </div>
 
+    <div class="amount-in-words">
+        Amount in Words: {{ \App\Support\IndianCurrency::inWords($grandTotal) }}
+    </div>
+
     <div class="section terms">
         <div class="title">{{ $isInvoice ? 'Payment Terms' : 'Validity' }}</div>
         @if ($isInvoice)
@@ -388,14 +306,24 @@
         @else
             <p>This estimate is valid for {{ config('garage.estimate_validity_days') }} days from the date of issue (until {{ $validUntil->format('d M Y') }}). Final invoice amount may change if additional work is required.</p>
         @endif
+        @if ($profile->terms_and_conditions)
+            <p style="margin-top:4pt;">{{ $profile->terms_and_conditions }}</p>
+        @endif
         @if ($jobCard->remarks)
             <p style="margin-top:4pt;"><strong>Remarks:</strong> {{ $jobCard->remarks }}</p>
         @endif
     </div>
 
-    <div class="footer">
-        This is a computer-generated {{ $isInvoice ? 'invoice' : 'estimate' }}. Generated on {{ now()->format('d M Y H:i') }}. — {{ $company['name'] }}
+    <div class="signatory">
+        <div class="sign-line"></div>
+        <div>For {{ $profile->company_name }}</div>
+        <div>Authorised Signatory</div>
     </div>
+
+    @include('pdf.partials.footer', [
+        'documentLabel' => $isInvoice ? 'invoice' : 'estimate',
+        'companyName' => $profile->company_name,
+    ])
 
 </body>
 </html>

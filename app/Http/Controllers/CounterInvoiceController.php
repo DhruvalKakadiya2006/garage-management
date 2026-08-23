@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\BulkDeletesRecords;
+use App\Http\Controllers\Concerns\BulkExportsRecords;
 use App\Models\CounterInvoice;
 use App\Models\SparePart;
 use App\Rules\DiscountWithinSubtotal;
@@ -17,10 +18,16 @@ use Illuminate\Support\Facades\Validator;
 class CounterInvoiceController extends Controller
 {
     use BulkDeletesRecords;
+    use BulkExportsRecords;
 
     protected function bulkDeleteModel(): string
     {
         return CounterInvoice::class;
+    }
+
+    protected function bulkExportEntity(): string
+    {
+        return 'counter_invoices';
     }
 
     /**
@@ -240,6 +247,8 @@ class CounterInvoiceController extends Controller
 
     public function destroy(CounterInvoice $counterInvoice)
     {
+        $this->authorize('admin');
+
         DB::beginTransaction();
         try {
             // Delete items one-by-one so CounterInvoiceItem::deleting returns stock.

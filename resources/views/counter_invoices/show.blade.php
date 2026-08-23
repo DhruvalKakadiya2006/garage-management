@@ -177,12 +177,14 @@
                                     <td class="px-4 py-2 text-right text-xs whitespace-nowrap">
                                         <div class="inline-flex items-center gap-3">
                                             <a href="{{ route('payments.edit', $payment) }}" class="text-primary hover:text-primary-700">Edit</a>
-                                            <form action="{{ route('payments.destroy', $payment) }}" method="POST"
-                                                  onsubmit="return confirm('Void (delete) this payment record?');" class="inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:text-red-800">Void</button>
-                                            </form>
+                                            @can('admin')
+                                                <form action="{{ route('payments.destroy', $payment) }}" method="POST"
+                                                      onsubmit="return confirm('Void (delete) this payment record?');" class="inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="text-red-600 hover:text-red-800">Void</button>
+                                                </form>
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>

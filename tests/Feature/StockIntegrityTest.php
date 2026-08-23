@@ -67,7 +67,7 @@ class StockIntegrityTest extends TestCase
         return ['parts' => $parts];
     }
 
-    public function test_deleting_job_card_returns_part_stock()
+    public function test_soft_deleting_job_card_keeps_stock_and_parts_for_restore()
     {
         $user = $this->makeUser();
         $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
@@ -91,9 +91,30 @@ class StockIntegrityTest extends TestCase
 
         $this->assertEquals(8, (int) $part->fresh()->current_stock_qty);
 
+        // Soft delete: the document is hidden but stock stays deducted and
+        // part rows remain attached so a restore brings everything back.
         $this->actingAs($user)
             ->delete(route('job-cards.destroy', $jobCard))
             ->assertRedirect(route('job-cards.index'));
+
+        $this->assertSoftDeleted('job_cards', ['id' => $jobCard->id]);
+        $this->assertDatabaseHas('job_card_parts', ['job_card_id' => $jobCard->id]);
+        $this->assertEquals(8, (int) $part->fresh()->current_stock_qty);
+        $this->assertEquals(0, JobCard::count());
+
+        // Restoring resurrects the document with its lines intact. Re-fetch
+        // through withTrashed(): the earlier $jobCard instance predates the
+        // HTTP soft delete, so its restore() would be a dirty-attribute no-op.
+        JobCard::withTrashed()->findOrFail($jobCard->id)->restore();
+        $this->assertEquals(1, JobCard::count());
+        $this->assertCount(1, $jobCard->fresh()->parts);
+        $this->assertEquals(8, (int) $part->fresh()->current_stock_qty);
+
+        // Permanent removal returns stock via the per-part deleting hook
+        foreach ($jobCard->fresh()->parts as $partRow) {
+            $partRow->delete();
+        }
+        $jobCard->forceDelete();
 
         $this->assertDatabaseMissing('job_cards', ['id' => $jobCard->id]);
         $this->assertDatabaseMissing('job_card_parts', ['job_card_id' => $jobCard->id]);
@@ -295,6 +316,49 @@ class StockIntegrityTest extends TestCase
         $this->assertDatabaseCount('counter_invoice_items', 0);
     }
 
+    public function test_assign_resave_with_unchanged_lines_preserves_rows_and_stock()
+    {
+        $user = $this->makeUser();
+        $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
+        $part = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 10);
+
+        $jobCard = $this->makeJobCard($customer, $vehicle);
+
+        $payload = $this->assignPayload([
+            ['spare_part_id' => $part->id, 'quantity' => 2, 'mrp' => 50, 'labor_charge' => 10],
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('job-cards.assign-update', $jobCard), $payload)
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertEquals(8, (int) $part->fresh()->current_stock_qty);
+        $partRowId = $jobCard->parts()->first()->id;
+
+        // Re-submitting the exact same lines must not churn stock or rows
+        $this->actingAs($user)
+            ->post(route('job-cards.assign-update', $jobCard), $payload)
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertEquals(8, (int) $part->fresh()->current_stock_qty);
+        $this->assertDatabaseCount('job_card_parts', 1);
+        $this->assertDatabaseHas('job_card_parts', ['id' => $partRowId]);
+
+        // Changing one line still triggers the full rewrite path
+        $this->actingAs($user)
+            ->post(route('job-cards.assign-update', $jobCard), $this->assignPayload([
+                ['spare_part_id' => $part->id, 'quantity' => 3, 'mrp' => 50, 'labor_charge' => 10],
+            ]))
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertEquals(7, (int) $part->fresh()->current_stock_qty);
+        $this->assertDatabaseMissing('job_card_parts', ['id' => $partRowId]);
+    }
+
     public function test_database_cascade_no_longer_silently_deletes_parts()
     {
         $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
@@ -314,10 +378,12 @@ class StockIntegrityTest extends TestCase
         $this->assertEquals(8, (int) $part->fresh()->current_stock_qty);
 
         // Bypassing the controller (no manual child deletes) must now fail loudly
-        // thanks to the restrict FK, instead of silently losing stock.
+        // thanks to the restrict FK, instead of silently losing stock. A soft
+        // delete leaves the database untouched by design — forceDelete is what
+        // hits the FK guard.
         try {
-            $jobCard->delete();
-            $this->fail('Expected QueryException when deleting a job card that still has parts.');
+            $jobCard->forceDelete();
+            $this->fail('Expected QueryException when force-deleting a job card that still has parts.');
         } catch (QueryException $e) {
             $this->assertTrue(true);
         }

@@ -215,16 +215,11 @@ class JobCardImportExportTest extends TestCase
         $this->actingAs($this->user)
             ->get(route('job-cards.index'))
             ->assertOk()
-            ->assertSee('Import')
-            ->assertSee('Export');
-    }
-
-    public function test_hub_lists_job_cards_entity()
-    {
-        $this->actingAs($this->user)
-            ->get(route('import-export.index'))
-            ->assertOk()
-            ->assertSee('Job Cards');
+            ->assertSee('Import CSV')
+            ->assertSee(route('import-export.preview'), false)
+            ->assertSee('name="entity" value="job_cards"', false)
+            ->assertSee(route('import-export.export', ['entity' => 'job_cards']))
+            ->assertSee(route('import-export.template', ['entity' => 'job_cards']));
     }
 
     // ------------------------------------------------------------- export
@@ -740,7 +735,9 @@ class JobCardImportExportTest extends TestCase
             ->streamedContent();
 
         // 3. Wipe to a clean database (child tables first for FK safety).
-        JobCard::query()->delete();
+        //    forceDelete is required: a plain delete now only soft-deletes
+        //    job cards, leaving rows that would block the vehicle wipe.
+        JobCard::withTrashed()->forceDelete();
         Employee::query()->delete();
         Vehicle::query()->delete();
         Customer::query()->delete();

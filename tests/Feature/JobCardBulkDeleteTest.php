@@ -50,7 +50,7 @@ class JobCardBulkDeleteTest extends TestCase
         ]);
     }
 
-    public function test_bulk_delete_job_cards_returns_part_stock(): void
+    public function test_bulk_delete_soft_deletes_job_cards_and_preserves_stock_state(): void
     {
         $user = $this->makeUser();
         $customer = Customer::create(['first_name' => 'Owner', 'mobile' => '9000000001', 'customer_type' => 'regular']);
@@ -80,13 +80,21 @@ class JobCardBulkDeleteTest extends TestCase
             ->assertJsonPath('skipped_count', 0)
             ->assertJsonPath('message', '2 deleted');
 
-        $this->assertDatabaseMissing('job_cards', ['id' => $withParts->id]);
-        $this->assertDatabaseMissing('job_cards', ['id' => $plain->id]);
-        $this->assertDatabaseMissing('job_card_parts', ['job_card_id' => $withParts->id]);
-        $this->assertEquals(10, (int) $part->fresh()->current_stock_qty);
+        // Cards are soft-deleted: hidden from lists but recoverable, with
+        // part rows and the stock deduction preserved for a restore.
+        $this->assertSoftDeleted('job_cards', ['id' => $withParts->id]);
+        $this->assertSoftDeleted('job_cards', ['id' => $plain->id]);
+        $this->assertDatabaseHas('job_card_parts', ['job_card_id' => $withParts->id]);
+        $this->assertEquals(8, (int) $part->fresh()->current_stock_qty);
+        $this->assertEquals(0, JobCard::count());
+
+        // Restoring both cards brings the documents back intact
+        JobCard::withTrashed()->whereIn('id', [$withParts->id, $plain->id])->restore();
+        $this->assertEquals(2, JobCard::count());
+        $this->assertCount(1, $withParts->fresh()->parts);
     }
 
-    public function test_bulk_delete_job_card_removes_related_payments(): void
+    public function test_bulk_delete_job_card_keeps_payment_history_intact(): void
     {
         $user = $this->makeUser();
         $customer = Customer::create(['first_name' => 'Owner', 'mobile' => '9000000002', 'customer_type' => 'regular']);
@@ -108,8 +116,8 @@ class JobCardBulkDeleteTest extends TestCase
             ->assertJsonPath('deleted_count', 1)
             ->assertJsonPath('skipped_count', 0);
 
-        $this->assertDatabaseMissing('job_cards', ['id' => $jobCard->id]);
-        $this->assertDatabaseMissing('payments', ['payable_id' => $jobCard->id, 'payable_type' => JobCard::class]);
+        $this->assertSoftDeleted('job_cards', ['id' => $jobCard->id]);
+        $this->assertDatabaseHas('payments', ['payable_id' => $jobCard->id, 'payable_type' => JobCard::class]);
     }
 
     public function test_bulk_delete_requires_ids_array(): void

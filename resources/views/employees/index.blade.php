@@ -14,7 +14,7 @@
 
     <div class="py-6">
         <div class="max-w-full sm:px-6 lg:px-8"
-             x-data="{ ...tableSelection({ bulkEndpoint: '{{ route('employees.bulk-delete') }}' }), ...employeeList() }">
+             x-data="mergeAlpineData(tableSelection({ bulkEndpoint: '{{ route('employees.bulk-delete') }}', bulkExportEndpoint: '{{ route('employees.bulk-export') }}' }), employeeList())">
 
             @if (session('success'))
                 <div class="mb-4 bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-md">
@@ -40,6 +40,7 @@
 
             <x-table-selection-bar
                 :bulk-endpoint="route('employees.bulk-delete')"
+                :bulk-export-endpoint="route('employees.bulk-export')"
                 bulkConfirmMessage="Employees assigned to job cards will have their assignment cleared."
             >
                 <x-slot name="single">

@@ -2,6 +2,7 @@
 
 namespace App\ImportExport;
 
+use App\ImportExport\Contracts\ImportDefinition;
 use App\ImportExport\Support\FormulaSanitizer;
 use DateTimeInterface;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,8 +20,7 @@ class ExportService
 {
     public function __construct(
         private readonly ImportRegistry $registry,
-    ) {
-    }
+    ) {}
 
     /**
      * Stream a CSV export of the entity's exportQuery() rows.
@@ -28,28 +28,43 @@ class ExportService
      * Rows are pulled lazily (chunked by the database) so large datasets never
      * all live in memory at once; only one chunk is materialized at a time.
      *
-     * @param array<string, mixed> $filters
+     * @param  array<string, mixed>  $filters
      */
     public function exportCsv(string $entityKey, array $filters = []): StreamedResponse
     {
-        $definition = $this->registry->definitionFor($entityKey);
+        $definition = $this->registry->exportDefinitionFor($entityKey);
 
         $headers = array_keys($definition->exportColumns());
 
         $types = array_column($definition->columns(), 'type', 'header');
 
         return $this->stream($headers, function ($write) use ($definition, $headers, $types, $filters) {
-            foreach ($definition->exportQuery($filters)->lazy(500) as $row) {
-                $values = [];
-                foreach ($headers as $header) {
-                    $values[] = $this->formatValue(
-                        data_get($row, $definition->exportColumns()[$header]),
-                        $types[$header] ?? 'string'
-                    );
-                }
-                $write($values);
-            }
+            $this->writeRows($write, $definition, $headers, $types, $definition->exportQuery($filters)->lazy(500));
         }, $definition->exportFileName().'.csv');
+    }
+
+    /**
+     * Stream a CSV of only the records with the given primary keys. Reuses the
+     * same columns/types/formatting as the full export so a selection of rows
+     * looks exactly like a slice of the full file.
+     *
+     * @param  array<int, int|string>  $ids
+     */
+    public function exportCsvForIds(string $entityKey, array $ids): StreamedResponse
+    {
+        $definition = $this->registry->exportDefinitionFor($entityKey);
+
+        $headers = array_keys($definition->exportColumns());
+
+        $types = array_column($definition->columns(), 'type', 'header');
+
+        return $this->stream($headers, function ($write) use ($definition, $headers, $types, $ids) {
+            $query = $definition->exportQuery();
+            $keyName = $query->getModel()->getKeyName();
+            $query->whereIn($keyName, $ids);
+
+            $this->writeRows($write, $definition, $headers, $types, $query->lazy(500));
+        }, $definition->exportFileName().'-selected.csv');
     }
 
     /**
@@ -58,7 +73,7 @@ class ExportService
      */
     public function templateCsv(string $entityKey): StreamedResponse
     {
-        $definition = $this->registry->definitionFor($entityKey);
+        $definition = $this->registry->exportDefinitionFor($entityKey);
 
         $headers = array_keys($definition->exportColumns());
 
@@ -71,6 +86,29 @@ class ExportService
                 $write($values);
             }
         }, $definition->exportFileName().'-import-template.csv');
+    }
+
+    /**
+     * Render one formatted row per model, reading each exported column value
+     * through data_get so relation paths (e.g. customer.external_ref) work.
+     *
+     * @param  callable(array<int, string>): void  $write
+     * @param  array<int, string>  $headers
+     * @param  array<string, string>  $types
+     * @param  iterable<object>  $rows
+     */
+    private function writeRows(callable $write, ImportDefinition $definition, array $headers, array $types, iterable $rows): void
+    {
+        foreach ($rows as $row) {
+            $values = [];
+            foreach ($headers as $header) {
+                $values[] = $this->formatValue(
+                    data_get($row, $definition->exportColumns()[$header]),
+                    $types[$header] ?? 'string'
+                );
+            }
+            $write($values);
+        }
     }
 
     private function stream(array $headers, callable $body, string $fileName): StreamedResponse

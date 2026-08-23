@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\BulkDeletesRecords;
+use App\Http\Controllers\Concerns\BulkExportsRecords;
 use App\Models\VehicleBrand;
 use App\Models\VehicleModel;
 use Illuminate\Database\QueryException;
@@ -12,16 +13,23 @@ use Illuminate\Validation\Rule;
 class VehicleModelController extends Controller
 {
     use BulkDeletesRecords;
+    use BulkExportsRecords;
 
     protected function bulkDeleteModel(): string
     {
         return VehicleModel::class;
     }
 
+    protected function bulkExportEntity(): string
+    {
+        return 'vehicle_models';
+    }
+
     public function create(Request $request)
     {
         $brands = VehicleBrand::orderBy('name')->get();
         $selectedBrandId = $request->integer('brand_id') ?: null;
+
         return view('vehicle_models.create', compact('brands', 'selectedBrandId'));
     }
 
@@ -36,7 +44,7 @@ class VehicleModelController extends Controller
                 Rule::unique('vehicle_models', 'name')
                     ->where(fn ($query) => $query->where('vehicle_brand_id', $request->input('vehicle_brand_id'))),
             ],
-            'battery_type' => 'nullable|in:' . implode(',', array_keys(config('garage.option_lists.vehicle_battery_type'))),
+            'battery_type' => 'nullable|in:'.implode(',', array_keys(config('garage.option_lists.vehicle_battery_type'))),
         ]);
 
         VehicleModel::create($validated);
@@ -47,6 +55,7 @@ class VehicleModelController extends Controller
     public function edit(VehicleModel $vehicleModel)
     {
         $brands = VehicleBrand::orderBy('name')->get();
+
         return view('vehicle_models.edit', compact('vehicleModel', 'brands'));
     }
 
@@ -62,7 +71,7 @@ class VehicleModelController extends Controller
                     ->where(fn ($query) => $query->where('vehicle_brand_id', $request->input('vehicle_brand_id')))
                     ->ignore($vehicleModel->id),
             ],
-            'battery_type' => 'nullable|in:' . implode(',', array_keys(config('garage.option_lists.vehicle_battery_type'))),
+            'battery_type' => 'nullable|in:'.implode(',', array_keys(config('garage.option_lists.vehicle_battery_type'))),
         ]);
 
         $vehicleModel->update($validated);
@@ -72,8 +81,11 @@ class VehicleModelController extends Controller
 
     public function destroy(VehicleModel $vehicleModel)
     {
+        $this->authorize('admin');
+
         try {
             $vehicleModel->delete();
+
             return redirect()->route('vehicle-catalog.index')->with('success', 'Model deleted.');
         } catch (QueryException $e) {
             return back()->with('error', 'Cannot delete — this model is referenced by existing records.');

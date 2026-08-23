@@ -101,7 +101,7 @@ class SparePartDefinition extends AbstractImportDefinition
                 'label' => 'Category',
                 'required' => true,
                 'type' => 'enum',
-                'enum' => $this->categories(),
+                'enum' => array_keys($this->categories()),
             ],
             [
                 'header' => 'unit',

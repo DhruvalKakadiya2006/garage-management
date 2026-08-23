@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\BulkDeletesRecords;
+use App\Http\Controllers\Concerns\BulkExportsRecords;
 use App\Models\CounterInvoice;
 use App\Models\Customer;
 use App\Models\JobCard;
@@ -17,10 +18,16 @@ use Illuminate\Support\Str;
 class CustomerController extends Controller
 {
     use BulkDeletesRecords;
+    use BulkExportsRecords;
 
     protected function bulkDeleteModel(): string
     {
         return Customer::class;
+    }
+
+    protected function bulkExportEntity(): string
+    {
+        return 'customers';
     }
 
     public function index()
@@ -371,6 +378,8 @@ class CustomerController extends Controller
 
     public function destroy(Customer $customer)
     {
+        $this->authorize('admin');
+
         try {
             $customer->delete();
 

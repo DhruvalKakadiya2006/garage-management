@@ -1,5 +1,5 @@
 @php
-    $company = config('garage.company');
+    $profile = \App\Models\CompanyProfile::profile();
     $currency = config('garage.currency_symbol');
     $money = fn ($value) => $currency . number_format((float) $value, 2);
     $outstandingTo = fn ($doc) => max(0, (float) $doc->grand_total - (float) ($doc->paid_to_sum_amount ?? 0));
@@ -11,172 +11,19 @@
     <meta charset="utf-8">
     <title>Customer Statement — {{ $customer->display_name }}</title>
     <style>
-        @font-face {
-            font-family: 'Open Sans';
-            font-style: normal;
-            font-weight: 400;
-            src: url('storage/fonts/OpenSans-Regular.ttf') format('truetype');
-        }
-        @font-face {
-            font-family: 'Open Sans';
-            font-style: normal;
-            font-weight: 700;
-            src: url('storage/fonts/OpenSans-Bold.ttf') format('truetype');
-        }
-        @font-face {
-            font-family: 'Open Sans';
-            font-style: italic;
-            font-weight: 400;
-            src: url('storage/fonts/OpenSans-Italic.ttf') format('truetype');
-        }
-        @font-face {
-            font-family: 'Open Sans';
-            font-style: italic;
-            font-weight: 700;
-            src: url('storage/fonts/OpenSans-BoldItalic.ttf') format('truetype');
-        }
-        @page {
-            size: A4 portrait;
-            margin: 14mm 14mm 18mm 14mm;
-        }
-        * { box-sizing: border-box; }
-        body {
-            font-family: 'Open Sans', sans-serif;
-            font-size: 10pt;
-            color: #1f2937;
-            margin: 0;
-            padding: 0;
-            line-height: 1.4;
-        }
-        .doc-header {
-            width: 100%;
-            border-bottom: 2pt solid #145C9E;
-            padding-bottom: 8pt;
-            margin-bottom: 12pt;
-            overflow: hidden;
-        }
-        .doc-title {
-            font-size: 20pt;
-            font-weight: bold;
-            letter-spacing: 1pt;
-            color: #145C9E;
-        }
-        .doc-meta { text-align: right; }
-        .doc-meta .field { font-size: 9pt; color: #374151; margin-top: 2pt; }
-        .company-name { font-size: 14pt; font-weight: bold; color: #111827; }
-        .company-line { font-size: 8.5pt; color: #6b7280; }
-        .doc-subtitle {
-            font-size: 9pt;
-            color: #6b7280;
-            margin-bottom: 8pt;
-        }
-        .section {
-            margin-bottom: 10pt;
-            page-break-inside: avoid;
-        }
-        .section-title {
-            font-size: 9.5pt;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.5pt;
-            color: #145C9E;
-            border-bottom: 1pt solid #e5e7eb;
-            padding-bottom: 2pt;
-            margin-bottom: 5pt;
-        }
-        .grid-2 {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .grid-2 td {
-            vertical-align: top;
-            padding: 0 8pt 6pt 0;
-        }
-        .label { font-size: 8pt; text-transform: uppercase; color: #6b7280; }
-        .value { font-size: 10pt; color: #111827; }
-        table.data {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 9pt;
-        }
-        table.data th {
-            background: #f3f4f6;
-            border: 1pt solid #e5e7eb;
-            padding: 4pt 6pt;
-            text-align: left;
-            font-size: 8.5pt;
-            text-transform: uppercase;
-            color: #374151;
-        }
-        table.data td {
-            border: 1pt solid #e5e7eb;
-            padding: 4pt 6pt;
-            vertical-align: top;
-        }
-        .right { text-align: right; }
-        .center { text-align: center; }
-        .totals {
-            width: 55%;
-            margin-left: auto;
-            border-collapse: collapse;
-            font-size: 9.5pt;
-        }
-        .totals td {
-            padding: 3pt 6pt;
-        }
-        .totals .grand td {
-            border-top: 2pt solid #145C9E;
-            font-weight: bold;
-            font-size: 11pt;
-        }
-        .note {
-            margin-top: 10pt;
-            font-size: 8.5pt;
-            color: #6b7280;
-        }
-        .footer {
-            position: fixed;
-            bottom: -14mm;
-            left: 0;
-            right: 0;
-            text-align: center;
-            font-size: 8pt;
-            color: #6b7280;
-        }
+        @include('pdf.partials.styles')
     </style>
 </head>
 <body>
 
-    <div class="doc-header">
-        <table style="width:100%; border-collapse:collapse;">
-            <tr>
-                <td style="width:60%;">
-                    <div class="company-name">{{ $company['name'] }}</div>
-                    @if ($company['address_line1'])
-                        <div class="company-line">{{ $company['address_line1'] }}</div>
-                    @endif
-                    @if ($company['address_line2'])
-                        <div class="company-line">{{ $company['address_line2'] }}</div>
-                    @endif
-                    @if ($company['city'] || $company['state'] || $company['pin'])
-                        <div class="company-line">{{ trim(implode(', ', array_filter([$company['city'], $company['state'], $company['pin']]))) }}</div>
-                    @endif
-                    @if ($company['gstin'])
-                        <div class="company-line">GSTIN: {{ $company['gstin'] }}</div>
-                    @endif
-                    @if ($company['phone'])
-                        <div class="company-line">Phone: {{ $company['phone'] }}</div>
-                    @endif
-                </td>
-                <td class="doc-meta">
-                    <div class="doc-title">CUSTOMER STATEMENT</div>
-                    <div class="field"><strong>Customer:</strong> {{ $customer->display_name }}</div>
-                    <div class="field"><strong>Period:</strong> {{ $rangeLabel }}</div>
-                    <div class="field"><strong>Generated:</strong> {{ now()->format('d M Y H:i') }}</div>
-                </td>
-            </tr>
-        </table>
-    </div>
+    @include('pdf.partials.company-header', [
+        'documentTitle' => 'CUSTOMER STATEMENT',
+        'docMeta' => [
+            'Customer' => $customer->display_name,
+            'Period' => $rangeLabel,
+            'Generated' => now()->format('d M Y H:i'),
+        ],
+    ])
 
     <div class="doc-subtitle">
         Statement of account for {{ $customer->display_name }} for the period {{ $rangeLabel }}.
@@ -330,7 +177,7 @@
                             @elseif ($payment->payable)
                                 {{ $payment->payable->invoice_no }}
                             @else
-                                — <span style="color:#9ca3af;">(deleted record)</span>
+                                — <span style="color:#666666;">(deleted record)</span>
                             @endif
                         </td>
                         <td>{{ ucwords(str_replace('_', ' ', $payment->payment_mode)) }}</td>
@@ -366,9 +213,10 @@
         Job Cards, Counter Invoices and their payments; it is not an independent ledger.
     </div>
 
-    <div class="footer">
-        This is a computer-generated customer statement. Generated on {{ now()->format('d M Y H:i') }}. — {{ $company['name'] }}
-    </div>
+    @include('pdf.partials.footer', [
+        'documentLabel' => 'customer statement',
+        'companyName' => $profile->company_name,
+    ])
 
 </body>
 </html>

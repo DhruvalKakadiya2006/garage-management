@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\BulkDeletesRecords;
+use App\Http\Controllers\Concerns\BulkExportsRecords;
 use App\Models\CounterInvoice;
 use App\Models\JobCard;
 use App\Models\Payment;
@@ -13,10 +14,16 @@ use Illuminate\Support\Facades\Log;
 class PaymentController extends Controller
 {
     use BulkDeletesRecords;
+    use BulkExportsRecords;
 
     protected function bulkDeleteModel(): string
     {
         return Payment::class;
+    }
+
+    protected function bulkExportEntity(): string
+    {
+        return 'payments';
     }
 
     /**
@@ -117,6 +124,8 @@ class PaymentController extends Controller
      */
     public function update(Request $request, Payment $payment)
     {
+        $this->authorize('admin');
+
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0.01',
             'payment_mode' => 'required|in:'.implode(',', array_keys(config('garage.option_lists.payment_mode'))),
@@ -164,6 +173,8 @@ class PaymentController extends Controller
      */
     public function destroy(Payment $payment)
     {
+        $this->authorize('admin');
+
         try {
             $payment->delete();
 

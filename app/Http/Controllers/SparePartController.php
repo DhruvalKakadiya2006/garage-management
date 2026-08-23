@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\BulkDeletesRecords;
+use App\Http\Controllers\Concerns\BulkExportsRecords;
 use App\Models\SparePart;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -10,10 +11,16 @@ use Illuminate\Http\Request;
 class SparePartController extends Controller
 {
     use BulkDeletesRecords;
+    use BulkExportsRecords;
 
     protected function bulkDeleteModel(): string
     {
         return SparePart::class;
+    }
+
+    protected function bulkExportEntity(): string
+    {
+        return 'spare_parts';
     }
 
     public function index(Request $request)
@@ -136,6 +143,8 @@ class SparePartController extends Controller
 
     public function destroy(SparePart $sparePart)
     {
+        $this->authorize('admin');
+
         try {
             $sparePart->delete();
 

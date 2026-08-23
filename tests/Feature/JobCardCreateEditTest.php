@@ -9,6 +9,7 @@ use App\Models\LabourMaster;
 use App\Models\SparePart;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\Concerns\SeedsVehicleCatalog;
 use Tests\TestCase;
 
@@ -518,5 +519,166 @@ class JobCardCreateEditTest extends TestCase
         // grand_total is deliberately left NULL — a fresh card is unbilled.
         $this->assertNull($jobCard->fresh()->grand_total);
         $this->assertFalse($jobCard->fresh()->is_billed);
+    }
+
+    public function test_billed_job_card_cannot_be_moved_to_another_customer_or_vehicle()
+    {
+        $user = $this->makeUser();
+        $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
+        $secondOwnVehicle = $this->makeCatalogVehicle($customer, 'GJ-01-CD-5678', 'Ather', '450X');
+        $otherCustomer = Customer::create(['first_name' => 'Nisha', 'mobile' => '9000000002', 'customer_type' => 'regular']);
+        $otherVehicle = $this->makeCatalogVehicle($otherCustomer, 'GJ-01-EF-9012', 'TVS', 'iQube');
+
+        $jobCard = JobCard::create([
+            'job_date' => '2026-08-03',
+            'customer_id' => $customer->id,
+            'vehicle_id' => $vehicle->id,
+            'job_type' => 'paid_service',
+            'status' => 'in_progress',
+            'grand_total' => 500,
+        ]);
+        $this->assertTrue($jobCard->is_billed);
+
+        // Moving to another customer AND their vehicle (a valid pairing) is rejected
+        $this->actingAs($user)
+            ->put(route('job-cards.update', $jobCard), [
+                'job_date' => '2026-08-04',
+                'customer_id' => $otherCustomer->id,
+                'vehicle_id' => $otherVehicle->id,
+                'job_type' => 'paid_service',
+                'status' => 'in_progress',
+            ])
+            ->assertSessionHasErrors(['customer_id']);
+
+        // Swapping to another vehicle owned by the same customer is rejected too
+        $this->actingAs($user)
+            ->put(route('job-cards.update', $jobCard), [
+                'job_date' => '2026-08-04',
+                'customer_id' => $customer->id,
+                'vehicle_id' => $secondOwnVehicle->id,
+                'job_type' => 'paid_service',
+                'status' => 'in_progress',
+            ])
+            ->assertSessionHasErrors(['customer_id']);
+
+        $jobCard->refresh();
+        $this->assertEquals($customer->id, $jobCard->customer_id);
+        $this->assertEquals($vehicle->id, $jobCard->vehicle_id);
+
+        // Non-attribution edits remain allowed on a billed card
+        $this->actingAs($user)
+            ->put(route('job-cards.update', $jobCard), [
+                'job_date' => '2026-08-05',
+                'customer_id' => $customer->id,
+                'vehicle_id' => $vehicle->id,
+                'job_type' => 'paid_service',
+                'status' => 'delivered',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $jobCard->refresh();
+        $this->assertEquals('delivered', $jobCard->status);
+    }
+
+    public function test_job_card_index_validates_filter_inputs()
+    {
+        $user = $this->makeUser();
+
+        $this->actingAs($user)
+            ->get(route('job-cards.index', ['status' => 'not-a-status']))
+            ->assertRedirect()
+            ->assertSessionHasErrors(['status']);
+
+        $this->actingAs($user)
+            ->get(route('job-cards.index', ['technician' => 999999]))
+            ->assertRedirect()
+            ->assertSessionHasErrors(['technician']);
+
+        $this->actingAs($user)
+            ->get(route('job-cards.index', ['brand' => 'NoSuchBrand']))
+            ->assertRedirect()
+            ->assertSessionHasErrors(['brand']);
+
+        // A clean request still loads fine
+        $this->actingAs($user)->get(route('job-cards.index'))->assertOk();
+    }
+
+    public function test_updating_job_card_syncs_complaints_by_delta()
+    {
+        $user = $this->makeUser();
+        $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
+
+        $this->actingAs($user)
+            ->post(route('job-cards.store'), $this->storePayload($customer->id, $vehicle->id))
+            ->assertSessionHasNoErrors();
+
+        $jobCard = JobCard::first();
+        $originalComplaintId = $jobCard->complaints()->first()->id;
+
+        // Keep the existing complaint and add a new one
+        $this->actingAs($user)
+            ->put(route('job-cards.update', $jobCard), [
+                'job_date' => '2026-08-03',
+                'customer_id' => $customer->id,
+                'vehicle_id' => $vehicle->id,
+                'job_type' => 'paid_service',
+                'status' => 'received',
+                'complaints' => [
+                    ['description' => 'Battery not charging'],
+                    ['description' => 'Brake noise while riding'],
+                ],
+            ])
+            ->assertSessionHasNoErrors();
+
+        // The untouched complaint row kept its identity
+        $this->assertDatabaseHas('job_card_complaints', [
+            'id' => $originalComplaintId,
+            'description' => 'Battery not charging',
+        ]);
+        $this->assertDatabaseCount('job_card_complaints', 2);
+
+        // Removing it deletes exactly that row
+        $this->actingAs($user)
+            ->put(route('job-cards.update', $jobCard), [
+                'job_date' => '2026-08-03',
+                'customer_id' => $customer->id,
+                'vehicle_id' => $vehicle->id,
+                'job_type' => 'paid_service',
+                'status' => 'received',
+                'complaints' => [
+                    ['description' => 'Brake noise while riding'],
+                ],
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseMissing('job_card_complaints', ['id' => $originalComplaintId]);
+        $this->assertDatabaseCount('job_card_complaints', 1);
+    }
+
+    public function test_job_card_numbering_continues_after_highest_existing_suffix()
+    {
+        $user = $this->makeUser();
+        $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
+
+        // Simulate legacy / imported data with a high number
+        DB::table('job_cards')->insert([
+            'job_card_no' => 'JC-0099',
+            'job_date' => '2025-01-01',
+            'customer_id' => $customer->id,
+            'vehicle_id' => $vehicle->id,
+            'job_type' => 'paid_service',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('job-cards.store'), $this->storePayload($customer->id, $vehicle->id))
+            ->assertSessionHasNoErrors();
+
+        $latest = JobCard::orderByDesc('id')->first();
+        $this->assertSame('JC-0100', $latest->job_card_no);
     }
 }

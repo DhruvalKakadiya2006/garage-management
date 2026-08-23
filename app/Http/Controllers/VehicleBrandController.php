@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\BulkDeletesRecords;
+use App\Http\Controllers\Concerns\BulkExportsRecords;
 use App\Models\VehicleBrand;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -10,10 +11,16 @@ use Illuminate\Http\Request;
 class VehicleBrandController extends Controller
 {
     use BulkDeletesRecords;
+    use BulkExportsRecords;
 
     protected function bulkDeleteModel(): string
     {
         return VehicleBrand::class;
+    }
+
+    protected function bulkExportEntity(): string
+    {
+        return 'vehicle_brands';
     }
 
     /**
@@ -64,7 +71,7 @@ class VehicleBrandController extends Controller
     public function update(Request $request, VehicleBrand $vehicleBrand)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:vehicle_brands,name,' . $vehicleBrand->id,
+            'name' => 'required|string|max:255|unique:vehicle_brands,name,'.$vehicleBrand->id,
         ]);
 
         $vehicleBrand->update($validated);
@@ -74,8 +81,11 @@ class VehicleBrandController extends Controller
 
     public function destroy(VehicleBrand $vehicleBrand)
     {
+        $this->authorize('admin');
+
         try {
             $vehicleBrand->delete();
+
             return redirect()->route('vehicle-catalog.index')->with('success', 'Brand deleted.');
         } catch (QueryException $e) {
             return back()->with('error', 'Cannot delete — this brand has models linked to it. Delete its models first.');

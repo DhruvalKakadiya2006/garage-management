@@ -66,9 +66,11 @@ class PaymentBulkDeleteTest extends TestCase
             ->assertJsonPath('skipped_count', 0)
             ->assertJsonPath('message', '3 deleted');
 
-        $this->assertDatabaseMissing('payments', ['id' => $paymentA->id]);
-        $this->assertDatabaseMissing('payments', ['id' => $paymentB->id]);
-        $this->assertDatabaseMissing('payments', ['id' => $orphaned->id]);
+        // Payments are soft-deleted so the audit trail survives a mistake
+        $this->assertSoftDeleted('payments', ['id' => $paymentA->id]);
+        $this->assertSoftDeleted('payments', ['id' => $paymentB->id]);
+        $this->assertSoftDeleted('payments', ['id' => $orphaned->id]);
+        $this->assertEquals(0, Payment::count());
     }
 
     public function test_bulk_delete_requires_ids_array(): void

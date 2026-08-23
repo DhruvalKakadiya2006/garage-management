@@ -13,14 +13,20 @@
 
                 <div class="flex flex-wrap items-center gap-3">
                     @if ($jobCard->parts->count() + $jobCard->labours->count() > 0)
-                        <x-button variant="secondary" :href="route('job-cards.invoice', $jobCard)">
-                            <x-heroicon-o-document-text class="w-4 h-4" />
-                            Generate Invoice
-                        </x-button>
-                        <x-button variant="secondary" :href="route('job-cards.estimate', $jobCard)">
-                            <x-heroicon-o-document-chart-bar class="w-4 h-4" />
-                            Generate Estimate
-                        </x-button>
+                        <form method="POST" action="{{ route('job-cards.invoice', $jobCard) }}">
+                            @csrf
+                            <x-button variant="secondary" type="submit">
+                                <x-heroicon-o-document-text class="w-4 h-4" />
+                                Generate Invoice
+                            </x-button>
+                        </form>
+                        <form method="POST" action="{{ route('job-cards.estimate', $jobCard) }}">
+                            @csrf
+                            <x-button variant="secondary" type="submit">
+                                <x-heroicon-o-document-chart-bar class="w-4 h-4" />
+                                Generate Estimate
+                            </x-button>
+                        </form>
                     @else
                         <x-button variant="secondary" disabled title="Add at least one part or labour line to generate">
                             <x-heroicon-o-document-text class="w-4 h-4" />
@@ -283,12 +289,14 @@
                                     <td class="px-4 py-2 text-right text-xs whitespace-nowrap">
                                         <div class="inline-flex items-center gap-3">
                                             <a href="{{ route('payments.edit', $payment) }}" class="text-primary hover:text-primary-700">Edit</a>
-                                            <form action="{{ route('payments.destroy', $payment) }}" method="POST"
-                                                  onsubmit="return confirm('Void (delete) this payment record?');" class="inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:text-red-800">Void</button>
-                                            </form>
+                                            @can('admin')
+                                                <form action="{{ route('payments.destroy', $payment) }}" method="POST"
+                                                      onsubmit="return confirm('Void (delete) this payment record?');" class="inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="text-red-600 hover:text-red-800">Void</button>
+                                                </form>
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>

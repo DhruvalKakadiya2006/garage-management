@@ -21,6 +21,17 @@ class ImportRegistry
         return $this->resolveClass($key) !== null;
     }
 
+    /**
+     * Whether an entity can be exported. Exportable entities may be registered
+     * as fully importable (config "entities") or as export-only reference data
+     * (config "export_entities") — the latter are never offered in the import
+     * hub but still stream a CSV through the shared ExportService.
+     */
+    public function hasExport(string $key): bool
+    {
+        return $this->resolveExportClass($key) !== null;
+    }
+
     public function definitionFor(string $key): ImportDefinition
     {
         if (isset($this->definitions[$key])) {
@@ -28,6 +39,31 @@ class ImportRegistry
         }
 
         $class = $this->resolveClass($key);
+        if ($class === null) {
+            throw new InvalidArgumentException("Unknown import/export entity '{$key}'.");
+        }
+
+        $definition = app($class);
+
+        if (! $definition instanceof ImportDefinition) {
+            throw new InvalidArgumentException("Entity '{$key}' does not implement ".ImportDefinition::class.'.');
+        }
+
+        return $this->definitions[$key] = $definition;
+    }
+
+    /**
+     * Resolve a definition for export. Importable entities and export-only
+     * entities both qualify, so the shared ExportService drives every module's
+     * "Export selected" action through the same code path.
+     */
+    public function exportDefinitionFor(string $key): ImportDefinition
+    {
+        if (isset($this->definitions[$key])) {
+            return $this->definitions[$key];
+        }
+
+        $class = $this->resolveExportClass($key);
         if ($class === null) {
             throw new InvalidArgumentException("Unknown import/export entity '{$key}'.");
         }
@@ -118,6 +154,14 @@ class ImportRegistry
     private function resolveClass(string $key): ?string
     {
         $class = config("import-export.entities.{$key}");
+
+        return is_string($class) && class_exists($class) ? $class : null;
+    }
+
+    private function resolveExportClass(string $key): ?string
+    {
+        $class = config("import-export.entities.{$key}")
+            ?? config("import-export.export_entities.{$key}");
 
         return is_string($class) && class_exists($class) ? $class : null;
     }

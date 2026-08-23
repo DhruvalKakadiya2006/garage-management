@@ -1,4 +1,4 @@
-<div x-data="tableSelection({ bulkEndpoint: '{{ route('labour-masters.bulk-delete') }}', modalName: 'bulk-delete-confirm-labour' })">
+<div x-data="tableSelection({ bulkEndpoint: '{{ route('labour-masters.bulk-delete') }}', bulkExportEndpoint: '{{ route('labour-masters.bulk-export') }}', modalName: 'bulk-delete-confirm-labour' })">
 
     <div class="mb-4 flex items-center justify-end">
         <x-button :href="route('labour-masters.create')">
@@ -9,6 +9,7 @@
 
     <x-table-selection-bar
         :bulk-endpoint="route('labour-masters.bulk-delete')"
+        :bulk-export-endpoint="route('labour-masters.bulk-export')"
         modal-name="bulk-delete-confirm-labour"
         bulkConfirmMessage="Labour services linked to existing job cards will be skipped."
     >

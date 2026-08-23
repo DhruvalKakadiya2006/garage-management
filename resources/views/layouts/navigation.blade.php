@@ -6,9 +6,9 @@ $navItems = [
     ['route' => 'job-cards.index', 'pattern' => 'job-cards.*', 'icon' => 'wrench-screwdriver', 'label' => __('Job Cards')],
     ['route' => 'counter-invoices.index', 'pattern' => 'counter-invoices.*', 'icon' => 'receipt-percent', 'label' => __('Counter Invoice')],
     ['route' => 'payments.index', 'pattern' => 'payments.*', 'icon' => 'banknotes', 'label' => __('Payments')],
-    ['route' => 'reports.index', 'pattern' => 'reports.*', 'icon' => 'chart-bar', 'label' => __('Reports')],
-    ['route' => 'import-export.index', 'pattern' => 'import-export.*', 'icon' => 'arrow-up-tray', 'label' => __('Import / Export')],
+    ['route' => 'analytics.index', 'pattern' => 'analytics.*', 'icon' => 'chart-bar', 'label' => __('Analytics')],
     ['route' => 'employees.index', 'pattern' => 'employees.*', 'icon' => 'user-group', 'label' => __('Employees')],
+    ['route' => 'company-profile.index', 'pattern' => 'company-profile.*', 'icon' => 'building-office-2', 'label' => __('Company Profile')],
     ['route' => 'inventory.index', 'pattern' => ['inventory.*', 'spare-parts.*', 'labour-masters.*'], 'icon' => 'cube', 'label' => __('Inventory')],
 ];
 

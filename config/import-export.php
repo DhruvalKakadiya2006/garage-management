@@ -1,9 +1,14 @@
 <?php
 
+use App\ImportExport\Definitions\CounterInvoiceDefinition;
 use App\ImportExport\Definitions\CustomerDefinition;
+use App\ImportExport\Definitions\EmployeeDefinition;
 use App\ImportExport\Definitions\JobCardDefinition;
+use App\ImportExport\Definitions\LabourMasterDefinition;
+use App\ImportExport\Definitions\PaymentDefinition;
 use App\ImportExport\Definitions\SparePartDefinition;
 use App\ImportExport\Definitions\VehicleBrandDefinition;
+use App\ImportExport\Definitions\VehicleModelDefinition;
 
 return [
 
@@ -28,6 +33,45 @@ return [
         'vehicle_brands' => VehicleBrandDefinition::class,
         'job_cards' => JobCardDefinition::class,
         'spare_parts' => SparePartDefinition::class,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Export-only entities
+    |--------------------------------------------------------------------------
+    |
+    | Entities that are exported through the same shared ExportService (and
+    | thus get the data-table "Export selected" action) but are never offered
+    | for import in the hub. Their definitions describe columns/types/query for
+    | CSV output only; the import hooks throw "not implemented".
+    |
+    */
+
+    'export_entities' => [
+        'counter_invoices' => CounterInvoiceDefinition::class,
+        'payments' => PaymentDefinition::class,
+        'labour_masters' => LabourMasterDefinition::class,
+        'employees' => EmployeeDefinition::class,
+        'vehicle_models' => VehicleModelDefinition::class,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Module home routes
+    |--------------------------------------------------------------------------
+    |
+    | Each importable entity's import/export lives on its own module index page
+    | (there is no central Import/Export hub). This maps an entity key to the
+    | route the import workflow returns to (e.g. the "Back" buttons on the
+    | preview/result pages and the error redirects in the controller).
+    |
+    */
+
+    'module_routes' => [
+        'customers' => 'customers.index',
+        'job_cards' => 'job-cards.index',
+        'spare_parts' => 'inventory.index',
+        'vehicle_brands' => 'vehicle-catalog.index',
     ],
 
     /*

@@ -3,7 +3,7 @@
     $lowStock = $lowStock ?? false;
 @endphp
 
-<div x-data="tableSelection({ bulkEndpoint: '{{ route('spare-parts.bulk-delete') }}', modalName: 'bulk-delete-confirm-parts' })">
+<div x-data="tableSelection({ bulkEndpoint: '{{ route('spare-parts.bulk-delete') }}', bulkExportEndpoint: '{{ route('spare-parts.bulk-export') }}', modalName: 'bulk-delete-confirm-parts' })">
 
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center gap-2">
@@ -17,9 +17,9 @@
             </a>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-            <x-button variant="secondary" :href="route('import-export.index', ['entity' => 'spare_parts'])">
+            <x-button variant="secondary" type="button" @click="$dispatch('open-modal', 'import-csv-spare-parts')">
                 <x-heroicon-o-arrow-up-tray class="w-4 h-4" />
-                Import
+                Import CSV
             </x-button>
             <x-dropdown align="left" width="56">
                 <x-slot name="trigger">
@@ -33,7 +33,7 @@
                     <x-dropdown-link :href="route('import-export.export', array_merge(['entity' => 'spare_parts'], request()->query()))">
                         <span class="inline-flex items-center gap-2">
                             <x-heroicon-o-document-text class="w-4 h-4" />
-                            Export CSV{{ $lowStock ? ' (Low Stock)' : '' }}
+                            Export All (CSV){{ $lowStock ? ' (Low Stock)' : '' }}
                         </span>
                     </x-dropdown-link>
                     @if (! $lowStock)
@@ -62,6 +62,7 @@
 
     <x-table-selection-bar
         :bulk-endpoint="route('spare-parts.bulk-delete')"
+        :bulk-export-endpoint="route('spare-parts.bulk-export')"
         modal-name="bulk-delete-confirm-parts"
         bulkConfirmMessage="Parts linked to existing job cards or invoices will be skipped."
     >
@@ -130,4 +131,6 @@
             </tr>
         @endforeach
     </x-data-table>
+
+    <x-import-csv-modal name="import-csv-spare-parts" entity="spare_parts" title="Import Spare Parts" />
 </div>

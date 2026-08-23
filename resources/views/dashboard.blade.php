@@ -65,7 +65,7 @@
                             <x-heroicon-o-banknotes class="w-5 h-5 text-primary" />
                             This Month's Revenue
                         </h3>
-                        <a href="{{ route('reports.revenue') }}" title="View revenue report"
+                        <a href="{{ route('analytics.revenue') }}" title="View revenue report"
                            class="text-gray-400 hover:text-primary">
                             <x-heroicon-o-arrow-top-right-on-square class="w-4 h-4" />
                         </a>
@@ -103,7 +103,7 @@
                             <x-heroicon-o-exclamation-triangle class="w-5 h-5 text-primary" />
                             Outstanding Dues
                         </h3>
-                        <a href="{{ route('reports.payments') }}" title="View payments report"
+                        <a href="{{ route('analytics.payments') }}" title="View payments report"
                            class="text-gray-400 hover:text-primary">
                             <x-heroicon-o-arrow-top-right-on-square class="w-4 h-4" />
                         </a>

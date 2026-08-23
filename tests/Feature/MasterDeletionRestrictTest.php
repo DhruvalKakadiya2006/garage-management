@@ -114,7 +114,7 @@ class MasterDeletionRestrictTest extends TestCase
 
         $this->actingAs($user)
             ->delete(route('vehicles.destroy', $vehicle))
-            ->assertSessionHas('error', 'Cannot delete — this vehicle has existing job cards or invoices linked to it.');
+            ->assertSessionHas('error', 'Cannot delete — this vehicle has existing job cards linked to it.');
 
         $this->assertDatabaseHas('vehicles', ['id' => $vehicle->id]);
         $this->assertDatabaseHas('job_cards', ['vehicle_id' => $vehicle->id]);

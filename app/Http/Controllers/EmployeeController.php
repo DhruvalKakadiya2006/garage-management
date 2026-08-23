@@ -3,28 +3,36 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\BulkDeletesRecords;
+use App\Http\Controllers\Concerns\BulkExportsRecords;
 use App\Models\Employee;
 use Illuminate\Http\Request;
 
 class EmployeeController extends Controller
 {
     use BulkDeletesRecords;
+    use BulkExportsRecords;
 
     protected function bulkDeleteModel(): string
     {
         return Employee::class;
     }
 
+    protected function bulkExportEntity(): string
+    {
+        return 'employees';
+    }
+
     public function index(Request $request)
     {
         $query = Employee::query();
-        
+
         // Filter by active status if provided
         if ($request->has('active')) {
             $query->where('active', $request->active === '1');
         }
-        
+
         $employees = $query->latest()->paginate(15)->withQueryString();
+
         return view('employees.index', compact('employees'));
     }
 
@@ -37,9 +45,9 @@ class EmployeeController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'role' => 'required|in:' . implode(',', array_keys(config('garage.option_lists.employee_role'))),
+            'role' => 'required|in:'.implode(',', array_keys(config('garage.option_lists.employee_role'))),
             'mobile' => ['required', 'string', 'regex:/^[6-9]\d{9}$/'],
-            'specialization' => 'nullable|in:' . implode(',', array_keys(config('garage.option_lists.employee_specialization'))),
+            'specialization' => 'nullable|in:'.implode(',', array_keys(config('garage.option_lists.employee_specialization'))),
             'active' => 'boolean',
             'join_date' => 'nullable|date',
         ]);
@@ -61,9 +69,9 @@ class EmployeeController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'role' => 'required|in:' . implode(',', array_keys(config('garage.option_lists.employee_role'))),
+            'role' => 'required|in:'.implode(',', array_keys(config('garage.option_lists.employee_role'))),
             'mobile' => ['required', 'string', 'regex:/^[6-9]\d{9}$/'],
-            'specialization' => 'nullable|in:' . implode(',', array_keys(config('garage.option_lists.employee_specialization'))),
+            'specialization' => 'nullable|in:'.implode(',', array_keys(config('garage.option_lists.employee_specialization'))),
             'active' => 'boolean',
             'join_date' => 'nullable|date',
         ]);
@@ -78,7 +86,10 @@ class EmployeeController extends Controller
 
     public function destroy(Employee $employee)
     {
+        $this->authorize('admin');
+
         $employee->delete();
+
         return redirect()->route('employees.index')->with('success', 'Employee deleted.');
     }
 }

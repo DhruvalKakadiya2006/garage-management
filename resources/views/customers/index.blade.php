@@ -6,9 +6,9 @@
                 Customers
             </h2>
             <div class="flex items-center gap-2">
-                <x-button variant="secondary" :href="route('import-export.index', ['entity' => 'customers'])">
+                <x-button variant="secondary" type="button" @click="$dispatch('open-modal', 'import-csv-customers')">
                     <x-heroicon-o-arrow-up-tray class="w-4 h-4" />
-                    Import
+                    Import CSV
                 </x-button>
                 <x-dropdown align="left" width="56">
                     <x-slot name="trigger">
@@ -22,7 +22,7 @@
                         <x-dropdown-link :href="route('import-export.export', ['entity' => 'customers'])">
                             <span class="inline-flex items-center gap-2">
                                 <x-heroicon-o-document-text class="w-4 h-4" />
-                                Export CSV
+                                Export All (CSV)
                             </span>
                         </x-dropdown-link>
                         <div class="my-1 border-t border-border"></div>
@@ -59,7 +59,7 @@
 
     <div class="py-6">
         <div class="max-w-full sm:px-6 lg:px-8"
-             x-data="{ ...tableSelection({ bulkEndpoint: '{{ route('customers.bulk-delete') }}' }), ...customerList() }">
+             x-data="mergeAlpineData(tableSelection({ bulkEndpoint: '{{ route('customers.bulk-delete') }}', bulkExportEndpoint: '{{ route('customers.bulk-export') }}' }), customerList())">
 
             @if (session('success'))
                 <div class="mb-4 bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-md">
@@ -76,6 +76,7 @@
             {{-- Contextual action bar --}}
             <x-table-selection-bar
                 :bulk-endpoint="route('customers.bulk-delete')"
+                :bulk-export-endpoint="route('customers.bulk-export')"
                 bulkConfirmMessage="Customers with vehicles or linked documents (job cards, counter invoices) will be skipped."
             >
                 <x-slot name="single">
@@ -201,6 +202,8 @@
 
         </div>
     </div>
+
+    <x-import-csv-modal name="import-csv-customers" entity="customers" title="Import Customers" />
 
     <script>
         function customerList() {

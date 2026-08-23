@@ -9,6 +9,8 @@ class CounterInvoice extends Model
 {
     use HasFactory;
 
+    public const INVOICE_NO_PREFIX = 'CI-';
+
     protected $fillable = [
         'invoice_no', 'invoice_date', 'customer_id', 'walkin_name', 'walkin_mobile',
         'gst_applicable', 'cgst_amount', 'sgst_amount', 'round_off_amount',
@@ -29,7 +31,7 @@ class CounterInvoice extends Model
     protected static function boot()
     {
         parent::boot();
-        
+
         static::creating(function ($invoice) {
             if (empty($invoice->invoice_no)) {
                 $invoice->invoice_no = self::generateInvoiceNo();
@@ -37,15 +39,39 @@ class CounterInvoice extends Model
         });
 
         static::deleting(function ($invoice) {
-            $invoice->payments()->delete();
+            // The invoice row itself is hard-deleted, so its payment records
+            // must be removed permanently too — a soft delete would leave
+            // orphaned rows behind forever.
+            $invoice->payments()->get()->each->forceDelete();
         });
     }
 
-    public static function generateInvoiceNo()
+    /**
+     * Generate the next sequential counter invoice number.
+     *
+     * Derived from the highest existing numeric suffix across every row (the
+     * unique index on invoice_no spans all of them), so gaps and concurrent
+     * writers cannot produce duplicates. On collision one writer receives a
+     * QueryException instead of a silently duplicated number.
+     */
+    public static function generateInvoiceNo(): string
     {
-        $latest = self::orderBy('id', 'desc')->first();
-        $number = $latest ? (int) substr($latest->invoice_no, 3) + 1 : 1;
-        return 'CI-' . str_pad($number, 4, '0', STR_PAD_LEFT);
+        $maxSuffix = (int) self::query()
+            ->selectRaw('MAX(CAST(substr(invoice_no, ?) AS INTEGER)) as max_suffix', [strlen(self::INVOICE_NO_PREFIX) + 1])
+            ->value('max_suffix');
+
+        $next = $maxSuffix + 1;
+
+        while (self::where('invoice_no', self::formatInvoiceNo($next))->exists()) {
+            $next++;
+        }
+
+        return self::formatInvoiceNo($next);
+    }
+
+    public static function formatInvoiceNo(int $number): string
+    {
+        return self::INVOICE_NO_PREFIX.str_pad((string) $number, 4, '0', STR_PAD_LEFT);
     }
 
     public function customer()
@@ -97,6 +123,7 @@ class CounterInvoice extends Model
         } elseif ($this->amount_paid > 0 && $this->outstanding > 0) {
             return 'partially_paid';
         }
+
         return 'unpaid';
     }
 }

@@ -34,3 +34,19 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# AI-generated documentation (regenerated as needed)
+/AGENTS.md
+/AI_AGENT_CONTEXT.md
+/CODE_REVIEW_REPORT.md
+/FINAL_STATUS.md
+/POST_REVIEW_CHECKLIST.md
+/REVIEW_SUMMARY.md
+/SAMPLE_DATA_SUMMARY.md
+/project-rules.md
+
+# IDE and Editor configurations
+/.agents
+/.ai
+/opencode.json
+/boost.json

@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\BulkDeletesRecords;
+use App\Http\Controllers\Concerns\BulkExportsRecords;
 use App\Models\Customer;
 use App\Models\Employee;
 use App\Models\JobCard;
+use App\Models\JobCardComplaint;
 use App\Models\LabourMaster;
 use App\Models\SparePart;
 use App\Models\Vehicle;
@@ -15,46 +17,58 @@ use App\Services\GstCalculator;
 use App\Services\PartPriceResolver;
 use App\Services\StockValidator;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+use RuntimeException;
 
 class JobCardController extends Controller
 {
     use BulkDeletesRecords;
+    use BulkExportsRecords;
 
     protected function bulkDeleteModel(): string
     {
         return JobCard::class;
     }
 
+    protected function bulkExportEntity(): string
+    {
+        return 'job_cards';
+    }
+
     /**
-     * Job Cards cannot be plain-deleted: the job_card_parts FK is restrict, so
-     * part rows must be deleted one-by-one first (which returns stock to
-     * inventory via the JobCardPart::deleting boot event) before the parent.
-     * The JobCard::deleting boot event cleans up related payments, and the
-     * labours / complaints rows cascade at the DB level.
+     * Job Cards are SOFT-deleted: line items and stock deductions stay
+     * exactly as they are so a restored document keeps its history, and
+     * payment records are preserved for audit. Only a forceDelete (not
+     * exposed over HTTP) removes rows permanently.
      */
     protected function bulkDeleteDeleter(): ?callable
     {
-        return function (JobCard $jobCard) {
-            DB::transaction(function () use ($jobCard) {
-                foreach ($jobCard->parts as $part) {
-                    $part->delete();
-                }
-                $jobCard->delete();
-            });
-        };
+        return null;
     }
 
     public function index(Request $request)
     {
-        // Reject malformed / one-sided date filters with a friendly redirect
+        // Reject malformed / one-sided date filters with a friendly redirect.
+        // List filters are whitelisted too so garbage input fails validation
+        // instead of silently matching nothing.
         $validated = $request->validate([
             'from_date' => 'nullable|date|required_with:to_date',
             'to_date' => 'nullable|date|required_with:from_date',
-        ], [], ['from_date' => 'From Date', 'to_date' => 'To Date']);
+            'technician' => ['nullable', Rule::exists('employees', 'id')],
+            'status' => ['nullable', 'in:'.implode(',', array_keys(config('garage.option_lists.job_card_status')))],
+            'brand' => ['nullable', Rule::exists('vehicle_brands', 'name')],
+        ], [], [
+            'from_date' => 'From Date',
+            'to_date' => 'To Date',
+            'technician' => 'Technician',
+            'status' => 'Status',
+            'brand' => 'Brand',
+        ]);
 
         $query = JobCard::with(['customer', 'vehicle.vehicleModel.vehicleBrand', 'assignedTechnician'])
             ->withSum('payments', 'amount')
@@ -205,16 +219,18 @@ class JobCardController extends Controller
         $jobCard->load(['customer', 'vehicle', 'assignedTechnician', 'supervisor',
             'complaints', 'parts.sparePart', 'labours.labourMaster', 'labours.technician']);
 
-        $jobCard->update([
-            $documentType === 'invoice' ? 'invoice_generated_at' : 'estimate_generated_at' => now(),
-        ]);
-
         $filename = $documentType === 'invoice'
             ? 'TAX-INVOICE-'.$jobCard->job_card_no.'.pdf'
             : 'ESTIMATE-'.$jobCard->job_card_no.'.pdf';
 
+        // Render first, record second: the audit timestamp must only be set
+        // when a PDF was actually produced.
         $pdf = Pdf::setBasePath(base_path())
             ->loadView('pdf.job-card', compact('jobCard', 'documentType'));
+
+        $jobCard->update([
+            $documentType === 'invoice' ? 'invoice_generated_at' : 'estimate_generated_at' => now(),
+        ]);
 
         return $pdf->download($filename);
     }
@@ -273,6 +289,11 @@ class JobCardController extends Controller
             return back()->withErrors($discountValidator)->withInput();
         }
 
+        // When the submitted lines are byte-for-byte what is already stored,
+        // skip the destructive delete-and-recreate cycle below: stock avoids
+        // the return/deduct round trip and unchanged rows keep their IDs.
+        $linesUnchanged = $this->submittedLinesMatchExisting($jobCard, $parts, $request->labours ?? []);
+
         DB::beginTransaction();
         try {
             $calculations = app(GstCalculator::class)->calculate(
@@ -282,12 +303,14 @@ class JobCardController extends Controller
                 $request->discount_amount ?? 0,
             );
 
-            // Delete existing line items. Parts must be deleted one-by-one so the
-            // JobCardPart::deleting boot event returns stock to inventory.
-            foreach ($jobCard->parts as $part) {
-                $part->delete();
+            if (! $linesUnchanged) {
+                // Delete existing line items. Parts must be deleted one-by-one so the
+                // JobCardPart::deleting boot event returns stock to inventory.
+                foreach ($jobCard->parts as $part) {
+                    $part->delete();
+                }
+                $jobCard->labours()->delete();
             }
-            $jobCard->labours()->delete();
 
             $jobCard->update([
                 'assigned_technician_id' => $validated['assigned_technician_id'] ?? null,
@@ -302,7 +325,7 @@ class JobCardController extends Controller
             ]);
 
             // Save parts (stock deduction happens in model boot)
-            if (! empty($parts)) {
+            if (! $linesUnchanged && ! empty($parts)) {
                 foreach ($parts as $part) {
                     $underWarranty = isset($part['under_warranty']) && $part['under_warranty'];
                     $lineTotal = $underWarranty ? 0 : ($part['quantity'] * ($part['mrp'] + $part['labor_charge']));
@@ -319,7 +342,7 @@ class JobCardController extends Controller
             }
 
             // Save labours
-            if (! empty($request->labours)) {
+            if (! $linesUnchanged && ! empty($request->labours)) {
                 foreach ($request->labours as $labour) {
                     $lineTotal = $labour['rate'] * $labour['qty'];
                     $jobCard->labours()->create([
@@ -335,7 +358,10 @@ class JobCardController extends Controller
             DB::commit();
 
             return redirect()->route('job-cards.show', $jobCard)->with('success', 'Job Card assigned and billed.');
-        } catch (\Exception $e) {
+        } catch (RuntimeException|QueryException $e) {
+            // Expected failure modes: stock guards (RuntimeException) and
+            // database constraint violations (QueryException). Anything else
+            // is a bug and should bubble to the exception handler.
             DB::rollBack();
             Log::error($e);
 
@@ -379,6 +405,18 @@ class JobCardController extends Controller
                 ->withInput();
         }
 
+        // A billed card is a financial record: its customer / vehicle
+        // attribution must stay frozen. Other fields (status, remarks,
+        // complaints...) may still be edited.
+        if ($jobCard->is_billed && (
+            $jobCard->customer_id != $validated['customer_id']
+            || $jobCard->vehicle_id != $validated['vehicle_id']
+        )) {
+            return back()
+                ->withErrors(['customer_id' => 'This job card has been billed, so its customer and vehicle can no longer be changed.'])
+                ->withInput();
+        }
+
         $jobCard->update([
             'job_date' => $validated['job_date'],
             'customer_id' => $validated['customer_id'],
@@ -391,40 +429,94 @@ class JobCardController extends Controller
             'remarks' => $validated['remarks'] ?? null,
         ]);
 
-        $jobCard->complaints()->delete();
-        if (! empty($request->complaints)) {
-            foreach ($request->complaints as $complaint) {
-                $jobCard->complaints()->create([
-                    'description' => $complaint['description'],
-                ]);
+        // Sync complaints by delta instead of wiping and recreating, so
+        // unchanged rows keep their identity (IDs / any future references).
+        $submittedDescriptions = collect($request->complaints ?? [])
+            ->pluck('description')
+            ->map(fn ($description) => trim((string) $description))
+            ->filter(fn ($description) => $description !== '')
+            ->unique()
+            ->values();
+
+        $existingDescriptions = $jobCard->complaints()->pluck('description', 'id');
+
+        $existingDescriptions->each(function ($description, $id) use ($submittedDescriptions) {
+            if (! $submittedDescriptions->contains($description)) {
+                JobCardComplaint::whereKey($id)->delete();
             }
-        }
+        });
+
+        $submittedDescriptions->each(function ($description) use ($jobCard, $existingDescriptions) {
+            if (! $existingDescriptions->contains($description)) {
+                $jobCard->complaints()->create(['description' => $description]);
+            }
+        });
 
         return redirect()->route('job-cards.show', $jobCard)->with('success', 'Job Card updated.');
     }
 
     public function destroy(JobCard $jobCard)
     {
-        DB::beginTransaction();
-        try {
-            // Delete parts one-by-one so JobCardPart::deleting returns stock.
-            // The job_card_parts FK is restrict, so the parent cannot be deleted
-            // while any part rows remain — this guarantees stock is returned.
-            foreach ($jobCard->parts as $part) {
-                $part->delete();
-            }
+        $this->authorize('admin');
 
-            $jobCard->delete();
+        // Soft delete only: parts, stock deductions and payments stay put so
+        // the document can be restored with its full history.
+        $jobCard->delete();
 
-            DB::commit();
+        return redirect()->route('job-cards.index')->with('success', 'Job Card deleted.');
+    }
 
-            return redirect()->route('job-cards.index')->with('success', 'Job Card deleted.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error($e);
+    /**
+     * Compare submitted lines against stored ones (order-insensitive) so an
+     * idempotent re-save can skip the destructive rewrite entirely. MRP is
+     * excluded from the comparison: it is always overwritten from the part
+     * master regardless.
+     */
+    private function submittedLinesMatchExisting(JobCard $jobCard, array $parts, array $labours): bool
+    {
+        $money = fn ($value) => number_format((float) $value, 2, '.', '');
 
-            return back()->withErrors(['error' => 'Something went wrong deleting this record. Please try again.']);
+        $incomingParts = collect($parts)
+            ->map(fn ($part) => [
+                (int) $part['spare_part_id'],
+                (int) $part['quantity'],
+                $money($part['labor_charge']),
+                ! empty($part['under_warranty']),
+            ])
+            ->sort()->values()->toJson();
+
+        $storedParts = $jobCard->parts()->get()
+            ->map(fn ($part) => [
+                (int) $part->spare_part_id,
+                (int) $part->quantity,
+                $money($part->labor_charge),
+                (bool) $part->under_warranty,
+            ])
+            ->sort()->values()->toJson();
+
+        if ($incomingParts !== $storedParts) {
+            return false;
         }
+
+        $incomingLabours = collect($labours)
+            ->map(fn ($labour) => [
+                (int) $labour['labour_master_id'],
+                (int) ($labour['technician_id'] ?? 0),
+                $money($labour['rate']),
+                $money($labour['qty']),
+            ])
+            ->sort()->values()->toJson();
+
+        $storedLabours = $jobCard->labours()->get()
+            ->map(fn ($labour) => [
+                (int) $labour->labour_master_id,
+                (int) ($labour->technician_id ?? 0),
+                $money($labour->rate),
+                $money($labour->qty),
+            ])
+            ->sort()->values()->toJson();
+
+        return $incomingLabours === $storedLabours;
     }
 
     private function buildGstLines(array $parts, array $labours): array

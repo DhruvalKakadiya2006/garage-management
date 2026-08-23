@@ -51,7 +51,7 @@ class PaymentDeletionTest extends TestCase
         ]);
     }
 
-    public function test_deleting_job_card_deletes_its_payments()
+    public function test_soft_deleting_job_card_preserves_its_payment_history()
     {
         $user = $this->makeUser();
         $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
@@ -74,8 +74,9 @@ class PaymentDeletionTest extends TestCase
             ->delete(route('job-cards.destroy', $jobCard))
             ->assertRedirect(route('job-cards.index'));
 
-        $this->assertDatabaseMissing('job_cards', ['id' => $jobCard->id]);
-        $this->assertSame(0, Payment::where('payable_type', JobCard::class)->where('payable_id', $jobCard->id)->count());
+        // The card is soft-deleted and its payment history stays fully intact
+        $this->assertSoftDeleted('job_cards', ['id' => $jobCard->id]);
+        $this->assertSame(1, Payment::where('payable_type', JobCard::class)->where('payable_id', $jobCard->id)->count());
     }
 
     public function test_deleting_counter_invoice_deletes_its_payments()

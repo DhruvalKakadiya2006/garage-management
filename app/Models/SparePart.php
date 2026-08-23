@@ -11,7 +11,7 @@ class SparePart extends Model
     use HasFactory;
 
     protected $fillable = [
-        'part_name', 'category', 'unit',
+        'part_name', 'part_code', 'category', 'unit',
         'purchase_price', 'mrp', 'labor_charge', 'hsn_code', 'gst_rate',
         'current_stock_qty', 'reorder_level', 'external_ref',
     ];
@@ -25,10 +25,19 @@ class SparePart extends Model
         'reorder_level' => 'integer',
     ];
 
+    protected static function booted(): void
+    {
+        static::creating(function (SparePart $part) {
+            if (blank($part->attributes['part_code'] ?? null)) {
+                $part->part_code = $part->generatePartCode();
+            }
+        });
+    }
+
     protected function partCode(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->getAttribute('part_code') ?? $this->generatePartCode(),
+            get: fn () => $this->attributes['part_code'] ?? $this->generatePartCode(),
         );
     }
 
@@ -40,6 +49,7 @@ class SparePart extends Model
         if ($lastPart && preg_match('/^[A-Z]{2,3}-\d+$/', $lastPart)) {
             $lastNum = (int) explode('-', $lastPart)[1];
             $newNum = sprintf('%03d', $lastNum + 1);
+
             return "{$prefix}-{$newNum}";
         }
 
@@ -55,6 +65,4 @@ class SparePart extends Model
             get: fn () => $this->mrp + $this->labor_charge,
         );
     }
-
-
 }

@@ -188,7 +188,10 @@ document.addEventListener('alpine:init', () => {
      *
      * or merge it with their own page state:
      *
-     *     x-data="{ ...tableSelection({...}), ...moduleList() }"
+     *     x-data="mergeAlpineData(tableSelection({...}), moduleList())"
+     *
+     * (A plain `{ ...tableSelection({...}), ...moduleList() }` spread invokes
+     * every getter eagerly and crashes — see mergeAlpineData below.)
      *
      * Selection is an array of record id strings that may span pages. The
      * visible rows on the current page (`pageIds`, read from the row
@@ -204,6 +207,7 @@ document.addEventListener('alpine:init', () => {
     const tableSelection = (config = {}) => ({
         config: config,
         bulkEndpoint: config.bulkEndpoint || '',
+        bulkExportEndpoint: config.bulkExportEndpoint || '',
         rowAttr: config.rowAttr || 'data-row-id',
         modalName: config.modalName || 'bulk-delete-confirm',
         selected: [],
@@ -327,10 +331,74 @@ document.addEventListener('alpine:init', () => {
                 this.busy = false;
             }
         },
+
+        async exportSelected() {
+            if (!this.bulkExportEndpoint || this.selected.length === 0 || this.busy) return;
+            this.busy = true;
+            try {
+                const form = new FormData();
+                this.selected.forEach((id) => form.append('ids[]', id));
+
+                const meta = document.querySelector('meta[name="csrf-token"]');
+                const res = await fetch(this.bulkExportEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'text/csv',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': meta ? meta.getAttribute('content') : '',
+                    },
+                    body: form,
+                });
+
+                if (!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    this.result = { type: 'error', message: data.message || 'Export failed.' };
+                    return;
+                }
+
+                const blob = await res.blob();
+                const disposition = res.headers.get('Content-Disposition') || '';
+                const match = disposition.match(/filename="?([^";]+)"?/);
+                const filename = match ? match[1] : 'export.csv';
+
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+            } catch (e) {
+                this.result = { type: 'error', message: 'Export failed. Please try again.' };
+            } finally {
+                this.busy = false;
+            }
+        },
     });
 
     Alpine.data('tableSelection', tableSelection);
     window.tableSelection = tableSelection;
+
+    /**
+     * Merge several Alpine component objects while preserving accessor
+     * properties (getters). A plain `{ ...a, ...b }` spread invokes every
+     * getter eagerly and copies its *value*, freezing it at that instant —
+     * and getters that read Alpine magics (e.g. `this.$root` in pageIds)
+     * throw outright because the raw object has no magic properties. Copying
+     * property descriptors instead keeps the getters lazy so they resolve
+     * through Alpine's proxy (where magics live) on every access, keeping the
+     * reactive state (selected[], allSelected, selectedCount, ...) live.
+     */
+    window.mergeAlpineData = (...sources) => {
+        const merged = {};
+        for (const source of sources) {
+            for (const key of Object.keys(source)) {
+                Object.defineProperty(merged, key, Object.getOwnPropertyDescriptor(source, key));
+            }
+        }
+        return merged;
+    };
 });
 
 Alpine.start();

@@ -23,14 +23,14 @@ class DashboardController extends Controller
 
         $todayJobCardsTotal = $todayJobCards->sum();
 
-        // This month's revenue (same query logic as ReportController@revenue).
+        // This month's revenue (same query logic as AnalyticsController@revenue).
         $fromDate = Carbon::now()->startOfMonth()->format('Y-m-d');
         $toDate = Carbon::now()->format('Y-m-d');
 
         $monthRevenue = JobCard::whereDate('job_date', '>=', $fromDate)
-                ->whereDate('job_date', '<=', $toDate)
-                ->where('status', 'delivered')
-                ->sum('grand_total')
+            ->whereDate('job_date', '<=', $toDate)
+            ->where('status', 'delivered')
+            ->sum('grand_total')
             + CounterInvoice::whereDate('invoice_date', '>=', $fromDate)
                 ->whereDate('invoice_date', '<=', $toDate)
                 ->sum('grand_total');

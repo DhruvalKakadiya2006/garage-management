@@ -1,5 +1,6 @@
 @props([
     'bulkEndpoint' => null,
+    'bulkExportEndpoint' => null,
     'bulkActionLabel' => 'Delete',
     'bulkModalTitle' => 'Delete selected record(s)?',
     'bulkModalConfirmLabel' => 'Delete',
@@ -17,7 +18,9 @@
                         actions remain
 
      The `single` slot holds record-specific actions (e.g. Edit, Create Job
-     Card); the `bulk` slot holds any additional batch actions. The "N
+     Card); the `bulk` slot holds any additional batch actions. When a
+     `bulkExportEndpoint` is given, a shared "Export selected" button streams
+     the selected rows to CSV through the existing ExportService. The "N
      selected" indicator, Clear selection control, and (when a
      `bulkEndpoint` is given) the bulk Delete button + confirmation modal are
      all shared. --}}
@@ -48,11 +51,20 @@
 
         {{ $bulk ?? '' }}
 
-        @if ($bulkEndpoint)
-            <x-button variant="danger" type="button" @click="$dispatch('open-modal', '{{ $modalName }}')">
-                <x-heroicon-o-trash class="w-4 h-4" />
-                {{ $bulkActionLabel }}
+        @if ($bulkExportEndpoint)
+            <x-button variant="secondary" type="button" @click="exportSelected()">
+                <x-heroicon-o-arrow-down-tray class="w-4 h-4" />
+                Export selected
             </x-button>
+        @endif
+
+        @if ($bulkEndpoint)
+            @can('admin')
+                <x-button variant="danger" type="button" @click="$dispatch('open-modal', '{{ $modalName }}')">
+                    <x-heroicon-o-trash class="w-4 h-4" />
+                    {{ $bulkActionLabel }}
+                </x-button>
+            @endcan
         @endif
 
         <x-button variant="ghost" type="button" @click="clearSelection()">
@@ -61,11 +73,13 @@
     </div>
 
     @if ($bulkEndpoint)
-        <x-bulk-delete-confirm
-            :name="$modalName"
-            :title="$bulkModalTitle"
-            :confirm-label="$bulkModalConfirmLabel"
-            :message="$bulkConfirmMessage"
-        />
+        @can('admin')
+            <x-bulk-delete-confirm
+                :name="$modalName"
+                :title="$bulkModalTitle"
+                :confirm-label="$bulkModalConfirmLabel"
+                :message="$bulkConfirmMessage"
+            />
+        @endcan
     @endif
 </div>
