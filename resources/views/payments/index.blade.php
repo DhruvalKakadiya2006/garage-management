@@ -59,7 +59,7 @@
                         :name="'bulk-delete-confirm'"
                         :title="'Void this payment?'"
                         :confirm-label="'Void'"
-                        :message='"Voided payments are permanently removed; the linked document's outstanding balance updates automatically."'
+                        message="Voided payments are permanently removed; the linked document's outstanding balance updates automatically."
                     />
                 </x-slot>
             </x-table-selection-bar>

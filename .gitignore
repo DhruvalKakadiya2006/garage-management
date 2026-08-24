@@ -46,6 +46,7 @@ Thumbs.db
 /project-rules.md
 
 # IDE and Editor configurations
+/.secrets
 /.agents
 /.ai
 /opencode.json
