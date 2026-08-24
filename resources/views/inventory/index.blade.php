@@ -5,7 +5,6 @@
                 <x-heroicon-o-cube class="w-6 h-6 text-primary" />
                 Inventory
             </h2>
-            <p class="mt-1 text-sm text-gray-500">Manage spare parts and labour services in one place.</p>
         </div>
     </x-slot>
 

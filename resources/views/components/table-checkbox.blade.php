@@ -11,4 +11,4 @@
        :checked="isSelected($el.getAttribute('{{ $attr }}'))"
        @change="toggleRow($el.getAttribute('{{ $attr }}'))"
        aria-label="Select row"
-       class="h-4 w-4 rounded border-input text-primary focus:ring-ring cursor-pointer">
+       class="h-4 w-4 align-middle rounded border-input text-primary focus:ring-ring cursor-pointer">

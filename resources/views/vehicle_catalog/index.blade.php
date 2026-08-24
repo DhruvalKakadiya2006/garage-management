@@ -36,18 +36,16 @@
                 bulkConfirmMessage="Brands with models under them will be skipped."
             >
                 <x-slot name="single">
-                    <span class="text-sm font-medium text-primary-800">
-                        Selected:
-                        <span class="font-semibold" x-text="selectedBrand ? selectedBrand.name : ''"></span>
-                    </span>
-                    <x-button type="button" @click="goAddModel()">
-                        <x-heroicon-o-plus class="w-4 h-4" />
-                        Add Model
+                    <x-button type="button" @click="$dispatch('open-modal', 'bulk-delete-confirm')" class="flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                        <x-heroicon-o-trash class="w-4 h-4" />
+                        Delete
                     </x-button>
-                    <x-button variant="secondary" type="button" @click="goEditBrand()">
-                        <x-heroicon-o-pencil-square class="w-4 h-4" />
-                        Edit
-                    </x-button>
+                    <x-bulk-delete-confirm
+                        :name="'bulk-delete-confirm'"
+                        :title="'Delete this brand?'"
+                        :confirm-label="'Delete'"
+                        :message="'Brands with models under them will be skipped.'"
+                    />
                 </x-slot>
             </x-table-selection-bar>
 
@@ -61,25 +59,25 @@
             >
                 <x-slot name="header">
                     <tr>
-                        <th class="w-10 px-6 py-3 text-left"><x-table-select-all /></th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Brand</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Models</th>
-                        <th class="w-10 px-6 py-3 text-right"></th>
+                        <th class="align-middle w-10 px-6 py-3 text-left"><x-table-select-all /></th>
+                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Brand</th>
+                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Models</th>
+                        <th class="align-middle w-10 px-6 py-3 text-right"></th>
                     </tr>
                 </x-slot>
 
                 @foreach ($brands as $brand)
                     <tr class="group hover:bg-muted/50">
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap">
                             <x-table-checkbox :id="$brand->id" attr="data-brand-id" />
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
                             {{ $brand->name }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-600">
                             {{ $brand->models_count }} model(s)
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-right">
                             <button type="button" @click="toggleExpand('{{ $brand->id }}')" title="View models"
                                     class="inline-flex items-center justify-center rounded-md p-2 text-gray-500 transition-colors duration-150 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                                 <x-heroicon-o-chevron-down class="w-5 h-5 transition-transform duration-150"
@@ -88,7 +86,7 @@
                         </td>
                     </tr>
                     <tr x-show="expandedId === '{{ $brand->id }}'" class="bg-muted/60">
-                        <td colspan="4" class="px-6 py-4">
+                        <td colspan="4" class="align-middle px-6 py-2">
                             <div x-data="tableSelection({ bulkEndpoint: '{{ route('vehicle-models.bulk-delete') }}', bulkExportEndpoint: '{{ route('vehicle-models.bulk-export') }}', rowAttr: 'data-model-id', modalName: 'bulk-delete-confirm-models-{{ $brand->id }}' })">
                                 <div class="flex items-center justify-between mb-2">
                                     <div class="text-xs font-medium text-muted-foreground uppercase tracking-wider">

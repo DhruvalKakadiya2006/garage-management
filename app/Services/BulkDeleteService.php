@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 
 class BulkDeleteService
 {
@@ -53,6 +54,7 @@ class BulkDeleteService
 
             if (! $record) {
                 $skippedIds[] = (string) $id;
+
                 continue;
             }
 
@@ -60,6 +62,14 @@ class BulkDeleteService
                 $deleter($record);
                 $deletedIds[] = (string) $id;
             } catch (\Throwable $e) {
+                // The user-facing message treats every skip as "linked to
+                // existing records", so real failures must be logged to stay
+                // distinguishable from legitimate FK-protection skips.
+                Log::warning('Bulk delete skipped a record.', [
+                    'model' => $modelClass,
+                    'id' => $id,
+                    'reason' => $e->getMessage(),
+                ]);
                 $skippedIds[] = (string) $id;
             }
         }

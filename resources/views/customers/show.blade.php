@@ -170,18 +170,18 @@
                                 <table class="min-w-full divide-y divide-border">
                                     <thead class="bg-muted/50">
                                         <tr>
-                                            <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Registration No.</th>
-                                            <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Vehicle</th>
-                                            <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Battery</th>
-                                            <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Color</th>
-                                            <th class="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Odometer</th>
-                                            <th class="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
+                                            <th class="align-middle px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Registration No.</th>
+                                            <th class="align-middle px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Vehicle</th>
+                                            <th class="align-middle px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Battery</th>
+                                            <th class="align-middle px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Color</th>
+                                            <th class="align-middle px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Odometer</th>
+                                            <th class="align-middle px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-border">
                                         @foreach ($customer->vehicles as $vehicle)
                                             <tr class="hover:bg-muted/50">
-                                                <td class="px-4 py-3 whitespace-nowrap text-xs text-gray-900">
+                                                <td class="align-middle px-4 py-2 whitespace-nowrap text-xs text-gray-900">
                                                     <div class="flex items-center gap-2">
                                                         <span class="font-medium">{{ $vehicle->registration_no ?? '—' }}</span>
                                                         @if ($vehicle->is_non_rto)
@@ -189,19 +189,19 @@
                                                         @endif
                                                     </div>
                                                 </td>
-                                                <td class="px-4 py-3 whitespace-nowrap text-xs text-gray-600">
+                                                <td class="align-middle px-4 py-2 whitespace-nowrap text-xs text-gray-600">
                                                     {{ $vehicle->vehicleModel?->vehicleBrand?->name }} {{ $vehicle->vehicleModel?->name }}
                                                 </td>
-                                                <td class="px-4 py-3 whitespace-nowrap text-xs text-gray-600">
+                                                <td class="align-middle px-4 py-2 whitespace-nowrap text-xs text-gray-600">
                                                     {{ ucwords(str_replace('-', ' ', (string) ($vehicle->vehicleModel?->battery_type ?? '—'))) }}
                                                 </td>
-                                                <td class="px-4 py-3 whitespace-nowrap text-xs text-gray-600">
+                                                <td class="align-middle px-4 py-2 whitespace-nowrap text-xs text-gray-600">
                                                     {{ $vehicle->color ?? '—' }}
                                                 </td>
-                                                <td class="px-4 py-3 whitespace-nowrap text-xs text-gray-600 text-right">
+                                                <td class="align-middle px-4 py-2 whitespace-nowrap text-xs text-gray-600 text-right">
                                                     {{ $vehicle->current_odometer_km ? number_format($vehicle->current_odometer_km) . ' km' : '—' }}
                                                 </td>
-                                                <td class="px-4 py-3 whitespace-nowrap text-xs text-right">
+                                                <td class="align-middle px-4 py-2 whitespace-nowrap text-xs text-right">
                                                     <a href="{{ route('vehicles.edit', $vehicle) }}" class="text-primary hover:text-primary-700">Edit</a>
                                                 </td>
                                             </tr>
@@ -225,27 +225,27 @@
                     >
                         <x-slot name="header">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Job Card</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Vehicle</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Type</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Billed</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Paid</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Outstanding</th>
+                                <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Job Card</th>
+                                <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
+                                <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Vehicle</th>
+                                <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Type</th>
+                                <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+                                <th class="align-middle px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Billed</th>
+                                <th class="align-middle px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Paid</th>
+                                <th class="align-middle px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Outstanding</th>
                             </tr>
                         </x-slot>
                         @foreach ($jobCards as $jobCard)
                             <tr class="hover:bg-muted/50">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <td class="align-middle px-6 py-2 whitespace-nowrap text-sm font-medium">
                                     <a href="{{ route('job-cards.show', $jobCard) }}" class="text-primary hover:text-primary-700">
                                         {{ $jobCard->job_card_no }}
                                     </a>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $jobCard->job_date->format('d M Y') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $jobCard->vehicle?->registration_no ?? 'NON-RTO' }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 capitalize">{{ str_replace('_', ' ', $jobCard->job_type) }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-600">{{ $jobCard->job_date->format('d/m/Y') }}</td>
+                                <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-600">{{ $jobCard->vehicle?->registration_no ?? 'NON-RTO' }}</td>
+                                <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-600 capitalize">{{ str_replace('_', ' ', $jobCard->job_type) }}</td>
+                                <td class="align-middle px-6 py-2 whitespace-nowrap">
                                     <x-badge :color="match ($jobCard->status) {
                                         'delivered' => 'green',
                                         'ready_for_delivery' => 'primary',
@@ -257,9 +257,9 @@
                                         {{ ucwords(str_replace('_', ' ', $jobCard->status)) }}
                                     </x-badge>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 text-right">{{ $money($jobCard->grand_total) }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-right">{{ $money($jobCard->amount_paid) }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-right {{ $jobCard->outstanding > 0 ? 'font-medium text-red-600' : 'text-gray-600' }}">
+                                <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-800 text-right">{{ $money($jobCard->grand_total) }}</td>
+                                <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-600 text-right">{{ $money($jobCard->amount_paid) }}</td>
+                                <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-right {{ $jobCard->outstanding > 0 ? 'font-medium text-red-600' : 'text-gray-600' }}">
                                     {{ $money($jobCard->outstanding) }}
                                 </td>
                             </tr>
@@ -280,24 +280,24 @@
                     >
                         <x-slot name="header">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Invoice No.</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Billed</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Paid</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Outstanding</th>
+                                <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Invoice No.</th>
+                                <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
+                                <th class="align-middle px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Billed</th>
+                                <th class="align-middle px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Paid</th>
+                                <th class="align-middle px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Outstanding</th>
                             </tr>
                         </x-slot>
                         @foreach ($counterInvoices as $invoice)
                             <tr class="hover:bg-muted/50">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <td class="align-middle px-6 py-2 whitespace-nowrap text-sm font-medium">
                                     <a href="{{ route('counter-invoices.show', $invoice) }}" class="text-primary hover:text-primary-700">
                                         {{ $invoice->invoice_no }}
                                     </a>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $invoice->invoice_date->format('d M Y') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 text-right">{{ $money($invoice->grand_total) }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-right">{{ $money($invoice->amount_paid) }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-right {{ $invoice->outstanding > 0 ? 'font-medium text-red-600' : 'text-gray-600' }}">
+                                <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-600">{{ $invoice->invoice_date->format('d/m/Y') }}</td>
+                                <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-800 text-right">{{ $money($invoice->grand_total) }}</td>
+                                <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-600 text-right">{{ $money($invoice->amount_paid) }}</td>
+                                <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-right {{ $invoice->outstanding > 0 ? 'font-medium text-red-600' : 'text-gray-600' }}">
                                     {{ $money($invoice->outstanding) }}
                                 </td>
                             </tr>
@@ -312,11 +312,11 @@
                     >
                         <x-slot name="header">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Document</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Mode</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Reference</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Amount</th>
+                                <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
+                                <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Document</th>
+                                <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Mode</th>
+                                <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Reference</th>
+                                <th class="align-middle px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Amount</th>
                             </tr>
                         </x-slot>
                         @foreach ($payments as $payment)
@@ -330,17 +330,17 @@
                                     : ($payable ? route('counter-invoices.show', $payable) : null);
                             @endphp
                             <tr class="hover:bg-muted/50">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $payment->payment_date->format('d M Y') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-900">{{ $payment->payment_date->format('d/m/Y') }}</td>
+                                <td class="align-middle px-6 py-2 whitespace-nowrap text-sm font-medium">
                                     @if ($docRoute)
                                         <a href="{{ $docRoute }}" class="text-primary hover:text-primary-700">{{ $docNo }}</a>
                                     @else
                                         <span class="text-gray-400 italic">Deleted record</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 capitalize">{{ str_replace('_', ' ', $payment->payment_mode) }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $payment->reference_no ?? '-' }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium text-right">{{ $money($payment->amount) }}</td>
+                                <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-600 capitalize">{{ str_replace('_', ' ', $payment->payment_mode) }}</td>
+                                <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-600">{{ $payment->reference_no ?? '-' }}</td>
+                                <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-900 font-medium text-right">{{ $money($payment->amount) }}</td>
                             </tr>
                         @endforeach
                     </x-data-table>

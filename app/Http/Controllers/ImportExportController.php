@@ -45,9 +45,16 @@ class ImportExportController extends Controller
             return back()->with('error', 'Unknown import/export entity.');
         }
 
+        // Reject unsupported uploads up front; the file format detector would
+        // catch these later anyway, but failing before the file hits storage
+        // gives a faster and clearer error.
+        $extension = strtolower((string) $request->file('file')->getClientOriginalExtension());
+        if (! in_array($extension, (array) config('import-export.allowed_extensions', ['csv']), true)) {
+            return back()->with('error', 'Unsupported import file type. Only '.implode(', ', (array) config('import-export.allowed_extensions', ['csv'])).' files are accepted.');
+        }
+
         $file = $request->file('file');
         $token = (string) Str::uuid();
-        $extension = strtolower((string) $file->getClientOriginalExtension());
 
         $disk = Storage::disk(config('import-export.storage.disk'));
 
@@ -62,6 +69,7 @@ class ImportExportController extends Controller
             'mode' => $validated['mode'],
             'original_filename' => $file->getClientOriginalName(),
             'upload_path' => $uploadPath,
+            'user_id' => $request->user()->getKey(),
         ]);
 
         return redirect()->route('import-export.preview.show', $token);
@@ -83,6 +91,11 @@ class ImportExportController extends Controller
 
     public function confirm(Request $request, string $token)
     {
+        // Confirming applies every safe row in one transaction — a mass
+        // create/update with bulk-delete-level blast radius, so it shares the
+        // admin gate.
+        $this->authorize('admin');
+
         try {
             $report = $this->importService->confirm($token);
         } catch (ImportException $e) {
@@ -123,6 +136,8 @@ class ImportExportController extends Controller
 
     public function errorReport(string $token)
     {
+        $this->assertTokenOwnership($token);
+
         $disk = Storage::disk(config('import-export.storage.disk'));
         $path = config('import-export.storage.error_reports').'/'.$token.'.csv';
 
@@ -167,6 +182,26 @@ class ImportExportController extends Controller
         $session = json_decode($disk->get($path), true);
 
         return is_array($session) ? ($session['entity_key'] ?? null) : null;
+    }
+
+    private function assertTokenOwnership(string $token): void
+    {
+        $disk = Storage::disk(config('import-export.storage.disk'));
+        $path = config('import-export.storage.sessions').'/'.$token.'.json';
+
+        if (! $disk->exists($path)) {
+            return;
+        }
+
+        $session = json_decode($disk->get($path), true);
+
+        if (! is_array($session) || ! isset($session['user_id'])) {
+            return;
+        }
+
+        if ((int) $session['user_id'] !== (int) auth()->id() && ! auth()->user()?->can('admin')) {
+            abort(403, 'This import belongs to another user.');
+        }
     }
 
     /**

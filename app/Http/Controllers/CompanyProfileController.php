@@ -15,9 +15,14 @@ class CompanyProfileController extends Controller
     {
         $profile = CompanyProfile::profile();
 
-        $logoUrl = $profile->logo_path && Storage::disk('local')->exists($profile->logo_path)
-            ? Storage::disk('local')->temporaryUrl($profile->logo_path, now()->addMinutes(60))
-            : null;
+        $logoUrl = null;
+        if ($profile->logo_path && Storage::disk('local')->exists($profile->logo_path)) {
+            try {
+                $logoUrl = Storage::disk('local')->temporaryUrl($profile->logo_path, now()->addMinutes(60));
+            } catch (\Throwable $e) {
+                $logoUrl = Storage::disk('local')->url($profile->logo_path);
+            }
+        }
 
         return view('company_profile.index', [
             'profile' => $profile,
@@ -30,6 +35,8 @@ class CompanyProfileController extends Controller
      */
     public function update(Request $request)
     {
+        $this->authorize('admin');
+
         $validated = $request->validate([
             'company_name' => ['required', 'string', 'max:255'],
             'address' => ['nullable', 'string'],

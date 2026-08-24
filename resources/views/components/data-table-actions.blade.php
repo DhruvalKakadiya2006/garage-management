@@ -6,7 +6,7 @@
     'confirm' => 'Delete this record?',
 ])
 
-<td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+<td class="align-middle px-6 py-2 whitespace-nowrap text-right text-sm">
     <div class="inline-flex items-center gap-2">
         @if ($viewRoute)
             <a

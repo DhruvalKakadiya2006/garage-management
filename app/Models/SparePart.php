@@ -34,26 +34,16 @@ class SparePart extends Model
         });
     }
 
-    protected function partCode(): Attribute
-    {
-        return Attribute::make(
-            get: fn () => $this->attributes['part_code'] ?? $this->generatePartCode(),
-        );
-    }
-
     protected function generatePartCode(): string
     {
         $prefix = $this->category ? strtoupper(substr($this->category, 0, 3)) : 'PART';
-        $lastPart = SparePart::max('part_code');
 
-        if ($lastPart && preg_match('/^[A-Z]{2,3}-\d+$/', $lastPart)) {
-            $lastNum = (int) explode('-', $lastPart)[1];
-            $newNum = sprintf('%03d', $lastNum + 1);
+        $maxSuffix = (int) static::query()
+            ->where('part_code', 'like', $prefix.'-%')
+            ->selectRaw('MAX(CAST(substr(part_code, ?) AS INTEGER)) as max_suffix', [strlen($prefix) + 2])
+            ->value('max_suffix');
 
-            return "{$prefix}-{$newNum}";
-        }
-
-        return "{$prefix}-001";
+        return sprintf('%s-%03d', $prefix, max($maxSuffix, 0) + 1);
     }
 
     /**

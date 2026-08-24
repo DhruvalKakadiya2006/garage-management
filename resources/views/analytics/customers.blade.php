@@ -27,8 +27,8 @@
                 <h3 class="font-semibold text-gray-900 mb-1">Customers Ranked by Amount Paid</h3>
                 <p class="text-xs text-gray-500 mb-4">
                     Based on Job Cards and Counter Invoices created between 
-                    <strong>{{ \Carbon\Carbon::parse($fromDate)->format('d M Y') }}</strong> and 
-                    <strong>{{ \Carbon\Carbon::parse($toDate)->format('d M Y') }}</strong>.
+                    <strong>{{ \Carbon\Carbon::parse($fromDate)->format('d/m/Y') }}</strong> and 
+                    <strong>{{ \Carbon\Carbon::parse($toDate)->format('d/m/Y') }}</strong>.
                     Amount paid is the total of all payments received against those documents;
                     visit count is the number of documents raised for the customer in the range.
                 </p>
@@ -40,28 +40,28 @@
                         <table class="min-w-full text-sm">
                             <thead class="bg-muted/50">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">#</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Customer</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Type</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Visits</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Amount Paid</th>
+                                    <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">#</th>
+                                    <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Customer</th>
+                                    <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Type</th>
+                                    <th class="align-middle px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Visits</th>
+                                    <th class="align-middle px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Amount Paid</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border">
                                 @foreach($customers as $index => $row)
                                 <tr class="hover:bg-muted/50">
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">{{ $index + 1 }}</td>
-                                    <td class="px-6 py-4">
+                                    <td class="align-middle px-6 py-2 whitespace-nowrap text-gray-500">{{ $index + 1 }}</td>
+                                    <td class="align-middle px-6 py-2">
                                         <div class="font-medium text-gray-900">{{ $row['customer']->display_name }}</div>
                                         <div class="text-xs text-gray-500">{{ $row['customer']->mobile ?? '-' }}</div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-600 capitalize">
+                                    <td class="align-middle px-6 py-2 whitespace-nowrap text-gray-600 capitalize">
                                         {{ str_replace('-', ' ', $row['customer']->customer_type) }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-gray-900 font-medium">
+                                    <td class="align-middle px-6 py-2 whitespace-nowrap text-right text-gray-900 font-medium">
                                         {{ $row['visits'] }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-gray-900 font-medium">
+                                    <td class="align-middle px-6 py-2 whitespace-nowrap text-right text-gray-900 font-medium">
                                         {{ config('garage.currency_symbol') }}{{ number_format($row['total_paid'], 2) }}
                                     </td>
                                 </tr>

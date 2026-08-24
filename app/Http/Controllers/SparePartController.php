@@ -7,6 +7,7 @@ use App\Http\Controllers\Concerns\BulkExportsRecords;
 use App\Models\SparePart;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class SparePartController extends Controller
 {
@@ -47,10 +48,14 @@ class SparePartController extends Controller
             return response()->json([]);
         }
 
+        // Escape LIKE wildcards (with an explicit ESCAPE clause) so a query
+        // like "OIL-50%" matches that literal code only.
+        $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\%', '\_'], $q);
+
         $parts = SparePart::query()
-            ->where(function ($query) use ($q) {
-                $query->where('part_name', 'like', "%{$q}%")
-                    ->orWhere('part_code', 'like', "%{$q}%");
+            ->where(function ($query) use ($escaped) {
+                $query->whereRaw("part_name LIKE ? ESCAPE '\'", ["%{$escaped}%"])
+                    ->orWhereRaw("part_code LIKE ? ESCAPE '\'", ["%{$escaped}%"]);
             })
             ->orderBy('part_name')
             ->limit(20)
@@ -93,21 +98,37 @@ class SparePartController extends Controller
         $validated['current_stock_qty'] = $validated['current_stock_qty'] ?? 0;
         $validated['reorder_level'] = $validated['reorder_level'] ?? 0;
 
-        // Auto-generate part_code if not provided (prefix from category)
+        // Auto-generate part_code if not provided (prefix from category).
+        // The next number is the highest NUMERIC suffix for this prefix only
+        // — a global lexicographic MAX would collide across categories and
+        // roll over past "999".
         $categoryPrefix = $validated['category'] ? strtoupper(substr($validated['category'], 0, 3)) : 'PART';
-        $lastPart = SparePart::max('part_code');
+        $validated['part_code'] = $this->nextPartCode($categoryPrefix);
 
-        if ($lastPart && preg_match('/^[A-Z]{2,3}-\d+$/', $lastPart)) {
-            $lastNum = (int) explode('-', $lastPart)[1];
-            $newNum = sprintf('%03d', $lastNum + 1);
-            $validated['part_code'] = "{$categoryPrefix}-{$newNum}";
-        } else {
-            $validated['part_code'] = "{$categoryPrefix}-001";
+        try {
+            SparePart::create($validated);
+        } catch (QueryException $e) {
+            Log::warning('Spare part code collision.', ['part_code' => $validated['part_code'], 'error' => $e->getMessage()]);
+
+            return back()->withInput()->withErrors([
+                'error' => 'A spare part with the generated code '.$validated['part_code'].' already exists. Please submit again.',
+            ]);
         }
 
-        SparePart::create($validated);
-
         return redirect()->route('inventory.index', ['tab' => 'parts'])->with('success', 'Spare part added successfully.');
+    }
+
+    /**
+     * Highest numeric suffix used by {$prefix}-### codes, plus one.
+     */
+    private function nextPartCode(string $prefix): string
+    {
+        $maxSuffix = (int) SparePart::query()
+            ->where('part_code', 'like', $prefix.'-%')
+            ->selectRaw('MAX(CAST(substr(part_code, ?) AS INTEGER)) as max_suffix', [strlen($prefix) + 2])
+            ->value('max_suffix');
+
+        return sprintf('%s-%03d', $prefix, max($maxSuffix, 0) + 1);
     }
 
     public function edit(SparePart $sparePart)

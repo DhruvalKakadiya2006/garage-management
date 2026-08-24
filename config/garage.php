@@ -48,6 +48,10 @@ return [
 
     'estimate_validity_days' => (int) env('ESTIMATE_VALIDITY_DAYS', 15),
 
+    'pagination' => [
+        'per_page' => (int) env('PAGINATION_PER_PAGE', 15),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Option lists

@@ -70,7 +70,7 @@
                         </div>
                         <div>
                             <div class="font-medium text-gray-500 text-xs uppercase tracking-wider mb-1">Job Date / Status</div>
-                            <div class="font-semibold text-gray-900">{{ $jobCard->job_date->format('d M Y') }}</div>
+                            <div class="font-semibold text-gray-900">{{ $jobCard->job_date->format('d/m/Y') }}</div>
                             <div class="mt-1">
                                 <x-badge :color="match ($jobCard->status) {
                                     'delivered' => 'green',

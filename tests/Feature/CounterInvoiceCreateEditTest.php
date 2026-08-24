@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\CounterInvoice;
 use App\Models\Customer;
+use App\Models\Payment;
 use App\Models\SparePart;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -363,5 +364,59 @@ class CounterInvoiceCreateEditTest extends TestCase
         $invoice->refresh();
         $this->assertCount(0, $invoice->items);
         $this->assertEquals(20, (int) $partA->fresh()->current_stock_qty);
+    }
+
+    public function test_store_rejects_more_than_fifty_item_lines()
+    {
+        $user = $this->makeUser();
+        $part = $this->makePart('BRK-01', 'Brake Shoe', 50, 500);
+
+        $items = collect(range(1, 51))
+            ->map(fn () => ['spare_part_id' => $part->id, 'quantity' => 1, 'discount_percent' => 0])
+            ->all();
+
+        $this->actingAs($user)
+            ->post(route('counter-invoices.store'), [
+                'invoice_date' => '2026-08-03',
+                'walkin_name' => 'Walk-in Buyer',
+                'items' => $items,
+            ])
+            ->assertSessionHasErrors('items');
+
+        $this->assertDatabaseCount('counter_invoices', 0);
+    }
+
+    public function test_fully_paid_invoice_reports_paid_despite_float_rounding_residue()
+    {
+        $invoice = CounterInvoice::create([
+            'invoice_date' => '2026-08-03',
+            'walkin_name' => 'Walk-in Buyer',
+            'gst_applicable' => false,
+            'discount_percent' => 0,
+            'discount_amount' => 0,
+            'cgst_amount' => 0,
+            'sgst_amount' => 0,
+            'round_off_amount' => 0,
+            'grand_total' => 0.58,
+        ]);
+
+        // grand_total 0.58 paid as 0.14 + 0.44: the binary float sum lands
+        // just under 0.58, so an unrounded comparison reports partially_paid.
+        Payment::create([
+            'payable_type' => CounterInvoice::class,
+            'payable_id' => $invoice->id,
+            'amount' => 0.14,
+            'payment_mode' => 'cash',
+            'payment_date' => '2026-08-04',
+        ]);
+        Payment::create([
+            'payable_type' => CounterInvoice::class,
+            'payable_id' => $invoice->id,
+            'amount' => 0.44,
+            'payment_mode' => 'upi',
+            'payment_date' => '2026-08-05',
+        ]);
+
+        $this->assertSame('paid', $invoice->refresh()->payment_status_label);
     }
 }

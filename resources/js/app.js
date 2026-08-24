@@ -76,6 +76,7 @@ document.addEventListener('alpine:init', () => {
 
         init() {
             this.selected = this.initialId ? { id: String(this.initialId), label: this.initialLabel } : null;
+            this.query = this.selected ? this.initialLabel : '';
             document.addEventListener('mousedown', this.onDocMousedown);
         },
 

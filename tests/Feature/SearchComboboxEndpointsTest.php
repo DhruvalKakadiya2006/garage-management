@@ -169,6 +169,57 @@ class SearchComboboxEndpointsTest extends TestCase
             ->assertJsonCount(10);
     }
 
+    public function test_customer_search_treats_like_wildcards_as_literals(): void
+    {
+        $user = $this->makeUser();
+
+        Customer::create(['first_name' => 'Fifty', 'display_name' => 'Fifty Percent 50% Off', 'mobile' => '9000000010', 'customer_type' => 'regular']);
+        Customer::create(['first_name' => 'FiftyX', 'display_name' => 'FiftyX 50A Off', 'mobile' => '9000000011', 'customer_type' => 'regular']);
+
+        // "50%" must match only the literal percent sign, not "50A".
+        $data = $this->actingAs($user)
+            ->getJson(route('customers.search', ['q' => '50%']))
+            ->assertOk()
+            ->assertJsonCount(1);
+
+        $this->assertSame('9000000010', $data->json('0.mobile'));
+    }
+
+    public function test_spare_part_search_treats_like_wildcards_as_literals(): void
+    {
+        $user = $this->makeUser();
+
+        SparePart::create([
+            'part_name' => 'Oil 50% Discount',
+            'part_code' => 'OIL-50%',
+            'category' => 'oil',
+            'unit' => 'ltr',
+            'purchase_price' => 30,
+            'mrp' => 50,
+            'labor_charge' => 0,
+            'current_stock_qty' => 10,
+            'reorder_level' => 5,
+        ]);
+        SparePart::create([
+            'part_name' => 'Oil 5XA Variant',
+            'part_code' => 'OIL-5XA',
+            'category' => 'oil',
+            'unit' => 'ltr',
+            'purchase_price' => 30,
+            'mrp' => 55,
+            'labor_charge' => 0,
+            'current_stock_qty' => 10,
+            'reorder_level' => 5,
+        ]);
+
+        $data = $this->actingAs($user)
+            ->getJson(route('spare-parts.search', ['q' => 'OIL-50%']))
+            ->assertOk()
+            ->assertJsonCount(1);
+
+        $this->assertSame('OIL-50%', $data->json('0.part_code'));
+    }
+
     public function test_vehicle_create_page_renders_with_customer_combobox(): void
     {
         $user = $this->makeUser();

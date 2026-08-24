@@ -69,7 +69,7 @@
                         <h3 class="font-semibold text-gray-900 mb-3">Job Details</h3>
                         <dl class="space-y-2 text-sm">
                             <div><dt class="inline font-medium">JC No:</dt> <dd class="inline">{{ $jobCard->job_card_no }}</dd></div>
-                            <div><dt class="inline font-medium">Date:</dt> <dd class="inline">{{ $jobCard->job_date->format('d M Y') }}</dd></div>
+                            <div><dt class="inline font-medium">Date:</dt> <dd class="inline">{{ $jobCard->job_date->format('d/m/Y') }}</dd></div>
                             <div><dt class="inline font-medium">Type:</dt> <dd class="inline capitalize">{{ str_replace('_', ' ', $jobCard->job_type) }}</dd></div>
                             <div><dt class="inline font-medium">Status:</dt> <dd class="inline">
                                 <x-badge :color="match ($jobCard->status) {
@@ -130,7 +130,7 @@
                         <dl class="space-y-2 text-sm">
                             <div><dt class="inline font-medium">Technician:</dt> <dd class="inline">{{ $jobCard->assignedTechnician->name ?? '-' }}</dd></div>
                             <div><dt class="inline font-medium">Supervisor:</dt> <dd class="inline">{{ $jobCard->supervisor->name ?? '-' }}</dd></div>
-                            <div><dt class="inline font-medium">Delivery:</dt> <dd class="inline">{{ $jobCard->promised_delivery_date?->format('d M Y') ?? '-' }}</dd></div>
+                            <div><dt class="inline font-medium">Delivery:</dt> <dd class="inline">{{ $jobCard->promised_delivery_date?->format('d/m/Y') ?? '-' }}</dd></div>
                         </dl>
                     </div>
                 </div>
@@ -153,23 +153,23 @@
                 <table class="min-w-full text-xs">
                     <thead class="bg-muted/50">
                         <tr>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Part</th>
-                            <th class="px-4 py-2 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Qty</th>
-                            <th class="px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">MRP</th>
-                            <th class="px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Labor</th>
-                            <th class="px-4 py-2 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Warranty</th>
-                            <th class="px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Line Total</th>
+                            <th class="align-middle px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Part</th>
+                            <th class="align-middle px-4 py-2 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Qty</th>
+                            <th class="align-middle px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">MRP</th>
+                            <th class="align-middle px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Labor</th>
+                            <th class="align-middle px-4 py-2 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Warranty</th>
+                            <th class="align-middle px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Line Total</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($jobCard->parts as $part)
                         <tr class="border-t hover:bg-muted/50">
-                            <td class="px-4 py-2">{{ $part->sparePart->part_name }}</td>
-                            <td class="px-4 py-2 text-center">{{ $part->quantity }}</td>
-                            <td class="px-4 py-2 text-right">{{ config('garage.currency_symbol') }}{{ number_format($part->mrp, 2) }}</td>
-                            <td class="px-4 py-2 text-right">{{ config('garage.currency_symbol') }}{{ number_format($part->labor_charge, 2) }}</td>
-                            <td class="px-4 py-2 text-center">{{ $part->under_warranty ? 'Yes' : 'No' }}</td>
-                            <td class="px-4 py-2 text-right font-medium">{{ config('garage.currency_symbol') }}{{ number_format($part->line_total, 2) }}</td>
+                            <td class="align-middle px-4 py-2">{{ $part->sparePart->part_name }}</td>
+                            <td class="align-middle px-4 py-2 text-center">{{ $part->quantity }}</td>
+                            <td class="align-middle px-4 py-2 text-right">{{ config('garage.currency_symbol') }}{{ number_format($part->mrp, 2) }}</td>
+                            <td class="align-middle px-4 py-2 text-right">{{ config('garage.currency_symbol') }}{{ number_format($part->labor_charge, 2) }}</td>
+                            <td class="align-middle px-4 py-2 text-center">{{ $part->under_warranty ? 'Yes' : 'No' }}</td>
+                            <td class="align-middle px-4 py-2 text-right font-medium">{{ config('garage.currency_symbol') }}{{ number_format($part->line_total, 2) }}</td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -184,21 +184,21 @@
                 <table class="min-w-full text-xs">
                     <thead class="bg-muted/50">
                         <tr>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Service</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Technician</th>
-                            <th class="px-4 py-2 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Qty</th>
-                            <th class="px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Rate</th>
-                            <th class="px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Line Total</th>
+                            <th class="align-middle px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Service</th>
+                            <th class="align-middle px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Technician</th>
+                            <th class="align-middle px-4 py-2 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Qty</th>
+                            <th class="align-middle px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Rate</th>
+                            <th class="align-middle px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Line Total</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($jobCard->labours as $labour)
                         <tr class="border-t hover:bg-muted/50">
-                            <td class="px-4 py-2">{{ $labour->labourMaster->service_name }}</td>
-                            <td class="px-4 py-2">{{ $labour->technician->name ?? '-' }}</td>
-                            <td class="px-4 py-2 text-center">{{ $labour->qty }}</td>
-                            <td class="px-4 py-2 text-right">{{ config('garage.currency_symbol') }}{{ number_format($labour->rate, 2) }}</td>
-                            <td class="px-4 py-2 text-right font-medium">{{ config('garage.currency_symbol') }}{{ number_format($labour->line_total, 2) }}</td>
+                            <td class="align-middle px-4 py-2">{{ $labour->labourMaster->service_name }}</td>
+                            <td class="align-middle px-4 py-2">{{ $labour->technician->name ?? '-' }}</td>
+                            <td class="align-middle px-4 py-2 text-center">{{ $labour->qty }}</td>
+                            <td class="align-middle px-4 py-2 text-right">{{ config('garage.currency_symbol') }}{{ number_format($labour->rate, 2) }}</td>
+                            <td class="align-middle px-4 py-2 text-right font-medium">{{ config('garage.currency_symbol') }}{{ number_format($labour->line_total, 2) }}</td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -270,23 +270,23 @@
                         <table class="min-w-full text-xs">
                             <thead class="bg-muted/50">
                                 <tr>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Mode</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Reference</th>
-                                    <th class="px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Amount</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Notes</th>
-                                    <th class="px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
+                                    <th class="align-middle px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
+                                    <th class="align-middle px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Mode</th>
+                                    <th class="align-middle px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Reference</th>
+                                    <th class="align-middle px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Amount</th>
+                                    <th class="align-middle px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Notes</th>
+                                    <th class="align-middle px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($jobCard->payments as $payment)
                                 <tr class="border-t hover:bg-muted/50">
-                                    <td class="px-4 py-2">{{ $payment->payment_date->format('d M Y') }}</td>
-                                    <td class="px-4 py-2 capitalize">{{ str_replace('_', ' ', $payment->payment_mode) }}</td>
-                                    <td class="px-4 py-2">{{ $payment->reference_no ?? '-' }}</td>
-                                    <td class="px-4 py-2 text-right font-medium">{{ config('garage.currency_symbol') }}{{ number_format($payment->amount, 2) }}</td>
-                                    <td class="px-4 py-2 text-gray-600">{{ $payment->notes ?? '-' }}</td>
-                                    <td class="px-4 py-2 text-right text-xs whitespace-nowrap">
+                                    <td class="align-middle px-4 py-2">{{ $payment->payment_date->format('d/m/Y') }}</td>
+                                    <td class="align-middle px-4 py-2 capitalize">{{ str_replace('_', ' ', $payment->payment_mode) }}</td>
+                                    <td class="align-middle px-4 py-2">{{ $payment->reference_no ?? '-' }}</td>
+                                    <td class="align-middle px-4 py-2 text-right font-medium">{{ config('garage.currency_symbol') }}{{ number_format($payment->amount, 2) }}</td>
+                                    <td class="align-middle px-4 py-2 text-gray-600">{{ $payment->notes ?? '-' }}</td>
+                                    <td class="align-middle px-4 py-2 text-right text-xs whitespace-nowrap">
                                         <div class="inline-flex items-center gap-3">
                                             <a href="{{ route('payments.edit', $payment) }}" class="text-primary hover:text-primary-700">Edit</a>
                                             @can('admin')
@@ -310,7 +310,7 @@
 
                 <!-- Record Payment Form -->
                 @if(! $jobCard->is_billed)
-                    <div class="inline-flex items-center gap-1.5 py-4 text-gray-500 font-medium">
+                    <div class="inline-flex items-center gap-1.5 py-2 text-gray-500 font-medium">
                         <x-heroicon-o-inbox class="w-5 h-5" />
                         Not billed yet &mdash; add parts / labour to bill this card.
                     </div>
@@ -367,12 +367,12 @@
                     </div>
                 @else
                     @if($jobCard->amount_paid > 0)
-                        <div class="inline-flex items-center gap-1.5 text-center py-4 text-green-600 font-medium">
+                        <div class="inline-flex items-center gap-1.5 text-center py-2 text-green-600 font-medium">
                             <x-heroicon-o-check-circle class="w-5 h-5" />
                             Fully Paid
                         </div>
                     @else
-                        <div class="inline-flex items-center gap-1.5 text-center py-4 text-gray-500 font-medium">
+                        <div class="inline-flex items-center gap-1.5 text-center py-2 text-gray-500 font-medium">
                             <x-heroicon-o-check-circle class="w-5 h-5" />
                             No amount due on this job card.
                         </div>

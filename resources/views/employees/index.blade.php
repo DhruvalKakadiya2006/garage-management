@@ -43,16 +43,17 @@
                 :bulk-export-endpoint="route('employees.bulk-export')"
                 bulkConfirmMessage="Employees assigned to job cards will have their assignment cleared."
             >
-                <x-slot name="single">
-                    <span class="text-sm font-medium text-primary-800">
-                        Selected:
-                        <span x-text="selectedEmployee ? selectedEmployee.name : ''" class="font-semibold"></span>
-                    </span>
-                    <x-button variant="secondary" type="button"
-                              @click="window.location.href = base + '/' + singleId + '/edit'">
-                        <x-heroicon-o-pencil-square class="w-4 h-4" />
-                        Edit
+<x-slot name="single">
+                    <x-button type="button" @click="$dispatch('open-modal', 'bulk-delete-confirm')" class="flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                        <x-heroicon-o-trash class="w-4 h-4" />
+                        Delete
                     </x-button>
+                    <x-bulk-delete-confirm
+                        :name="'bulk-delete-confirm'"
+                        :title="'Delete this employee?'"
+                        :confirm-label="'Delete'"
+                        :message="'Employees assigned to job cards will have their assignment cleared.'"
+                    />
                 </x-slot>
             </x-table-selection-bar>
 
@@ -66,24 +67,24 @@
             >
                 <x-slot name="header">
                     <tr>
-                        <th class="w-10 px-6 py-3 text-left"><x-table-select-all /></th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Role</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Specialization</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Mobile</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Active</th>
+                        <th class="align-middle w-10 px-6 py-3 text-left"><x-table-select-all /></th>
+                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Name</th>
+                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Role</th>
+                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Specialization</th>
+                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Mobile</th>
+                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Active</th>
                     </tr>
                 </x-slot>
 
                 @foreach ($employees as $employee)
                     <tr class="hover:bg-muted/50">
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap">
                             <x-table-checkbox :id="$employee->id" />
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
                             {{ $employee->name }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap">
                             <x-badge :color="match ($employee->role) {
                                 'technician' => 'primary',
                                 'supervisor' => 'purple',
@@ -94,13 +95,13 @@
                                 {{ ucwords(str_replace('_', ' ', $employee->role)) }}
                             </x-badge>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 capitalize">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-600 capitalize">
                             {{ $employee->specialization ? str_replace('_', ' ', $employee->specialization) : '-' }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-600">
                             {{ $employee->mobile }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap">
                             @if ($employee->active)
                                 <x-badge color="green">
                                     <x-heroicon-o-check-circle class="w-3.5 h-3.5" />

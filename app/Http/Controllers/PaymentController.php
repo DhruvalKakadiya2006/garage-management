@@ -7,6 +7,8 @@ use App\Http\Controllers\Concerns\BulkExportsRecords;
 use App\Models\CounterInvoice;
 use App\Models\JobCard;
 use App\Models\Payment;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -34,7 +36,7 @@ class PaymentController extends Controller
         $payments = Payment::with('payable.customer')
             ->orderBy('payment_date', 'desc')
             ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->paginate((int) config('garage.pagination.per_page', 15));
 
         return view('payments.index', compact('payments'));
     }
@@ -56,9 +58,12 @@ class PaymentController extends Controller
 
         DB::beginTransaction();
         try {
-            // Load the payable model
+            // Load the payable model. lockForUpdate serializes concurrent
+            // payment writers against the same document on row-locking
+            // databases; on SQLite (single writer) it is a no-op and the
+            // post-insert guard below provides the backstop.
             $payableClass = $validated['payable_type'];
-            $payable = $payableClass::findOrFail($validated['payable_id']);
+            $payable = $payableClass::whereKey($validated['payable_id'])->lockForUpdate()->firstOrFail();
 
             // Explicitly confirm the resolved record is one of the two payable
             // documents. Note: the client submits payable_type + payable_id
@@ -96,11 +101,23 @@ class PaymentController extends Controller
             // Create payment
             Payment::create($validated);
 
+            // Post-insert invariant: recompute the live paid total inside the
+            // transaction so two requests that both passed the pre-check above
+            // can never jointly push the document past its grand total.
+            if (round((float) $payable->payments()->sum('amount'), 2) > round((float) $payable->grand_total, 2)) {
+                throw new \RuntimeException('Concurrent writes exceeded the payable grand total.');
+            }
+
             DB::commit();
 
             return back()->with('success', 'Payment recorded successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
+
+            if ($e instanceof ModelNotFoundException) {
+                return $this->invalidPayableResponse();
+            }
+
             Log::error($e);
 
             return back()->withErrors(['error' => 'Something went wrong saving this record. Please try again.'])->withInput();
@@ -108,8 +125,18 @@ class PaymentController extends Controller
     }
 
     /**
-     * Show the form for editing a payment record.
+     * A payable id that no longer exists (or never did) is a user-input
+     * problem, not an application fault — surface it as a field error instead
+     * of the generic failure message. Caller has already rolled back the
+     * transaction if one was active.
      */
+    protected function invalidPayableResponse(): RedirectResponse
+    {
+        return back()
+            ->withErrors(['payable_id' => 'The selected document could not be found. It may have been deleted.'])
+            ->withInput();
+    }
+
     public function edit(Payment $payment)
     {
         $payment->load('payable');
@@ -139,6 +166,12 @@ class PaymentController extends Controller
             $payable = $payment->payable;
 
             if ($payable && ($payable instanceof JobCard || $payable instanceof CounterInvoice)) {
+                // Re-fetch under a row lock so concurrent payment writers
+                // targeting the same document serialize their balance checks
+                // (no-op on SQLite; the post-update guard below backstops it).
+                $payableClass = get_class($payable);
+                $payable = $payableClass::whereKey($payable->getKey())->lockForUpdate()->firstOrFail();
+
                 // Other payments on the document + the corrected amount must
                 // never exceed its grand total.
                 $otherPaymentsTotal = $payable->amount_paid - $payment->amount;
@@ -154,6 +187,13 @@ class PaymentController extends Controller
             }
 
             $payment->update($validated);
+
+            // Post-update invariant mirroring store(): the live paid total can
+            // never exceed the grand total, even under concurrent writes.
+            // When payable was deleted, there is no document to guard.
+            if ($payable && round((float) $payable->payments()->sum('amount'), 2) > round((float) $payable->grand_total, 2)) {
+                throw new \RuntimeException('Concurrent writes exceeded the payable grand total.');
+            }
 
             DB::commit();
 

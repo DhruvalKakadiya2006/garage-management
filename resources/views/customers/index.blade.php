@@ -105,36 +105,36 @@
             >
                 <x-slot name="header">
                     <tr>
-                        <th class="w-10 px-6 py-3 text-left"><x-table-select-all /></th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Display Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Mobile</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Outstanding</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Visits</th>
-                        <th class="w-10 px-6 py-3 text-right"></th>
+                        <th class="align-middle w-10 px-6 py-3 text-left"><x-table-select-all /></th>
+                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Display Name</th>
+                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Mobile</th>
+                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Outstanding</th>
+                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Visits</th>
+                        <th class="align-middle w-10 px-6 py-3 text-right"></th>
                     </tr>
                 </x-slot>
 
                 @foreach ($customers as $customer)
                     <tr class="group hover:bg-muted/50">
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap">
                             <x-table-checkbox :id="$customer->id" />
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm font-medium">
                             <a href="{{ route('customers.show', $customer) }}"
                                class="text-primary hover:text-primary-700 transition-colors duration-150">
                                 {{ $customer->display_name }}
                             </a>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-600">
                             {{ $customer->mobile }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm {{ $customer->outstanding > 0 ? 'font-medium text-red-600' : 'text-gray-600' }}">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm {{ $customer->outstanding > 0 ? 'font-medium text-red-600' : 'text-gray-600' }}">
                             {{ config('garage.currency_symbol') }}{{ number_format($customer->outstanding, 2) }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-600">
                             {{ $customer->job_cards_count + $customer->counter_invoices_count }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-right">
                             <button type="button" @click="toggleExpand('{{ $customer->id }}')"
                                     title="{{ $customer->vehicles->count() }} vehicle(s)"
                                     class="inline-flex items-center justify-center rounded-md p-2 text-gray-500 transition-colors duration-150 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
@@ -144,7 +144,7 @@
                         </td>
                     </tr>
                     <tr x-show="expandedId === '{{ $customer->id }}'" class="bg-muted/60">
-                        <td colspan="6" class="px-6 py-4">
+                        <td colspan="6" class="align-middle px-6 py-2">
                             <div class="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
                                 Vehicles ({{ $customer->vehicles->count() }})
                             </div>

@@ -7,9 +7,9 @@ use Laravel\Mcp\Server\Attributes\Instructions;
 use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Attributes\Version;
 
-#[Name('Weather Server')]
-#[Version('0.0.1')]
-#[Instructions('Instructions describing how to use the server and its features.')]
+#[Name('Garage Weather Server')]
+#[Version('1.0.0')]
+#[Instructions('Provides garage-relevant weather context for scheduling outdoor jobs and deliveries. Currently no tools are registered — add tools to $tools to expose them via MCP.')]
 class WeatherServer extends Server
 {
     protected array $tools = [

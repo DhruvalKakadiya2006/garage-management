@@ -30,9 +30,9 @@
                         <p class="text-purple-100 text-sm uppercase tracking-wide mb-2">Total Payments Collected</p>
                         <p class="text-4xl font-bold">{{ config('garage.currency_symbol') }}{{ number_format($totalPayments, 2) }}</p>
                         <p class="text-purple-100 text-sm mt-2">
-                            {{ \Carbon\Carbon::parse($fromDate)->format('d M Y') }} 
+                            {{ \Carbon\Carbon::parse($fromDate)->format('d/m/Y') }} 
                             to 
-                            {{ \Carbon\Carbon::parse($toDate)->format('d M Y') }}
+                            {{ \Carbon\Carbon::parse($toDate)->format('d/m/Y') }}
                         </p>
                     </div>
                     <div class="opacity-50">
@@ -68,13 +68,13 @@
                         <table class="min-w-full text-sm">
                             <thead class="bg-muted/50">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Payment Date</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Document</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Customer</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Payment Mode</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Reference</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Amount</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Notes</th>
+                                    <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Payment Date</th>
+                                    <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Document</th>
+                                    <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Customer</th>
+                                    <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Payment Mode</th>
+                                    <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Reference</th>
+                                    <th class="align-middle px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Amount</th>
+                                    <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Notes</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border">
@@ -96,10 +96,10 @@
                                         }
                                     @endphp
                                     <tr class="hover:bg-muted/50">
-                                        <td class="px-6 py-4 whitespace-nowrap text-gray-900">
-                                            {{ $payment->payment_date->format('d M Y') }}
+                                        <td class="align-middle px-6 py-2 whitespace-nowrap text-gray-900">
+                                            {{ $payment->payment_date->format('d/m/Y') }}
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
+                                        <td class="align-middle px-6 py-2 whitespace-nowrap">
                                             @if ($payable)
                                                 <a href="{{ $docRoute }}" class="font-medium text-primary hover:text-primary-700">
                                                     {{ $docNo }}
@@ -108,19 +108,19 @@
                                                 <span class="text-gray-400 italic">Deleted record</span>
                                             @endif
                                         </td>
-                                        <td class="px-6 py-4 text-gray-600">
+                                        <td class="align-middle px-6 py-2 text-gray-600">
                                             {{ $payable ? $customerName : '—' }}
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-gray-600 capitalize">
+                                        <td class="align-middle px-6 py-2 whitespace-nowrap text-gray-600 capitalize">
                                             {{ str_replace('_', ' ', $payment->payment_mode) }}
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-gray-600">
+                                        <td class="align-middle px-6 py-2 whitespace-nowrap text-gray-600">
                                             {{ $payment->reference_no ?? '-' }}
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right font-medium text-gray-900">
+                                        <td class="align-middle px-6 py-2 whitespace-nowrap text-right font-medium text-gray-900">
                                             {{ config('garage.currency_symbol') }}{{ number_format($payment->amount, 2) }}
                                         </td>
-                                        <td class="px-6 py-4 text-gray-500">
+                                        <td class="align-middle px-6 py-2 text-gray-500">
                                             {{ $payment->notes ? \Illuminate\Support\Str::limit($payment->notes, 30) : '-' }}
                                         </td>
                                     </tr>

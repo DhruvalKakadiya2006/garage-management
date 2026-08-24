@@ -34,18 +34,16 @@
                 bulkConfirmMessage="Item stock will be returned and related payments will be removed."
             >
                 <x-slot name="single">
-                    <span class="text-sm font-medium text-primary-800">
-                        Selected:
-                        <span x-text="selectedInvoice ? selectedInvoice.invoice_no : ''" class="font-semibold"></span>
-                    </span>
-                    <x-button x-bind:href="base + '/' + singleId">
-                        <x-heroicon-o-eye class="w-4 h-4" />
-                        View
+                    <x-button type="button" @click="$dispatch('open-modal', 'bulk-delete-confirm')" class="flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                        <x-heroicon-o-trash class="w-4 h-4" />
+                        Delete
                     </x-button>
-                    <x-button variant="secondary" x-bind:href="base + '/' + singleId + '/edit'">
-                        <x-heroicon-o-pencil-square class="w-4 h-4" />
-                        Edit
-                    </x-button>
+                    <x-bulk-delete-confirm
+                        :name="'bulk-delete-confirm'"
+                        :title="'Delete this invoice?'"
+                        :confirm-label="'Delete'"
+                        :message="'Item stock will be returned and related payments will be removed.'"
+                    />
                 </x-slot>
             </x-table-selection-bar>
 
@@ -59,27 +57,27 @@
             >
                 <x-slot name="header">
                     <tr>
-                        <th class="w-10 px-6 py-3 text-left"><x-table-select-all /></th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Invoice No.</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Customer</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Payment</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Grand Total</th>
+                        <th class="align-middle w-10 px-6 py-3 text-left"><x-table-select-all /></th>
+                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Invoice No.</th>
+                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
+                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Customer</th>
+                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Payment</th>
+                        <th class="align-middle px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Grand Total</th>
                     </tr>
                 </x-slot>
 
                 @foreach ($invoices as $invoice)
                     <tr class="hover:bg-muted/50">
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap">
                             <x-table-checkbox :id="$invoice->id" />
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
                             {{ $invoice->invoice_no }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {{ $invoice->invoice_date->format('d M Y') }}
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-600">
+                            {{ $invoice->invoice_date->format('d/m/Y') }}
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-600">
+                        <td class="align-middle px-6 py-2 text-sm text-gray-600">
                             @if($invoice->customer_id)
                                 {{ $invoice->customer->display_name }}
                             @else
@@ -89,7 +87,7 @@
                                 @endif
                             @endif
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-xs">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-xs">
                             <x-badge :color="match ($invoice->payment_status_label) {
                                 'paid' => 'green',
                                 'partially_paid' => 'amber',
@@ -108,7 +106,7 @@
                                 <div class="text-xs text-gray-500 mt-1">{{ ucfirst(str_replace('_', ' ', $invoice->payment_mode)) }}</div>
                             @endif
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
                             {{ config('garage.currency_symbol') }}{{ number_format($invoice->grand_total, 2) }}
                         </td>
                     </tr>

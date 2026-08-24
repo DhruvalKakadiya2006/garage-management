@@ -75,7 +75,7 @@ class CounterInvoiceController extends Controller
             'discount_percent' => 'nullable|numeric|min:0|max:100',
             'discount_amount' => 'nullable|numeric|min:0',
             'gst_applicable' => 'boolean',
-            'items' => 'required|array|min:1',
+            'items' => 'required|array|min:1|max:50',
             'items.*.spare_part_id' => 'required|exists:spare_parts,id',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.discount_percent' => 'nullable|numeric|min:0|max:100',
@@ -83,38 +83,44 @@ class CounterInvoiceController extends Controller
             'customer_id.required_without_all' => 'Select a customer or enter a walk-in name / mobile number.',
         ]);
 
-        // Stock check before any writes so stock can never go negative
-        $stockErrors = app(StockValidator::class)->validate($request->input('items', []), null, 'items');
-        if (! empty($stockErrors)) {
-            return back()->withErrors($stockErrors)->withInput();
-        }
-
-        // MRP is always taken from the part master, never from the client submission
-        $items = app(PartPriceResolver::class)->priceLines($request->items ?? []);
-
-        // The subtotal is only known once the lines are resolved. Reject a
-        // discount (percent-derived or flat amount) that would exceed it,
-        // otherwise GstCalculator yields a negative grand_total.
-        $lines = $this->buildGstLines($items);
-        $subtotal = collect($lines)->sum('line_total');
-
-        $discountValidator = Validator::make(
-            ['discount_amount' => $request->discount_amount ?? 0],
-            ['discount_amount' => ['nullable', 'numeric', 'min:0', new DiscountWithinSubtotal($subtotal, (float) ($request->discount_percent ?? 0))]],
-            [],
-            ['discount_amount' => 'Discount Amount']
-        );
-        if ($discountValidator->fails()) {
-            return back()->withErrors($discountValidator)->withInput();
-        }
-
         DB::beginTransaction();
         try {
+            // Stock check before any writes so stock can never go negative.
+            // Runs inside the transaction so the read guarding the deduction
+            // serializes with the write on row-locking databases.
+            $stockErrors = app(StockValidator::class)->validate($validated['items'], null, 'items');
+            if (! empty($stockErrors)) {
+                DB::rollBack();
+
+                return back()->withErrors($stockErrors)->withInput();
+            }
+
+            // MRP is always taken from the part master, never from the client submission
+            $items = app(PartPriceResolver::class)->priceLines($validated['items']);
+
+            // The subtotal is only known once the lines are resolved. Reject a
+            // discount (percent-derived or flat amount) that would exceed it,
+            // otherwise GstCalculator yields a negative grand_total.
+            $lines = $this->buildGstLines($items);
+            $subtotal = collect($lines)->sum('line_total');
+
+            $discountValidator = Validator::make(
+                ['discount_amount' => $validated['discount_amount'] ?? 0],
+                ['discount_amount' => ['nullable', 'numeric', 'min:0', new DiscountWithinSubtotal($subtotal, (float) ($validated['discount_percent'] ?? 0))]],
+                [],
+                ['discount_amount' => 'Discount Amount']
+            );
+            if ($discountValidator->fails()) {
+                DB::rollBack();
+
+                return back()->withErrors($discountValidator)->withInput();
+            }
+
             $calculations = app(GstCalculator::class)->calculate(
                 $lines,
-                $request->has('gst_applicable'),
-                $request->discount_percent ?? 0,
-                $request->discount_amount ?? 0,
+                (bool) ($validated['gst_applicable'] ?? false),
+                (float) ($validated['discount_percent'] ?? 0),
+                (float) ($validated['discount_amount'] ?? 0),
             );
 
             $invoice = CounterInvoice::create([
@@ -125,7 +131,7 @@ class CounterInvoiceController extends Controller
                 'payment_mode' => $validated['payment_mode'] ?? null,
                 'discount_percent' => $calculations['discount_percent'],
                 'discount_amount' => $calculations['discount_amount'],
-                'gst_applicable' => $request->has('gst_applicable'),
+                'gst_applicable' => (bool) ($validated['gst_applicable'] ?? false),
                 'cgst_amount' => $calculations['cgst_amount'],
                 'sgst_amount' => $calculations['sgst_amount'],
                 'round_off_amount' => $calculations['round_off_amount'],
@@ -170,7 +176,7 @@ class CounterInvoiceController extends Controller
             'discount_percent' => 'nullable|numeric|min:0|max:100',
             'discount_amount' => 'nullable|numeric|min:0',
             'gst_applicable' => 'boolean',
-            'items' => 'required|array|min:1',
+            'items' => 'required|array|min:1|max:50',
             'items.*.spare_part_id' => 'required|exists:spare_parts,id',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.discount_percent' => 'nullable|numeric|min:0|max:100',
@@ -178,38 +184,44 @@ class CounterInvoiceController extends Controller
             'customer_id.required_without_all' => 'Select a customer or enter a walk-in name / mobile number.',
         ]);
 
-        // Stock check accounting for quantity this invoice already reserves
-        $stockErrors = app(StockValidator::class)->validate($request->input('items', []), $counterInvoice, 'items');
-        if (! empty($stockErrors)) {
-            return back()->withErrors($stockErrors)->withInput();
-        }
-
-        // MRP is always taken from the part master, never from the client submission
-        $items = app(PartPriceResolver::class)->priceLines($request->items ?? []);
-
-        // The subtotal is only known once the lines are resolved. Reject a
-        // discount (percent-derived or flat amount) that would exceed it,
-        // otherwise GstCalculator yields a negative grand_total.
-        $lines = $this->buildGstLines($items);
-        $subtotal = collect($lines)->sum('line_total');
-
-        $discountValidator = Validator::make(
-            ['discount_amount' => $request->discount_amount ?? 0],
-            ['discount_amount' => ['nullable', 'numeric', 'min:0', new DiscountWithinSubtotal($subtotal, (float) ($request->discount_percent ?? 0))]],
-            [],
-            ['discount_amount' => 'Discount Amount']
-        );
-        if ($discountValidator->fails()) {
-            return back()->withErrors($discountValidator)->withInput();
-        }
-
         DB::beginTransaction();
         try {
+            // Stock check accounting for quantity this invoice already
+            // reserves. Runs inside the transaction so the read guarding the
+            // deduction serializes with the write on row-locking databases.
+            $stockErrors = app(StockValidator::class)->validate($validated['items'], $counterInvoice, 'items');
+            if (! empty($stockErrors)) {
+                DB::rollBack();
+
+                return back()->withErrors($stockErrors)->withInput();
+            }
+
+            // MRP is always taken from the part master, never from the client submission
+            $items = app(PartPriceResolver::class)->priceLines($validated['items']);
+
+            // The subtotal is only known once the lines are resolved. Reject a
+            // discount (percent-derived or flat amount) that would exceed it,
+            // otherwise GstCalculator yields a negative grand_total.
+            $lines = $this->buildGstLines($items);
+            $subtotal = collect($lines)->sum('line_total');
+
+            $discountValidator = Validator::make(
+                ['discount_amount' => $validated['discount_amount'] ?? 0],
+                ['discount_amount' => ['nullable', 'numeric', 'min:0', new DiscountWithinSubtotal($subtotal, (float) ($validated['discount_percent'] ?? 0))]],
+                [],
+                ['discount_amount' => 'Discount Amount']
+            );
+            if ($discountValidator->fails()) {
+                DB::rollBack();
+
+                return back()->withErrors($discountValidator)->withInput();
+            }
+
             $calculations = app(GstCalculator::class)->calculate(
                 $lines,
-                $request->has('gst_applicable'),
-                $request->discount_percent ?? 0,
-                $request->discount_amount ?? 0,
+                (bool) ($validated['gst_applicable'] ?? false),
+                (float) ($validated['discount_percent'] ?? 0),
+                (float) ($validated['discount_amount'] ?? 0),
             );
 
             $counterInvoice->update([
@@ -220,7 +232,7 @@ class CounterInvoiceController extends Controller
                 'payment_mode' => $validated['payment_mode'] ?? null,
                 'discount_percent' => $calculations['discount_percent'],
                 'discount_amount' => $calculations['discount_amount'],
-                'gst_applicable' => $request->has('gst_applicable'),
+                'gst_applicable' => (bool) ($validated['gst_applicable'] ?? false),
                 'cgst_amount' => $calculations['cgst_amount'],
                 'sgst_amount' => $calculations['sgst_amount'],
                 'round_off_amount' => $calculations['round_off_amount'],

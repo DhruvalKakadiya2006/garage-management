@@ -311,6 +311,41 @@ class JobCardCreateEditTest extends TestCase
         $response->assertSee('Ramesh');
     }
 
+    public function test_create_page_prefills_customer_combobox_and_vehicle_from_query_params()
+    {
+        $user = $this->makeUser();
+        $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
+        $otherCustomer = Customer::create(['first_name' => 'Other', 'mobile' => '9000000002', 'customer_type' => 'regular']);
+        $foreignVehicle = $this->makeCatalogVehicle($otherCustomer, 'GJ-01-AB-9999', 'Ather', '450X');
+
+        $response = $this->actingAs($user)
+            ->get(route('job-cards.create', ['customer_id' => $customer->id, 'vehicle_id' => $vehicle->id]));
+        $response->assertOk();
+
+        // The searchableCombobox config must carry both the id and the label:
+        // init() paints the label into the visible query field. Blade's @js()
+        // encodes double quotes as \u0022, so match against that exact form.
+        $q = '\u0022';
+        $html = html_entity_decode($response->getContent(), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $this->assertStringContainsString($q.'initialId'.$q.':'.$q.$customer->id.$q, $html);
+        $this->assertStringContainsString($q.'initialLabel'.$q.':'.$q.'Dhruval', $html);
+        $this->assertStringContainsString('9000000001', $html);
+
+        // The vehicle dropdown pre-selects through the Alpine initial data.
+        // Blade's @json() emits literal quotes (unlike @js()'s \u0022 above).
+        $this->assertStringContainsString('"vehicle_id":"'.$vehicle->id.'"', $html);
+
+        // A vehicle owned by somebody else is never pre-selected
+        $response = $this->actingAs($user)
+            ->get(route('job-cards.create', ['customer_id' => $customer->id, 'vehicle_id' => $foreignVehicle->id]));
+        $response->assertOk();
+
+        $html = html_entity_decode($response->getContent(), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $this->assertStringNotContainsString('"vehicle_id":"'.$foreignVehicle->id.'"', $html);
+        $this->assertStringContainsString('"vehicle_id":""', $html);
+    }
+
     public function test_assign_rejects_discount_amount_exceeding_subtotal()
     {
         $user = $this->makeUser();
@@ -680,5 +715,88 @@ class JobCardCreateEditTest extends TestCase
 
         $latest = JobCard::orderByDesc('id')->first();
         $this->assertSame('JC-0100', $latest->job_card_no);
+    }
+
+    public function test_store_returns_friendly_error_when_numbering_collides()
+    {
+        $user = $this->makeUser();
+        $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
+
+        // Force the insert to violate a constraint, simulating the unique
+        // index losing a numbering race between generate and insert.
+        DB::statement("CREATE TRIGGER force_jc_collision BEFORE INSERT ON job_cards
+            WHEN NEW.job_card_no LIKE 'JC-%'
+            BEGIN SELECT RAISE(ABORT, 'simulated unique constraint'); END");
+
+        try {
+            $this->actingAs($user)
+                ->post(route('job-cards.store'), $this->storePayload($customer->id, $vehicle->id))
+                ->assertRedirect()
+                ->assertSessionHasErrors('error');
+
+            $this->assertStringContainsString(
+                'took the next job card number',
+                session('errors')->first('error')
+            );
+            $this->assertDatabaseCount('job_cards', 0);
+        } finally {
+            DB::statement('DROP TRIGGER force_jc_collision');
+        }
+    }
+
+    public function test_promised_delivery_date_cannot_precede_the_job_date()
+    {
+        $user = $this->makeUser();
+        $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
+
+        $payload = $this->storePayload($customer->id, $vehicle->id);
+        $payload['promised_delivery_date'] = '2026-08-01';   // job_date is 2026-08-03
+
+        $this->actingAs($user)
+            ->post(route('job-cards.store'), $payload)
+            ->assertSessionHasErrors('promised_delivery_date');
+    }
+
+    public function test_store_rejects_more_than_twenty_complaints()
+    {
+        $user = $this->makeUser();
+        $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
+
+        $payload = $this->storePayload($customer->id, $vehicle->id);
+        $payload['complaints'] = collect(range(1, 21))
+            ->map(fn ($i) => ['description' => "Complaint {$i}"])
+            ->all();
+
+        $this->actingAs($user)
+            ->post(route('job-cards.store'), $payload)
+            ->assertSessionHasErrors('complaints');
+    }
+
+    public function test_assign_rejects_more_than_fifty_part_lines()
+    {
+        $user = $this->makeUser();
+        $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
+        $part = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 200);
+
+        // A billed card is required to reach the stock validation stage.
+        $jobCard = JobCard::create([
+            'job_date' => '2026-08-03',
+            'customer_id' => $customer->id,
+            'vehicle_id' => $vehicle->id,
+            'job_type' => 'paid_service',
+            'status' => 'received',
+        ]);
+
+        $parts = collect(range(1, 51))
+            ->map(fn () => ['spare_part_id' => $part->id, 'quantity' => 1, 'labor_charge' => 0])
+            ->all();
+
+        $this->actingAs($user)
+            ->post(route('job-cards.assign-update', $jobCard), ['parts' => $parts])
+            ->assertSessionHasErrors('parts');
     }
 }

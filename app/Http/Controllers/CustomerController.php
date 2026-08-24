@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\BulkDeletesRecords;
 use App\Http\Controllers\Concerns\BulkExportsRecords;
+use App\Http\Requests\StoreCustomerRequest;
 use App\Models\CounterInvoice;
 use App\Models\Customer;
 use App\Models\JobCard;
@@ -45,11 +46,13 @@ class CustomerController extends Controller
                     ->join('job_cards', 'payments.payable_id', '=', 'job_cards.id')
                     ->where('payments.payable_type', JobCard::class)
                     ->whereColumn('job_cards.customer_id', 'customers.id')
+                    ->whereNull('payments.deleted_at')
                     ->selectRaw('COALESCE(SUM(payments.amount), 0)'),
                 'invoice_paid' => DB::table('payments')
                     ->join('counter_invoices', 'payments.payable_id', '=', 'counter_invoices.id')
                     ->where('payments.payable_type', CounterInvoice::class)
                     ->whereColumn('counter_invoices.customer_id', 'customers.id')
+                    ->whereNull('payments.deleted_at')
                     ->selectRaw('COALESCE(SUM(payments.amount), 0)'),
             ])
             ->latest()
@@ -81,11 +84,15 @@ class CustomerController extends Controller
             return response()->json([]);
         }
 
+        // Escape LIKE wildcards (with an explicit ESCAPE clause) so a query
+        // like "50%" matches that literal name only.
+        $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\%', '\_'], $q);
+
         $customers = Customer::query()
             ->withCount('vehicles')
-            ->where(function ($query) use ($q) {
-                $query->where('display_name', 'like', "%{$q}%")
-                    ->orWhere('mobile', 'like', "%{$q}%");
+            ->where(function ($query) use ($escaped) {
+                $query->whereRaw("display_name LIKE ? ESCAPE '\'", ["%{$escaped}%"])
+                    ->orWhereRaw("mobile LIKE ? ESCAPE '\'", ["%{$escaped}%"]);
             })
             ->orderBy('display_name')
             ->limit(10)
@@ -142,12 +149,14 @@ class CustomerController extends Controller
             ->join('job_cards', 'payments.payable_id', '=', 'job_cards.id')
             ->where('payments.payable_type', JobCard::class)
             ->where('job_cards.customer_id', $customer->id)
+            ->whereNull('payments.deleted_at')
             ->sum('payments.amount');
 
         $invoicePaid = (float) DB::table('payments')
             ->join('counter_invoices', 'payments.payable_id', '=', 'counter_invoices.id')
             ->where('payments.payable_type', CounterInvoice::class)
             ->where('counter_invoices.customer_id', $customer->id)
+            ->whereNull('payments.deleted_at')
             ->sum('payments.amount');
 
         $totalPaid = $jobPaid + $invoicePaid;
@@ -185,14 +194,14 @@ class CustomerController extends Controller
         $outstandingJobCards = $customer->jobCards()
             ->select('id', 'job_card_no', 'job_date', 'grand_total')
             ->withSum('payments', 'amount')
-            ->whereRaw('COALESCE(grand_total, 0) > (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE payments.payable_id = job_cards.id AND payments.payable_type = ?)', [JobCard::class])
+            ->whereRaw('COALESCE(grand_total, 0) > (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE payments.payable_id = job_cards.id AND payments.payable_type = ? AND payments.deleted_at IS NULL)', [JobCard::class])
             ->orderByDesc('job_date')
             ->get();
 
         $outstandingInvoices = $customer->counterInvoices()
             ->select('id', 'invoice_no', 'invoice_date', 'grand_total')
             ->withSum('payments', 'amount')
-            ->whereRaw('COALESCE(grand_total, 0) > (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE payments.payable_id = counter_invoices.id AND payments.payable_type = ?)', [CounterInvoice::class])
+            ->whereRaw('COALESCE(grand_total, 0) > (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE payments.payable_id = counter_invoices.id AND payments.payable_type = ? AND payments.deleted_at IS NULL)', [CounterInvoice::class])
             ->orderByDesc('invoice_date')
             ->get();
 
@@ -327,22 +336,9 @@ class CustomerController extends Controller
         return view('customers.create');
     }
 
-    public function store(Request $request)
+    public function store(StoreCustomerRequest $request)
     {
-        $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'nullable|string|max:255',
-            'surname' => 'nullable|string|max:255',
-            'company_name' => 'nullable|string|max:255',
-            'display_name' => 'nullable|string|max:255',
-            'mobile' => ['required', 'string', 'regex:/^[6-9]\d{9}$/', 'unique:customers,mobile'],
-            'alt_mobile' => ['nullable', 'string', 'regex:/^[6-9]\d{9}$/'],
-            'email' => 'nullable|email|max:255',
-            'address' => 'nullable|string',
-            'city' => 'nullable|string|max:100',
-            'gstin' => ['nullable', 'string', 'regex:/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/'],
-            'customer_type' => 'required|in:'.implode(',', array_keys(config('garage.option_lists.customer_type'))),
-        ]);
+        $validated = $request->validated();
 
         Customer::create($validated);
 

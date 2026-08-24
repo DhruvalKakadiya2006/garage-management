@@ -171,50 +171,50 @@
             >
                 <x-slot name="header">
                     <tr>
-                        <th class="w-10 px-6 py-3 text-left"><x-table-select-all /></th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Job No.</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Customer</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Brand</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Model</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Color</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Technician</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Grand Total</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Payment</th>
+                        <th class="align-middle w-10 px-6 py-3 text-left"><x-table-select-all /></th>
+                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Job No.</th>
+                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
+                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Customer</th>
+                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Brand</th>
+                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Model</th>
+                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Color</th>
+                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Technician</th>
+                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+                        <th class="align-middle px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Grand Total</th>
+                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Payment</th>
                     </tr>
                 </x-slot>
 
                 @foreach ($jobCards as $jc)
                     <tr class="group hover:bg-muted/50">
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap">
                             <x-table-checkbox :id="$jc->id" />
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm font-medium">
                             <a href="{{ route('job-cards.show', $jc) }}"
                                class="text-primary hover:text-primary-700 transition-colors duration-150">
                                 {{ $jc->job_card_no }}
                             </a>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {{ $jc->job_date->format('d M Y') }}
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-600">
+                            {{ $jc->job_date->format('d/m/Y') }}
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-600">
+                        <td class="align-middle px-6 py-2 text-sm text-gray-600">
                             {{ $jc->customer->display_name ?? '-' }}
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-600">
+                        <td class="align-middle px-6 py-2 text-sm text-gray-600">
                             {{ $jc->vehicle?->vehicleModel?->vehicleBrand?->name ?? '-' }}
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-600">
+                        <td class="align-middle px-6 py-2 text-sm text-gray-600">
                             {{ $jc->vehicle?->vehicleModel?->name ?? '-' }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-600">
                             {{ $jc->vehicle->color ?? '-' }}
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-600">
+                        <td class="align-middle px-6 py-2 text-sm text-gray-600">
                             {{ $jc->assignedTechnician->name ?? '-' }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-xs">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-xs">
                             <x-badge :color="match ($jc->status) {
                                 'delivered' => 'green',
                                 'ready_for_delivery' => 'primary',
@@ -239,10 +239,10 @@
                                 {{ ucwords(str_replace('_', ' ', $jc->status)) }}
                             </x-badge>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
                             {{ config('garage.currency_symbol') }}{{ number_format((float) $jc->grand_total, 2) }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-xs">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-xs">
                             <x-badge :color="match ($jc->payment_status_label) {
                                 'paid' => 'green',
                                 'partially_paid' => 'amber',

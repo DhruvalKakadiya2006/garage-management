@@ -51,19 +51,16 @@
                 bulk-confirm-message="Voided payments are permanently removed; the linked document's outstanding balance updates automatically."
             >
                 <x-slot name="single">
-                    <span class="text-sm font-medium text-primary-800">
-                        Selected:
-                        <span x-text="selectedPayment ? selectedPayment.label : ''" class="font-semibold"></span>
-                    </span>
-                    <x-button variant="secondary" x-bind:href="base + '/' + singleId + '/edit'">
-                        <x-heroicon-o-pencil-square class="w-4 h-4" />
-                        Edit
+                    <x-button type="button" @click="$dispatch('open-modal', 'bulk-delete-confirm')" class="flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                        <x-heroicon-o-trash class="w-4 h-4" />
+                        Delete
                     </x-button>
-                    <x-button variant="secondary" x-cloak x-show="selectedPayment && selectedPayment.view_url"
-                              x-bind:href="selectedPayment.view_url">
-                        <x-heroicon-o-document-text class="w-4 h-4" />
-                        View Document
-                    </x-button>
+                    <x-bulk-delete-confirm
+                        :name="'bulk-delete-confirm'"
+                        :title="'Void this payment?'"
+                        :confirm-label="'Void'"
+                        :message='"Voided payments are permanently removed; the linked document's outstanding balance updates automatically."'
+                    />
                 </x-slot>
             </x-table-selection-bar>
 
@@ -75,15 +72,16 @@
             >
                 <x-slot name="header">
                     <tr>
-                        <th class="w-10 px-6 py-3 text-left"><x-table-select-all /></th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Payment Date</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Document Type</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Document No</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Customer</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Payment Mode</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Reference</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Amount</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Notes</th>
+                        <th class="align-middle w-10 px-6 py-3 text-left"><x-table-select-all /></th>
+                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Payment Date</th>
+                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Document Type</th>
+                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Document No</th>
+                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Customer</th>
+                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Payment Mode</th>
+                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Reference</th>
+                        <th class="align-middle px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Amount</th>
+                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Notes</th>
+                        <th class="align-middle px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
                     </tr>
                 </x-slot>
 
@@ -92,13 +90,13 @@
                         $payable = $payment->payable;
                     @endphp
                     <tr class="hover:bg-muted/50">
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap">
                             <x-table-checkbox :id="$payment->id" />
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ $payment->payment_date->format('d M Y') }}
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-900">
+                            {{ $payment->payment_date->format('d/m/Y') }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-xs">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-xs">
                             @if ($payable)
                                 <x-badge :color="$payable instanceof \App\Models\JobCard ? 'primary' : 'green'">
                                     @if ($payable instanceof \App\Models\JobCard)
@@ -112,14 +110,14 @@
                                 <span class="text-gray-400 italic">Deleted record</span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
                             @if ($payable)
                                 {{ $payable instanceof \App\Models\JobCard ? $payable->job_card_no : $payable->invoice_no }}
                             @else
                                 <span class="text-gray-400 italic">Deleted record</span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-600">
+                        <td class="align-middle px-6 py-2 text-sm text-gray-600">
                             @if ($payable)
                                 @php
                                     if ($payable instanceof \App\Models\JobCard) {
@@ -135,17 +133,28 @@
                                 <span class="text-gray-400 italic">Deleted record</span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 capitalize">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-600 capitalize">
                             {{ str_replace('_', ' ', $payment->payment_mode) }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-600">
                             {{ $payment->reference_no ?? '-' }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
                             {{ config('garage.currency_symbol') }}{{ number_format($payment->amount, 2) }}
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-500">
+                        <td class="align-middle px-6 py-2 text-sm text-gray-500">
                             {{ $payment->notes ? \Illuminate\Support\Str::limit($payment->notes, 30) : '-' }}
+                        </td>
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-right">
+                            @if ($payable)
+                                <a href="{{ $payable instanceof \App\Models\JobCard ? route('job-cards.show', $payable->id) : route('counter-invoices.show', $payable->id) }}"
+                                   class="inline-flex items-center gap-1 text-sm text-primary hover:underline">
+                                    <x-heroicon-o-document-text class="w-4 h-4" />
+                                    View Document
+                                </a>
+                            @else
+                                <span class="text-gray-400">—</span>
+                            @endif
                         </td>
                     </tr>
                 @endforeach

@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\CounterInvoice;
 use App\Models\JobCard;
-use App\Models\Payment;
 use App\Models\SparePart;
+use App\Services\OutstandingBalanceService;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -39,10 +39,10 @@ class DashboardController extends Controller
         $lowStockCount = SparePart::whereColumn('current_stock_qty', '<=', 'reorder_level')
             ->count();
 
-        // Outstanding dues across Job Cards + Counter Invoices (derived live).
-        $totalBilled = JobCard::sum('grand_total') + CounterInvoice::sum('grand_total');
-        $totalPaid = Payment::sum('amount');
-        $outstandingDues = max(0, $totalBilled - $totalPaid);
+        // Outstanding dues across Job Cards + Counter Invoices — the shared
+        // clamped per-document definition (an overpayment on one document can
+        // never offset another document's unpaid balance).
+        $outstandingDues = app(OutstandingBalanceService::class)->total();
 
         // Five most recent job cards.
         $recentJobCards = JobCard::with('customer')->latest()->limit(5)->get();

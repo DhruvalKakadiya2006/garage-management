@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\BulkDeletesRecords;
 use App\Http\Controllers\Concerns\BulkExportsRecords;
+use App\Http\Requests\StoreJobCardRequest;
 use App\Models\Customer;
 use App\Models\Employee;
 use App\Models\JobCard;
@@ -136,20 +137,9 @@ class JobCardController extends Controller
         return view('job_cards.create', compact('initialCustomer', 'initialVehicles', 'initialData'));
     }
 
-    public function store(Request $request)
+    public function store(StoreJobCardRequest $request)
     {
-        $validated = $request->validate([
-            'job_date' => 'required|date',
-            'customer_id' => 'required|exists:customers,id',
-            'vehicle_id' => 'required|exists:vehicles,id',
-            'odometer_reading_km' => 'nullable|integer|min:0',
-            'job_type' => 'required|in:'.implode(',', array_keys(config('garage.option_lists.job_type'))),
-            'promised_delivery_date' => 'nullable|date',
-            'promised_delivery_time' => 'nullable',
-            'remarks' => 'nullable|string',
-            'complaints' => 'nullable|array',
-            'complaints.*.description' => 'required|string',
-        ]);
+        $validated = $request->validated();
 
         // Server-side check: the selected vehicle must belong to the selected customer
         $vehicle = Vehicle::find($validated['vehicle_id']);
@@ -159,24 +149,40 @@ class JobCardController extends Controller
                 ->withInput();
         }
 
-        $jobCard = JobCard::create([
-            'job_date' => $validated['job_date'],
-            'customer_id' => $validated['customer_id'],
-            'vehicle_id' => $validated['vehicle_id'],
-            'odometer_reading_km' => $validated['odometer_reading_km'] ?? null,
-            'job_type' => $validated['job_type'],
-            'promised_delivery_date' => $validated['promised_delivery_date'] ?? null,
-            'promised_delivery_time' => $validated['promised_delivery_time'] ?? null,
-            'status' => 'received',
-            'remarks' => $validated['remarks'] ?? null,
-        ]);
+        try {
+            DB::beginTransaction();
 
-        if (! empty($request->complaints)) {
-            foreach ($request->complaints as $complaint) {
-                $jobCard->complaints()->create([
-                    'description' => $complaint['description'],
-                ]);
+            // Numbering derives from MAX(suffix) + 1 with the unique index as
+            // the final safety net; a lost race lands here as a QueryException
+            // instead of a raw 500.
+            $jobCard = JobCard::create([
+                'job_date' => $validated['job_date'],
+                'customer_id' => $validated['customer_id'],
+                'vehicle_id' => $validated['vehicle_id'],
+                'odometer_reading_km' => $validated['odometer_reading_km'] ?? null,
+                'job_type' => $validated['job_type'],
+                'promised_delivery_date' => $validated['promised_delivery_date'] ?? null,
+                'promised_delivery_time' => $validated['promised_delivery_time'] ?? null,
+                'status' => 'received',
+                'remarks' => $validated['remarks'] ?? null,
+            ]);
+
+            if (! empty($validated['complaints'])) {
+                foreach ($validated['complaints'] as $complaint) {
+                    $jobCard->complaints()->create([
+                        'description' => $complaint['description'],
+                    ]);
+                }
             }
+
+            DB::commit();
+        } catch (QueryException $e) {
+            DB::rollBack();
+            Log::warning('Job card numbering collision, retry required.', ['error' => $e->getMessage()]);
+
+            return back()->withInput()->withErrors([
+                'error' => 'Another job card was saved at the same moment and took the next job card number. Please submit again.',
+            ]);
         }
 
         return redirect()->route('job-cards.assign', $jobCard)
@@ -224,9 +230,13 @@ class JobCardController extends Controller
             : 'ESTIMATE-'.$jobCard->job_card_no.'.pdf';
 
         // Render first, record second: the audit timestamp must only be set
-        // when a PDF was actually produced.
+        // when a PDF was actually produced. Rendering to string first ensures
+        // dompdf errors do not leave a timestamp without a deliverable PDF.
         $pdf = Pdf::setBasePath(base_path())
             ->loadView('pdf.job-card', compact('jobCard', 'documentType'));
+
+        // Force rendering now; if dompdf throws, the timestamp is never written.
+        $pdf->output();
 
         $jobCard->update([
             $documentType === 'invoice' ? 'invoice_generated_at' : 'estimate_generated_at' => now(),
@@ -252,55 +262,61 @@ class JobCardController extends Controller
             'discount_percent' => 'nullable|numeric|min:0|max:100',
             'discount_amount' => 'nullable|numeric|min:0',
             'gst_applicable' => 'boolean',
-            'parts' => 'nullable|array',
+            'parts' => 'nullable|array|max:50',
             'parts.*.spare_part_id' => 'required|exists:spare_parts,id',
             'parts.*.quantity' => 'required|integer|min:1',
             'parts.*.labor_charge' => 'required|numeric|min:0',
             'parts.*.under_warranty' => 'boolean',
-            'labours' => 'nullable|array',
+            'labours' => 'nullable|array|max:50',
             'labours.*.labour_master_id' => 'required|exists:labour_masters,id',
             'labours.*.technician_id' => 'nullable|exists:employees,id',
             'labours.*.rate' => 'required|numeric|min:0',
             'labours.*.qty' => 'required|numeric|min:0.01',
         ]);
 
-        // Stock check accounting for quantity this job card already reserves
-        $stockErrors = app(StockValidator::class)->validate($request->input('parts', []), $jobCard, 'parts');
-        if (! empty($stockErrors)) {
-            return back()->withErrors($stockErrors)->withInput();
-        }
-
-        // MRP is always taken from the part master, never from the client submission
-        $parts = app(PartPriceResolver::class)->priceLines($request->parts ?? []);
-
-        // The subtotal is only known once the lines are resolved. Reject a
-        // discount (percent-derived or flat amount) that would exceed it,
-        // otherwise GstCalculator yields a negative grand_total.
-        $lines = $this->buildGstLines($parts, $request->labours ?? []);
-        $subtotal = collect($lines)->sum('line_total');
-
-        $discountValidator = Validator::make(
-            ['discount_amount' => $request->discount_amount ?? 0],
-            ['discount_amount' => ['nullable', 'numeric', 'min:0', new DiscountWithinSubtotal($subtotal, (float) ($request->discount_percent ?? 0))]],
-            [],
-            ['discount_amount' => 'Discount Amount']
-        );
-        if ($discountValidator->fails()) {
-            return back()->withErrors($discountValidator)->withInput();
-        }
-
-        // When the submitted lines are byte-for-byte what is already stored,
-        // skip the destructive delete-and-recreate cycle below: stock avoids
-        // the return/deduct round trip and unchanged rows keep their IDs.
-        $linesUnchanged = $this->submittedLinesMatchExisting($jobCard, $parts, $request->labours ?? []);
-
         DB::beginTransaction();
         try {
+            // Stock check accounting for quantity this job card already
+            // reserves. Runs inside the transaction so the read guarding the
+            // deduction serializes with the write on row-locking databases.
+            $stockErrors = app(StockValidator::class)->validate($validated['parts'] ?? [], $jobCard, 'parts');
+            if (! empty($stockErrors)) {
+                DB::rollBack();
+
+                return back()->withErrors($stockErrors)->withInput();
+            }
+
+            // MRP is always taken from the part master, never from the client submission
+            $parts = app(PartPriceResolver::class)->priceLines($validated['parts'] ?? []);
+
+            // The subtotal is only known once the lines are resolved. Reject a
+            // discount (percent-derived or flat amount) that would exceed it,
+            // otherwise GstCalculator yields a negative grand_total.
+            $lines = $this->buildGstLines($parts, $validated['labours'] ?? []);
+            $subtotal = collect($lines)->sum('line_total');
+
+            $discountValidator = Validator::make(
+                ['discount_amount' => $validated['discount_amount'] ?? 0],
+                ['discount_amount' => ['nullable', 'numeric', 'min:0', new DiscountWithinSubtotal($subtotal, (float) ($validated['discount_percent'] ?? 0))]],
+                [],
+                ['discount_amount' => 'Discount Amount']
+            );
+            if ($discountValidator->fails()) {
+                DB::rollBack();
+
+                return back()->withErrors($discountValidator)->withInput();
+            }
+
+            // When the submitted lines are byte-for-byte what is already stored,
+            // skip the destructive delete-and-recreate cycle below: stock avoids
+            // the return/deduct round trip and unchanged rows keep their IDs.
+            $linesUnchanged = $this->submittedLinesMatchExisting($jobCard, $parts, $validated['labours'] ?? []);
+
             $calculations = app(GstCalculator::class)->calculate(
                 $lines,
-                $request->has('gst_applicable'),
-                $request->discount_percent ?? 0,
-                $request->discount_amount ?? 0,
+                (bool) ($validated['gst_applicable'] ?? false),
+                (float) ($validated['discount_percent'] ?? 0),
+                (float) ($validated['discount_amount'] ?? 0),
             );
 
             if (! $linesUnchanged) {
@@ -317,7 +333,7 @@ class JobCardController extends Controller
                 'supervisor_id' => $validated['supervisor_id'] ?? null,
                 'discount_percent' => $calculations['discount_percent'],
                 'discount_amount' => $calculations['discount_amount'],
-                'gst_applicable' => $request->has('gst_applicable'),
+                'gst_applicable' => (bool) ($validated['gst_applicable'] ?? false),
                 'cgst_amount' => $calculations['cgst_amount'],
                 'sgst_amount' => $calculations['sgst_amount'],
                 'round_off_amount' => $calculations['round_off_amount'],
@@ -342,8 +358,8 @@ class JobCardController extends Controller
             }
 
             // Save labours
-            if (! $linesUnchanged && ! empty($request->labours)) {
-                foreach ($request->labours as $labour) {
+            if (! $linesUnchanged && ! empty($validated['labours'])) {
+                foreach ($validated['labours'] as $labour) {
                     $lineTotal = $labour['rate'] * $labour['qty'];
                     $jobCard->labours()->create([
                         'labour_master_id' => $labour['labour_master_id'],
@@ -389,11 +405,11 @@ class JobCardController extends Controller
             'vehicle_id' => 'required|exists:vehicles,id',
             'odometer_reading_km' => 'nullable|integer|min:0',
             'job_type' => 'required|in:'.implode(',', array_keys(config('garage.option_lists.job_type'))),
-            'promised_delivery_date' => 'nullable|date',
-            'promised_delivery_time' => 'nullable',
+            'promised_delivery_date' => 'nullable|date|after_or_equal:job_date',
+            'promised_delivery_time' => 'nullable|date_format:H:i',
             'status' => 'required|in:'.implode(',', array_keys(config('garage.option_lists.job_card_status'))),
             'remarks' => 'nullable|string',
-            'complaints' => 'nullable|array',
+            'complaints' => 'nullable|array|max:20',
             'complaints.*.description' => 'required|string',
         ]);
 
@@ -431,7 +447,7 @@ class JobCardController extends Controller
 
         // Sync complaints by delta instead of wiping and recreating, so
         // unchanged rows keep their identity (IDs / any future references).
-        $submittedDescriptions = collect($request->complaints ?? [])
+        $submittedDescriptions = collect($validated['complaints'] ?? [])
             ->pluck('description')
             ->map(fn ($description) => trim((string) $description))
             ->filter(fn ($description) => $description !== '')

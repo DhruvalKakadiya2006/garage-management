@@ -85,27 +85,27 @@
                         <table class="min-w-full divide-y divide-border text-sm">
                             <thead>
                                 <tr class="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                    <th class="px-3 py-2">Row</th>
-                                    <th class="px-3 py-2">Action</th>
+                                    <th class="align-middle px-3 py-2">Row</th>
+                                    <th class="align-middle px-3 py-2">Action</th>
                                     @foreach ($previewColumns as $col)
-                                        <th class="px-3 py-2">{{ $col['label'] }}</th>
+                                        <th class="align-middle px-3 py-2">{{ $col['label'] }}</th>
                                     @endforeach
-                                    <th class="px-3 py-2">Issues</th>
+                                    <th class="align-middle px-3 py-2">Issues</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border">
                                 @foreach ($report->rows as $row)
                                     <tr class="align-top">
-                                        <td class="px-3 py-2 text-gray-500">{{ $row->rowNumber }}</td>
-                                        <td class="px-3 py-2">
+                                        <td class="align-middle px-3 py-2 text-gray-500">{{ $row->rowNumber }}</td>
+                                        <td class="align-middle px-3 py-2">
                                             <x-badge :color="$row->action === RowAction::CREATE ? 'green' : ($row->action === RowAction::UPDATE ? 'amber' : 'gray')">
                                                 {{ $row->action->label() }}
                                             </x-badge>
                                         </td>
                                         @foreach ($previewColumns as $col)
-                                            <td class="px-3 py-2 text-gray-800">{{ $row->display[$col['field']] ?? '—' }}</td>
+                                            <td class="align-middle px-3 py-2 text-gray-800">{{ $row->display[$col['field']] ?? '—' }}</td>
                                         @endforeach
-                                        <td class="px-3 py-2">
+                                        <td class="align-middle px-3 py-2">
                                             @if ($row->issues !== [])
                                                 <ul class="space-y-1">
                                                     @foreach ($row->issues as $issue)

@@ -584,4 +584,49 @@ class CustomerImportExportTest extends TestCase
             ->assertRedirect(route('customers.index'))
             ->assertSessionHas('error');
     }
+
+    // ------------------------------------------------------------- upload guards
+
+    public function test_preview_rejects_files_that_are_not_csv()
+    {
+        Storage::fake('local');
+
+        $file = UploadedFile::fake()->createWithContent('customers.txt', 'not,a,csv');
+
+        $this->actingAs($this->user)
+            ->post(route('import-export.preview'), [
+                'entity' => 'customers',
+                'mode' => 'create_or_update',
+                'file' => $file,
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('error', 'Unsupported import file type. Only csv files are accepted.');
+
+        $this->assertDatabaseCount('customers', 0);
+    }
+
+    public function test_confirm_is_admin_only()
+    {
+        $content = $this->csv([[
+            'mobile' => '9876543211',
+            'first_name' => 'B',
+            'customer_type' => 'regular',
+        ]]);
+
+        $token = $this->upload($content, 'create_only');
+
+        // A non-admin may preview but must never be able to confirm the import.
+        $staff = User::factory()->staff()->create();
+
+        $this->actingAs($staff)
+            ->get(route('import-export.preview.show', $token))
+            ->assertOk();
+
+        $this->actingAs($staff)
+            ->post(route('import-export.confirm', $token))
+            ->assertForbidden();
+
+        // Nothing imported by the unauthorised attempt.
+        $this->assertSame(0, Customer::count());
+    }
 }

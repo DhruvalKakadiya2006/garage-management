@@ -2,8 +2,8 @@
     $profile = \App\Models\CompanyProfile::profile();
     $currency = config('garage.currency_symbol');
     $money = fn ($value) => $currency . number_format((float) $value, 2);
-    $outstandingTo = fn ($doc) => max(0, (float) $doc->grand_total - (float) ($doc->paid_to_sum_amount ?? 0));
-    $rangeLabel = $from->format('d M Y') . ' to ' . $to->format('d M Y');
+    $outstandingTo = fn ($doc) => max(0, (float) $doc->grand_total - (float) ($doc->paid_to ?? 0));
+    $rangeLabel = $from->format('d/m/Y') . ' to ' . $to->format('d/m/Y');
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -21,13 +21,13 @@
         'docMeta' => [
             'Customer' => $customer->display_name,
             'Period' => $rangeLabel,
-            'Generated' => now()->format('d M Y H:i'),
+            'Generated' => now()->format('d/m/Y H:i'),
         ],
     ])
 
     <div class="doc-subtitle">
         Statement of account for {{ $customer->display_name }} for the period {{ $rangeLabel }}.
-        Outstanding shown is the balance due as on {{ $to->format('d M Y') }}.
+        Outstanding shown is the balance due as on {{ $to->format('d/m/Y') }}.
     </div>
 
     <div class="section">
@@ -111,11 +111,11 @@
                 @foreach ($jobCards as $jobCard)
                     <tr>
                         <td>{{ $jobCard->job_card_no }}</td>
-                        <td>{{ $jobCard->job_date->format('d M Y') }}</td>
+                        <td>{{ $jobCard->job_date->format('d/m/Y') }}</td>
                         <td>{{ $jobCard->vehicle?->registration_no ?? 'NON-RTO' }}</td>
                         <td>{{ ucwords(str_replace('_', ' ', $jobCard->job_type)) }}</td>
                         <td class="right">{{ $money($jobCard->grand_total) }}</td>
-                        <td class="right">{{ $money($jobCard->collected_in_range_sum_amount ?? 0) }}</td>
+                        <td class="right">{{ $money($jobCard->collected_in_range ?? 0) }}</td>
                         <td class="right">{{ $money($outstandingTo($jobCard)) }}</td>
                     </tr>
                 @endforeach
@@ -142,10 +142,10 @@
                 @foreach ($counterInvoices as $invoice)
                     <tr>
                         <td>{{ $invoice->invoice_no }}</td>
-                        <td>{{ $invoice->invoice_date->format('d M Y') }}</td>
+                        <td>{{ $invoice->invoice_date->format('d/m/Y') }}</td>
                         <td>{{ $invoice->customer_id ? $customer->display_name : ($invoice->walkin_name ?? 'Walk-in') }}</td>
                         <td class="right">{{ $money($invoice->grand_total) }}</td>
-                        <td class="right">{{ $money($invoice->collected_in_range_sum_amount ?? 0) }}</td>
+                        <td class="right">{{ $money($invoice->collected_in_range ?? 0) }}</td>
                         <td class="right">{{ $money($outstandingTo($invoice)) }}</td>
                     </tr>
                 @endforeach
@@ -170,7 +170,7 @@
             <tbody>
                 @foreach ($payments as $payment)
                     <tr>
-                        <td>{{ $payment->payment_date->format('d M Y') }}</td>
+                        <td>{{ $payment->payment_date->format('d/m/Y') }}</td>
                         <td>
                             @if ($payment->payable instanceof \App\Models\JobCard)
                                 {{ $payment->payable->job_card_no }}
@@ -201,14 +201,14 @@
                 <td class="right">{{ $money($collectedInRange) }}</td>
             </tr>
             <tr class="grand">
-                <td>Outstanding Balance (as on {{ $to->format('d M Y') }})</td>
+                <td>Outstanding Balance (as on {{ $to->format('d/m/Y') }})</td>
                 <td class="right">{{ $money($outstandingAsOf) }}</td>
             </tr>
         </table>
     </div>
 
     <div class="note">
-        Outstanding balance is computed from all documents dated on or before {{ $to->format('d M Y') }}
+        Outstanding balance is computed from all documents dated on or before {{ $to->format('d/m/Y') }}
         minus all payments received on or before that date. This statement is a summary of existing
         Job Cards, Counter Invoices and their payments; it is not an independent ledger.
     </div>

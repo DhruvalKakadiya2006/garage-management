@@ -215,6 +215,68 @@ class Customer360StatementTest extends TestCase
         $this->assertStringContainsString('₹540.00', $html);      // outstanding as on to
     }
 
+    public function test_statement_rows_show_per_document_collected_and_outstanding()
+    {
+        $customer = $this->makeCustomer('9000000009');
+        $vehicle = $this->makeVehicle($customer, 'GJ-09-PQ-0123');
+        $jc = $this->makeJobCard($customer, $vehicle, 111);
+        $this->makePayment($jc, 40);
+        $ci = $this->makeCounterInvoice($customer, 222);
+        $this->makePayment($ci, 50);
+
+        $data = app(CustomerController::class)->statementData(
+            $customer,
+            Carbon::parse('2026-04-01')->startOfDay(),
+            Carbon::parse('2026-08-17')->endOfDay(),
+        );
+
+        // The aliased aggregates must land on the exact attribute keys the
+        // PDF view reads (paid_to / collected_in_range).
+        $this->assertSame(40.0, (float) $data['jobCards'][0]->paid_to);
+        $this->assertSame(40.0, (float) $data['jobCards'][0]->collected_in_range);
+        $this->assertSame(50.0, (float) $data['counterInvoices'][0]->paid_to);
+        $this->assertSame(50.0, (float) $data['counterInvoices'][0]->collected_in_range);
+
+        $html = view('pdf.customer-statement', $data)->render();
+
+        $this->assertStringContainsString('₹40.00', $html);    // job card collected cell
+        $this->assertStringContainsString('₹71.00', $html);    // job card outstanding cell (111 - 40)
+        $this->assertStringContainsString('₹50.00', $html);    // invoice collected cell
+        $this->assertStringContainsString('₹172.00', $html);   // invoice outstanding cell (222 - 50)
+
+        // Header totals stay distinct from the per-row figures above.
+        $this->assertStringContainsString('₹333.00', $html);   // billed in range
+        $this->assertStringContainsString('₹90.00', $html);    // collected in range total
+        $this->assertStringContainsString('₹243.00', $html);   // outstanding as on to
+    }
+
+    public function test_voided_payments_do_not_count_toward_customer_balances()
+    {
+        $user = $this->makeUser();
+        $customer = $this->makeCustomer('9000000010');
+        $vehicle = $this->makeVehicle($customer, 'GJ-10-RS-4567');
+        $jc = $this->makeJobCard($customer, $vehicle, 340);
+        $this->makePayment($jc, 100);
+        $voided = $this->makePayment($jc, 60);
+
+        // Voiding a payment soft-deletes it; balances must ignore it.
+        $voided->delete();
+
+        $this->actingAs($user)
+            ->get(route('customers.index'))
+            ->assertOk()
+            ->assertSee('₹240.00');   // (340) - (100), voided 60 excluded
+
+        $content = $this->actingAs($user)
+            ->get(route('customers.show', $customer))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('₹240.00', $content);   // outstanding
+        $this->assertStringContainsString('₹100.00', $content);   // total paid
+        $this->assertStringNotContainsString('₹180.00', $content);
+    }
+
     public function test_statement_respects_selected_date_range()
     {
         $user = $this->makeUser();

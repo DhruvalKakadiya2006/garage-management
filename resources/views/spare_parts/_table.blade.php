@@ -60,18 +60,23 @@
         </div>
     </div>
 
-    <x-table-selection-bar
+<x-table-selection-bar
         :bulk-endpoint="route('spare-parts.bulk-delete')"
         :bulk-export-endpoint="route('spare-parts.bulk-export')"
         modal-name="bulk-delete-confirm-parts"
         bulkConfirmMessage="Parts linked to existing job cards or invoices will be skipped."
     >
         <x-slot name="single">
-            <x-button variant="secondary" type="button"
-                      @click="window.location.href = '{{ url('spare-parts') }}' + '/' + singleId + '/edit'">
-                <x-heroicon-o-pencil-square class="w-4 h-4" />
-                Edit
+            <x-button type="button" @click="$dispatch('open-modal', 'bulk-delete-confirm')" class="flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                <x-heroicon-o-trash class="w-4 h-4" />
+                Delete
             </x-button>
+            <x-bulk-delete-confirm
+                :name="'bulk-delete-confirm'"
+                :title="'Delete this part?'"
+                :confirm-label="'Delete'"
+                :message="'Parts linked to existing job cards or invoices will be skipped.'"
+            />
         </x-slot>
     </x-table-selection-bar>
 
@@ -85,41 +90,41 @@
     >
         <x-slot name="header">
             <tr>
-                <th class="w-10 px-6 py-3 text-left"><x-table-select-all /></th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Part Name</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Part Code</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Category</th>
-                <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">MRP</th>
-                <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Labor Charge</th>
-                <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Total</th>
-                <th class="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Current Stock</th>
+                <th class="align-middle w-10 px-6 py-3 text-left"><x-table-select-all /></th>
+                <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Part Name</th>
+                <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Part Code</th>
+                <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Category</th>
+                <th class="align-middle px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">MRP</th>
+                <th class="align-middle px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Labor Charge</th>
+                <th class="align-middle px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Total</th>
+                <th class="align-middle px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Current Stock</th>
             </tr>
         </x-slot>
 
         @foreach ($spareParts as $part)
             <tr class="hover:bg-muted/50">
-                <td class="px-6 py-4 whitespace-nowrap">
+                <td class="align-middle px-6 py-2 whitespace-nowrap">
                     <x-table-checkbox :id="$part->id" />
                 </td>
-                <td class="px-6 py-4 text-sm font-medium text-gray-900">
+                <td class="align-middle px-6 py-2 text-sm font-medium text-gray-900">
                     {{ $part->part_name }}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-600">
                     {{ $part->part_code }}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-600">
                     {{ $part->category ?? '-' }}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
                     {{ config('garage.currency_symbol') }}{{ number_format($part->mrp, 2) }}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
                     {{ config('garage.currency_symbol') }}{{ number_format($part->labor_charge, 2) }}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
+                <td class="align-middle px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
                     {{ config('garage.currency_symbol') }}{{ number_format($part->total_price, 2) }}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-center">
                     @if ($part->current_stock_qty <= 0)
                         <x-badge color="red">{{ $part->current_stock_qty }}</x-badge>
                     @elseif ($part->current_stock_qty <= $part->reorder_level)

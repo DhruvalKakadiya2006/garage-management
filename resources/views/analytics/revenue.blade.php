@@ -30,9 +30,9 @@
                         <p class="text-green-100 text-sm uppercase tracking-wide mb-2">Total Revenue</p>
                         <p class="text-4xl font-bold">{{ config('garage.currency_symbol') }}{{ number_format($totalRevenue, 2) }}</p>
                         <p class="text-green-100 text-sm mt-2">
-                            {{ \Carbon\Carbon::parse($fromDate)->format('d M Y') }} 
+                            {{ \Carbon\Carbon::parse($fromDate)->format('d/m/Y') }} 
                             to 
-                            {{ \Carbon\Carbon::parse($toDate)->format('d M Y') }}
+                            {{ \Carbon\Carbon::parse($toDate)->format('d/m/Y') }}
                         </p>
                     </div>
                     <div class="opacity-50">
@@ -88,29 +88,29 @@
                     <table class="min-w-full text-sm">
                         <thead class="bg-muted/50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Job Type</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Revenue</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">% of Job Cards</th>
+                                <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Job Type</th>
+                                <th class="align-middle px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Revenue</th>
+                                <th class="align-middle px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">% of Job Cards</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border">
                             @foreach($revenueByJobType as $item)
                             <tr class="hover:bg-muted/50">
-                                <td class="px-6 py-4 whitespace-nowrap capitalize">
+                                <td class="align-middle px-6 py-2 whitespace-nowrap capitalize">
                                     {{ str_replace('_', ' ', $item->job_type) }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right font-medium">
+                                <td class="align-middle px-6 py-2 whitespace-nowrap text-right font-medium">
                                     {{ config('garage.currency_symbol') }}{{ number_format($item->total, 2) }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-gray-600">
+                                <td class="align-middle px-6 py-2 whitespace-nowrap text-right text-gray-600">
                                     {{ $jobCardsRevenue > 0 ? number_format(($item->total / $jobCardsRevenue) * 100, 1) : 0 }}%
                                 </td>
                             </tr>
                             @endforeach
                             <tr class="bg-muted font-semibold">
-                                <td class="px-6 py-4">Total (Job Cards)</td>
-                                <td class="px-6 py-4 text-right">{{ config('garage.currency_symbol') }}{{ number_format($jobCardsRevenue, 2) }}</td>
-                                <td class="px-6 py-4 text-right">100%</td>
+                                <td class="align-middle px-6 py-2">Total (Job Cards)</td>
+                                <td class="align-middle px-6 py-2 text-right">{{ config('garage.currency_symbol') }}{{ number_format($jobCardsRevenue, 2) }}</td>
+                                <td class="align-middle px-6 py-2 text-right">100%</td>
                             </tr>
                         </tbody>
                     </table>

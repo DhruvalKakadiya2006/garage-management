@@ -6,6 +6,7 @@ use App\Models\CounterInvoice;
 use App\Models\JobCard;
 use App\Models\Payment;
 use App\Models\SparePart;
+use App\Services\OutstandingBalanceService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,20 +21,9 @@ class AnalyticsController extends Controller
     {
         $today = Carbon::now();
 
-        // Outstanding = sum over all billed documents of (grand_total - amount paid).
-        $jobCardOutstanding = JobCard::query()
-            ->whereNotNull('grand_total')
-            ->where('status', 'delivered')
-            ->withSum('payments as amount_paid', 'amount')
-            ->get(['id', 'grand_total'])
-            ->sum(fn ($card) => max(0, (float) $card->grand_total - (float) $card->amount_paid));
-
-        $counterOutstanding = CounterInvoice::query()
-            ->withSum('payments as amount_paid', 'amount')
-            ->get(['id', 'grand_total'])
-            ->sum(fn ($invoice) => max(0, (float) $invoice->grand_total - (float) $invoice->amount_paid));
-
-        $totalOutstanding = round($jobCardOutstanding + $counterOutstanding, 2);
+        // Outstanding = clamped per-document balance across every billed
+        // document, shared with the dashboard via OutstandingBalanceService.
+        $totalOutstanding = app(OutstandingBalanceService::class)->total();
 
         $openJobCardsCount = JobCard::whereNotIn('status', ['delivered', 'cancelled'])->count();
 
@@ -218,7 +208,10 @@ class AnalyticsController extends Controller
             ->groupBy('counter_invoice_items.spare_part_id')
             ->pluck('times_used', 'spare_part_id');
 
-        $inventory = SparePart::orderBy('part_name')->get()
+        $inventory = SparePart::query()
+            ->select(['id', 'part_name', 'part_code', 'category', 'unit', 'purchase_price', 'mrp', 'labor_charge', 'current_stock_qty', 'reorder_level'])
+            ->orderBy('part_name')
+            ->get()
             ->map(fn (SparePart $part) => [
                 'id' => $part->id,
                 'part_name' => $part->part_name,
@@ -372,6 +365,15 @@ class AnalyticsController extends Controller
         if (Carbon::parse($toDate)->lt(Carbon::parse($fromDate))) {
             throw ValidationException::withMessages([
                 'to_date' => 'The To Date must be on or after the From Date.',
+            ]);
+        }
+
+        // The revenue report builds a row per day in the range in PHP; cap the
+        // span so an absurd range cannot turn one request into thousands of
+        // loop iterations.
+        if (Carbon::parse($fromDate)->diffInDays(Carbon::parse($toDate)) > 366) {
+            throw ValidationException::withMessages([
+                'to_date' => 'The report range cannot exceed 366 days.',
             ]);
         }
 

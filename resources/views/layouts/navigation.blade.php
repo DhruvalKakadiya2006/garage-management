@@ -1,15 +1,15 @@
 @php
 $navItems = [
     ['route' => 'dashboard', 'pattern' => 'dashboard', 'icon' => 'home', 'label' => __('Dashboard')],
+    ['route' => 'job-cards.index', 'pattern' => 'job-cards.*', 'icon' => 'wrench-screwdriver', 'label' => __('Job Cards')],
     ['route' => 'customers.index', 'pattern' => 'customers.*', 'icon' => 'users', 'label' => __('Customers')],
     ['route' => 'vehicle-catalog.index', 'pattern' => ['vehicle-catalog.*', 'vehicle-brands.*', 'vehicle-models.*'], 'icon' => 'book-open', 'label' => __('Vehicle Catalog')],
-    ['route' => 'job-cards.index', 'pattern' => 'job-cards.*', 'icon' => 'wrench-screwdriver', 'label' => __('Job Cards')],
     ['route' => 'counter-invoices.index', 'pattern' => 'counter-invoices.*', 'icon' => 'receipt-percent', 'label' => __('Counter Invoice')],
     ['route' => 'payments.index', 'pattern' => 'payments.*', 'icon' => 'banknotes', 'label' => __('Payments')],
+    ['route' => 'inventory.index', 'pattern' => ['inventory.*', 'spare-parts.*', 'labour-masters.*'], 'icon' => 'cube', 'label' => __('Inventory')],
     ['route' => 'analytics.index', 'pattern' => 'analytics.*', 'icon' => 'chart-bar', 'label' => __('Analytics')],
     ['route' => 'employees.index', 'pattern' => 'employees.*', 'icon' => 'user-group', 'label' => __('Employees')],
     ['route' => 'company-profile.index', 'pattern' => 'company-profile.*', 'icon' => 'building-office-2', 'label' => __('Company Profile')],
-    ['route' => 'inventory.index', 'pattern' => ['inventory.*', 'spare-parts.*', 'labour-masters.*'], 'icon' => 'cube', 'label' => __('Inventory')],
 ];
 
 $userInitials = collect(explode(' ', trim((string) Auth::user()->name)))
@@ -23,7 +23,7 @@ $userInitials = collect(explode(' ', trim((string) Auth::user()->name)))
 <aside class="fixed inset-y-0 left-0 z-30 hidden md:flex flex-col bg-background border-r border-border transition-all duration-300 ease-in-out"
        :class="collapsed ? 'w-20' : 'w-64'">
     <!-- Sidebar Header -->
-    <div class="flex items-center justify-center h-16 shrink-0 border-b border-border overflow-hidden">
+    <div class="flex items-center justify-center h-14 shrink-0 border-b border-border overflow-hidden">
         <a href="{{ route('dashboard') }}" class="flex items-center justify-center" :class="collapsed ? 'h-5' : 'h-9'">
             <x-application-logo class="h-full w-auto" />
         </a>
@@ -96,7 +96,7 @@ $userInitials = collect(explode(' ', trim((string) Auth::user()->name)))
 <aside class="fixed inset-y-0 left-0 z-40 w-64 flex flex-col bg-background border-r border-border shadow-xl md:hidden transition-transform duration-300 ease-in-out"
        :class="mobileOpen ? 'translate-x-0' : '-translate-x-full'">
     <!-- Drawer Header -->
-    <div class="flex items-center justify-between h-16 px-4 shrink-0 border-b border-border">
+    <div class="flex items-center justify-between h-14 px-4 shrink-0 border-b border-border">
         <a href="{{ route('dashboard') }}" class="flex items-center">
             <x-application-logo class="w-auto h-8" />
         </a>

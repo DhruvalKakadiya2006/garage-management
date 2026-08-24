@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Models\Vehicle;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\Concerns\SeedsVehicleCatalog;
 use Tests\TestCase;
 
@@ -473,11 +474,63 @@ class AnalyticsControllerTest extends TestCase
         $totalOutstanding = $response->viewData('totalOutstanding');
         // Job card outstanding: max(0, 1000 - 400) = 600
         // Counter invoice outstanding: max(0, 800 - 200) = 600
-        // Total: 1200
-        $this->assertEqualsWithDelta(1200.0, $totalOutstanding, 0.01);
+        // The open (billed, in_progress) job card also owes its 750 now that
+        // outstanding covers every billed document regardless of status.
+        // Total: 600 + 600 + 750 = 1950
+        $this->assertEqualsWithDelta(1950.0, $totalOutstanding, 0.01);
 
         $openJobCardsCount = $response->viewData('openJobCardsCount');
         // Only the open (in_progress) job card counts, delivered ones excluded
         $this->assertEquals(1, $openJobCardsCount);
+    }
+
+    public function test_reports_reject_ranges_longer_than_a_year()
+    {
+        $user = $this->makeUser();
+
+        $this->actingAs($user)
+            ->get(route('analytics.payments', ['from_date' => '2024-01-01', 'to_date' => '2026-08-01']))
+            ->assertSessionHasErrors('to_date');
+
+        // A 366-day span stays allowed.
+        $this->actingAs($user)
+            ->get(route('analytics.revenue', ['from_date' => '2025-08-01', 'to_date' => '2026-08-01']))
+            ->assertOk();
+    }
+
+    public function test_analytics_index_computes_outstanding_without_per_row_payment_sums()
+    {
+        $user = $this->makeUser();
+        $customer = $this->makeCustomer('NPlusOne', '9000000006');
+        $today = Carbon::now()->toDateString();
+
+        $jobCardIds = [];
+        foreach ([100, 200, 300] as $grandTotal) {
+            $card = $this->makeJobCard($customer, $today, 'delivered', 'paid_service', $grandTotal);
+            Payment::create(['payable_id' => $card->id, 'payable_type' => JobCard::class, 'amount' => 10, 'payment_mode' => 'cash', 'payment_date' => $today]);
+            $jobCardIds[] = $card->id;
+        }
+
+        foreach ([150, 250, 350] as $grandTotal) {
+            $invoice = $this->makeCounterInvoice($customer, $today, $grandTotal);
+            Payment::create(['payable_id' => $invoice->id, 'payable_type' => CounterInvoice::class, 'amount' => 20, 'payment_mode' => 'cash', 'payment_date' => $today]);
+        }
+
+        // A per-row fallback SUM against payments means the amount_paid
+        // accessors missed their eager-loaded fast path (aliased withSum).
+        $perRowPaymentSumQueries = 0;
+        DB::listen(function ($query) use (&$perRowPaymentSumQueries) {
+            if (str_starts_with(strtolower($query->sql), 'select sum(')
+                && str_contains(strtolower($query->sql), 'from "payments"')) {
+                $perRowPaymentSumQueries++;
+            }
+        });
+
+        $response = $this->actingAs($user)->get(route('analytics.index'));
+
+        $this->assertSame(0, $perRowPaymentSumQueries);
+
+        // (100 + 200 + 300 - 30) + (150 + 250 + 350 - 60) = 1260
+        $this->assertEqualsWithDelta(1260.0, $response->viewData('totalOutstanding'), 0.01);
     }
 }

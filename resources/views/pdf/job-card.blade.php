@@ -69,7 +69,7 @@
         'documentTitle' => $isInvoice ? 'TAX INVOICE' : 'ESTIMATE',
         'docMeta' => [
             ($isInvoice ? 'Invoice No' : 'Estimate No') => $jobCard->job_card_no,
-            'Date' => $documentDate->format('d M Y'),
+            'Date' => $documentDate->format('d/m/Y'),
             'Job Card' => $jobCard->job_card_no,
         ],
     ])
@@ -115,7 +115,7 @@
                 </td>
                 <td style="width:34%;">
                     <div class="section-title">Job Details</div>
-                    <div><span class="label">Job Date:</span> <span class="value">{{ $jobCard->job_date->format('d M Y') }}</span></div>
+                    <div><span class="label">Job Date:</span> <span class="value">{{ $jobCard->job_date->format('d/m/Y') }}</span></div>
                     <div><span class="label">Type:</span> <span class="value">{{ ucwords(str_replace('_', ' ', $jobCard->job_type)) }}</span></div>
                     <div><span class="label">Status:</span> <span class="value">{{ ucwords(str_replace('_', ' ', $jobCard->status)) }}</span></div>
                     @if ($jobCard->assignedTechnician)
@@ -125,7 +125,7 @@
                         <div><span class="label">Supervisor:</span> <span class="value">{{ $jobCard->supervisor->name }}</span></div>
                     @endif
                     @if ($jobCard->promised_delivery_date)
-                        <div><span class="label">Promised Delivery:</span> <span class="value">{{ $jobCard->promised_delivery_date->format('d M Y') }}</span></div>
+                        <div><span class="label">Promised Delivery:</span> <span class="value">{{ $jobCard->promised_delivery_date->format('d/m/Y') }}</span></div>
                     @endif
                 </td>
             </tr>
@@ -304,7 +304,7 @@
         @if ($isInvoice)
             <p>Payment is due on delivery of the vehicle. Please retain this invoice as proof of the transaction.</p>
         @else
-            <p>This estimate is valid for {{ config('garage.estimate_validity_days') }} days from the date of issue (until {{ $validUntil->format('d M Y') }}). Final invoice amount may change if additional work is required.</p>
+            <p>This estimate is valid for {{ config('garage.estimate_validity_days') }} days from the date of issue (until {{ $validUntil->format('d/m/Y') }}). Final invoice amount may change if additional work is required.</p>
         @endif
         @if ($profile->terms_and_conditions)
             <p style="margin-top:4pt;">{{ $profile->terms_and_conditions }}</p>

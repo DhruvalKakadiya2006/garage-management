@@ -56,29 +56,29 @@
                         <table class="min-w-full text-sm">
                             <thead class="bg-muted/50">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Status</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Count</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">% of Total</th>
+                                    <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Status</th>
+                                    <th class="align-middle px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Count</th>
+                                    <th class="align-middle px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">% of Total</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border">
                                 @foreach($statusCounts as $item)
                                 <tr class="hover:bg-muted/50">
-                                    <td class="px-6 py-4 whitespace-nowrap capitalize">
+                                    <td class="align-middle px-6 py-2 whitespace-nowrap capitalize">
                                         {{ str_replace('_', ' ', $item->status) }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right font-medium">
+                                    <td class="align-middle px-6 py-2 whitespace-nowrap text-right font-medium">
                                         {{ $item->count }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-gray-600">
+                                    <td class="align-middle px-6 py-2 whitespace-nowrap text-right text-gray-600">
                                         {{ $totalJobCards > 0 ? number_format(($item->count / $totalJobCards) * 100, 1) : 0 }}%
                                     </td>
                                 </tr>
                                 @endforeach
                                 <tr class="bg-muted font-semibold">
-                                    <td class="px-6 py-4">Total</td>
-                                    <td class="px-6 py-4 text-right">{{ $totalJobCards }}</td>
-                                    <td class="px-6 py-4 text-right">100%</td>
+                                    <td class="align-middle px-6 py-2">Total</td>
+                                    <td class="align-middle px-6 py-2 text-right">{{ $totalJobCards }}</td>
+                                    <td class="align-middle px-6 py-2 text-right">100%</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -184,29 +184,29 @@
                         <table class="min-w-full text-sm">
                             <thead class="bg-muted/50">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Job Type</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Count</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">% of Total</th>
+                                    <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Job Type</th>
+                                    <th class="align-middle px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Count</th>
+                                    <th class="align-middle px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">% of Total</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border">
                                 @foreach($jobTypeCounts as $item)
                                 <tr class="hover:bg-muted/50">
-                                    <td class="px-6 py-4 whitespace-nowrap capitalize">
+                                    <td class="align-middle px-6 py-2 whitespace-nowrap capitalize">
                                         {{ str_replace('_', ' ', $item->job_type) }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right font-medium">
+                                    <td class="align-middle px-6 py-2 whitespace-nowrap text-right font-medium">
                                         {{ $item->count }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-gray-600">
+                                    <td class="align-middle px-6 py-2 whitespace-nowrap text-right text-gray-600">
                                         {{ $totalJobCards > 0 ? number_format(($item->count / $totalJobCards) * 100, 1) : 0 }}%
                                     </td>
                                 </tr>
                                 @endforeach
                                 <tr class="bg-muted font-semibold">
-                                    <td class="px-6 py-4">Total</td>
-                                    <td class="px-6 py-4 text-right">{{ $totalJobCards }}</td>
-                                    <td class="px-6 py-4 text-right">100%</td>
+                                    <td class="align-middle px-6 py-2">Total</td>
+                                    <td class="align-middle px-6 py-2 text-right">{{ $totalJobCards }}</td>
+                                    <td class="align-middle px-6 py-2 text-right">100%</td>
                                 </tr>
                             </tbody>
                         </table>

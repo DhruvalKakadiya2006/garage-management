@@ -24,7 +24,7 @@
 
                 <!-- Slim top bar: page title only -->
                 <header class="sticky top-0 z-20 bg-background border-b border-border">
-                    <div class="flex items-center px-4 sm:px-6 lg:px-8 min-h-[3.5rem]">
+                    <div class="flex items-center px-4 sm:px-6 lg:px-8 h-14">
                         <button type="button" @click="openMobile()"
                                 class="me-3 -ms-2 inline-flex items-center justify-center p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent md:hidden focus:outline-none focus:bg-accent focus:text-foreground transition duration-150 ease-in-out">
                             <x-heroicon-o-bars-3 class="w-6 h-6" />

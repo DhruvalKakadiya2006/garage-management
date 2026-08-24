@@ -27,7 +27,7 @@
                         <h3 class="font-semibold text-gray-900 mb-3">Invoice Details</h3>
                         <dl class="space-y-2 text-sm">
                             <div><dt class="inline font-medium">Invoice No:</dt> <dd class="inline">{{ $counterInvoice->invoice_no }}</dd></div>
-                            <div><dt class="inline font-medium">Date:</dt> <dd class="inline">{{ $counterInvoice->invoice_date->format('d M Y') }}</dd></div>
+                            <div><dt class="inline font-medium">Date:</dt> <dd class="inline">{{ $counterInvoice->invoice_date->format('d/m/Y') }}</dd></div>
                             <div><dt class="inline font-medium">Payment Status:</dt> <dd class="inline">
                                 <x-badge :color="match ($counterInvoice->payment_status_label) {
                                     'paid' => 'green',
@@ -70,21 +70,21 @@
                 <table class="min-w-full text-xs">
                     <thead class="bg-muted/50">
                         <tr>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Part</th>
-                            <th class="px-4 py-2 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Qty</th>
-                            <th class="px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">MRP</th>
-                            <th class="px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Discount %</th>
-                            <th class="px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Line Total</th>
+                            <th class="align-middle px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Part</th>
+                            <th class="align-middle px-4 py-2 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Qty</th>
+                            <th class="align-middle px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">MRP</th>
+                            <th class="align-middle px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Discount %</th>
+                            <th class="align-middle px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Line Total</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($counterInvoice->items as $item)
                         <tr class="border-t hover:bg-muted/50">
-                            <td class="px-4 py-2">{{ $item->sparePart->part_name }}</td>
-                            <td class="px-4 py-2 text-center">{{ $item->quantity }}</td>
-                            <td class="px-4 py-2 text-right">{{ config('garage.currency_symbol') }}{{ number_format($item->mrp, 2) }}</td>
-                            <td class="px-4 py-2 text-right">{{ $item->discount_percent > 0 ? $item->discount_percent.'%' : '-' }}</td>
-                            <td class="px-4 py-2 text-right font-medium">{{ config('garage.currency_symbol') }}{{ number_format($item->line_total, 2) }}</td>
+                            <td class="align-middle px-4 py-2">{{ $item->sparePart->part_name }}</td>
+                            <td class="align-middle px-4 py-2 text-center">{{ $item->quantity }}</td>
+                            <td class="align-middle px-4 py-2 text-right">{{ config('garage.currency_symbol') }}{{ number_format($item->mrp, 2) }}</td>
+                            <td class="align-middle px-4 py-2 text-right">{{ $item->discount_percent > 0 ? $item->discount_percent.'%' : '-' }}</td>
+                            <td class="align-middle px-4 py-2 text-right font-medium">{{ config('garage.currency_symbol') }}{{ number_format($item->line_total, 2) }}</td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -158,23 +158,23 @@
                         <table class="min-w-full text-xs">
                             <thead class="bg-muted/50">
                                 <tr>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Mode</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Reference</th>
-                                    <th class="px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Amount</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Notes</th>
-                                    <th class="px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
+                                    <th class="align-middle px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
+                                    <th class="align-middle px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Mode</th>
+                                    <th class="align-middle px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Reference</th>
+                                    <th class="align-middle px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Amount</th>
+                                    <th class="align-middle px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Notes</th>
+                                    <th class="align-middle px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($counterInvoice->payments as $payment)
                                 <tr class="border-t hover:bg-muted/50">
-                                    <td class="px-4 py-2">{{ $payment->payment_date->format('d M Y') }}</td>
-                                    <td class="px-4 py-2 capitalize">{{ str_replace('_', ' ', $payment->payment_mode) }}</td>
-                                    <td class="px-4 py-2">{{ $payment->reference_no ?? '-' }}</td>
-                                    <td class="px-4 py-2 text-right font-medium">{{ config('garage.currency_symbol') }}{{ number_format($payment->amount, 2) }}</td>
-                                    <td class="px-4 py-2 text-gray-600">{{ $payment->notes ?? '-' }}</td>
-                                    <td class="px-4 py-2 text-right text-xs whitespace-nowrap">
+                                    <td class="align-middle px-4 py-2">{{ $payment->payment_date->format('d/m/Y') }}</td>
+                                    <td class="align-middle px-4 py-2 capitalize">{{ str_replace('_', ' ', $payment->payment_mode) }}</td>
+                                    <td class="align-middle px-4 py-2">{{ $payment->reference_no ?? '-' }}</td>
+                                    <td class="align-middle px-4 py-2 text-right font-medium">{{ config('garage.currency_symbol') }}{{ number_format($payment->amount, 2) }}</td>
+                                    <td class="align-middle px-4 py-2 text-gray-600">{{ $payment->notes ?? '-' }}</td>
+                                    <td class="align-middle px-4 py-2 text-right text-xs whitespace-nowrap">
                                         <div class="inline-flex items-center gap-3">
                                             <a href="{{ route('payments.edit', $payment) }}" class="text-primary hover:text-primary-700">Edit</a>
                                             @can('admin')
@@ -249,7 +249,7 @@
                         </form>
                     </div>
                 @else
-                    <div class="inline-flex items-center gap-1.5 text-center py-4 text-green-600 font-medium">
+                    <div class="inline-flex items-center gap-1.5 text-center py-2 text-green-600 font-medium">
                         <x-heroicon-o-check-circle class="w-5 h-5" />
                         Fully Paid
                     </div>

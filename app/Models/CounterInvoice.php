@@ -110,17 +110,23 @@ class CounterInvoice extends Model
      */
     public function getOutstandingAttribute()
     {
-        return max(0, $this->grand_total - $this->amount_paid);
+        return max(0, round((float) $this->grand_total, 2) - round((float) $this->amount_paid, 2));
     }
 
     /**
      * Get the derived payment status label.
+     *
+     * Comparisons round to cents first — raw float sums carry binary residue
+     * that would flip fully paid documents to partially_paid.
      */
     public function getPaymentStatusLabelAttribute()
     {
-        if ($this->outstanding == 0 && $this->amount_paid > 0) {
+        $amountPaid = round((float) $this->amount_paid, 2);
+        $outstanding = round((float) $this->outstanding, 2);
+
+        if ($outstanding == 0 && $amountPaid > 0) {
             return 'paid';
-        } elseif ($this->amount_paid > 0 && $this->outstanding > 0) {
+        } elseif ($amountPaid > 0 && $outstanding > 0) {
             return 'partially_paid';
         }
 

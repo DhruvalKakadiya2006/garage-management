@@ -6,6 +6,7 @@ use App\Models\Customer;
 use App\Models\JobCard;
 use App\Services\BulkDeleteService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Log;
 use Tests\Concerns\SeedsVehicleCatalog;
 use Tests\TestCase;
 
@@ -30,7 +31,7 @@ class BulkDeleteServiceTest extends TestCase
         self::$regCounter++;
         $vehicle = $this->makeCatalogVehicle(
             $customer,
-            'GJ-01-AB-' . str_pad((string) self::$regCounter, 4, '0', STR_PAD_LEFT),
+            'GJ-01-AB-'.str_pad((string) self::$regCounter, 4, '0', STR_PAD_LEFT),
             'Ola',
             'S1 Pro'
         );
@@ -98,5 +99,27 @@ class BulkDeleteServiceTest extends TestCase
         $this->assertSame(1, $result['deleted_count']);
         $this->assertSame(1, $result['skipped_count']);
         $this->assertSame(['999999'], $result['skipped_ids']);
+    }
+
+    public function test_bulk_delete_logs_the_reason_a_record_was_skipped(): void
+    {
+        Log::spy();
+
+        $customer = $this->makeCustomer('Doomed', '9000000007');
+
+        app(BulkDeleteService::class)->delete(
+            Customer::class,
+            [$customer->id],
+            function (): void {
+                throw new \RuntimeException('simulated protected record');
+            }
+        );
+
+        Log::shouldHaveReceived('warning')
+            ->once()
+            ->withArgs(function (string $message, array $context): bool {
+                return $message === 'Bulk delete skipped a record.'
+                    && $context['reason'] === 'simulated protected record';
+            });
     }
 }
