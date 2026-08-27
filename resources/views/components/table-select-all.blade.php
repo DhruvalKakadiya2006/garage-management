@@ -7,4 +7,4 @@
        @change="toggleAll()"
        x-effect="$el.indeterminate = someSelected && !allSelected"
        aria-label="Select all visible rows"
-       class="h-4 w-4 align-middle rounded border-input text-primary focus:ring-ring cursor-pointer">
+       class="h-4 w-4 align-middle rounded border border-gray-300 text-primary focus:ring-ring cursor-pointer">

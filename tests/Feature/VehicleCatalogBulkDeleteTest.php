@@ -2,11 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\Customer;
 use App\Models\User;
+use App\Models\Vehicle;
 use App\Models\VehicleBrand;
 use App\Models\VehicleModel;
-use App\Models\Vehicle;
-use App\Models\Customer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

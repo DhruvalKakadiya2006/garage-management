@@ -22,8 +22,7 @@ class ProcessedRow
         public RowAction $action,
         public ?int $matchedId = null,
         public array $issues = [],
-    ) {
-    }
+    ) {}
 
     public function addIssue(ValidationIssue $issue): void
     {

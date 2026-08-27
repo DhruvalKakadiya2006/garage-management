@@ -50,7 +50,6 @@ return new class extends Migration
                     "part_name" varchar not null,
                     "part_code" varchar not null,
                     "category" varchar,
-                    "compatible_vehicle_brand" varchar,
                     "unit" varchar not null,
                     "purchase_price" numeric not null,
                     "mrp" numeric not null,
@@ -69,10 +68,10 @@ return new class extends Migration
 
             DB::statement(sprintf(
                 'INSERT INTO "%s"
-                    (id, part_name, part_code, category, compatible_vehicle_brand, unit,
+                    (id, part_name, part_code, category, unit,
                      purchase_price, mrp, labor_charge, hsn_code, gst_rate,
                      current_stock_qty, reorder_level, created_at, updated_at)
-                 SELECT id, part_name, part_code, category, compatible_vehicle_brand, unit,
+                 SELECT id, part_name, part_code, category, unit,
                         purchase_price, mrp, labor_charge, hsn_code, gst_rate,
                         current_stock_qty, reorder_level, created_at, updated_at
                  FROM spare_parts',

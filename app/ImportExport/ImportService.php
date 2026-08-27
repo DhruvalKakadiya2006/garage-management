@@ -33,8 +33,7 @@ class ImportService
 {
     public function __construct(
         private readonly ImportRegistry $registry,
-    ) {
-    }
+    ) {}
 
     /**
      * Dry-run an upload. Creates nothing.
@@ -126,7 +125,7 @@ class ImportService
     /** @return array{headers: array<int, string>, rows: array<int, array<int|string, mixed>>} */
     private function read(string $path, ?string $originalFileName, ?string $mime = null): array
     {
-        $reader = (new FileFormatDetector())->readerFor($path, $originalFileName, $mime);
+        $reader = (new FileFormatDetector)->readerFor($path, $originalFileName, $mime);
 
         return $reader->read($path);
     }
@@ -276,12 +275,14 @@ class ImportService
 
                 if ($issue !== null) {
                     $issues[] = $issue;
+
                     continue;
                 }
 
                 // Required (only when coercion did not already fail).
                 if (! empty($spec['required']) && ($value === null || $value === '')) {
                     $issues[] = ValidationIssue::error($rowNumber, $field, $raw, "{$label} is required.");
+
                     continue;
                 }
 
@@ -390,7 +391,7 @@ class ImportService
      * matches nothing or matches several records is reported as an error and
      * never guessed.
      *
-     * @param array{entity: string, field: string, keys: array<string, string>, required?: bool} $relation
+     * @param  array{entity: string, field: string, keys: array<string, string>, required?: bool}  $relation
      * @return array{0: int|string|null, 1: ValidationIssue|null, 2: string|null}
      */
     private function resolveRelation(array $relation, array $data, int $rowNumber): array

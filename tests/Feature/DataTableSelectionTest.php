@@ -166,7 +166,6 @@ class DataTableSelectionTest extends TestCase
             'service_name' => 'General Service',
             'category' => 'general',
             'standard_rate' => 500,
-            'estimated_time_minutes' => 60,
         ]);
 
         $response = $this->actingAs($this->user)->get(route('inventory.index'));

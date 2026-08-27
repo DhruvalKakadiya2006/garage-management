@@ -71,7 +71,7 @@
                         <td class="align-middle px-6 py-2 whitespace-nowrap">
                             <x-table-checkbox :id="$brand->id" attr="data-brand-id" />
                         </td>
-                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900 max-w-[200px] truncate" title="{{ $brand->name }}">
                             {{ $brand->name }}
                         </td>
                         <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-600">
@@ -79,8 +79,8 @@
                         </td>
                         <td class="align-middle px-6 py-2 whitespace-nowrap text-right">
                             <button type="button" @click="toggleExpand('{{ $brand->id }}')" title="View models"
-                                    class="inline-flex items-center justify-center rounded-md p-2 text-gray-500 transition-colors duration-150 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-                                <x-heroicon-o-chevron-down class="w-5 h-5 transition-transform duration-150"
+                                    class="inline-flex items-center justify-center rounded-md p-1 text-gray-500 transition-colors duration-150 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                                <x-heroicon-o-chevron-down class="w-4 h-4 transition-transform duration-150"
                                                            x-bind:class="expandedId === '{{ $brand->id }}' ? 'rotate-180' : ''" />
                             </button>
                         </td>

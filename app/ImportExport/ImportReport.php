@@ -16,8 +16,8 @@ use App\ImportExport\Enums\Severity;
 class ImportReport
 {
     /**
-     * @param ValidationIssue[] $structureIssues
-     * @param ProcessedRow[] $rows
+     * @param  ValidationIssue[]  $structureIssues
+     * @param  ProcessedRow[]  $rows
      */
     public function __construct(
         public readonly string $entityKey,
@@ -32,8 +32,7 @@ class ImportReport
         public ?string $failureMessage = null,
         public int $appliedCreates = 0,
         public int $appliedUpdates = 0,
-    ) {
-    }
+    ) {}
 
     // ---- File / structure ----
 

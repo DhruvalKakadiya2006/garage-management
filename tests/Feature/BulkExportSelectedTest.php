@@ -28,7 +28,6 @@ class BulkExportSelectedTest extends TestCase
         return Customer::create([
             'first_name' => $name,
             'mobile' => $mobile,
-            'customer_type' => 'regular',
         ]);
     }
 
@@ -94,7 +93,7 @@ class BulkExportSelectedTest extends TestCase
         $this->assertSame([
             'external_ref', 'mobile', 'alt_mobile', 'email', 'first_name', 'last_name',
             'surname', 'company_name', 'display_name', 'address', 'city', 'gstin',
-            'customer_type', 'created_at', 'updated_at',
+            'created_at', 'updated_at',
         ], $rows[0]);
         $this->assertCount(2, $rows);
         $this->assertSame('9000000001', $rows[1][1]);

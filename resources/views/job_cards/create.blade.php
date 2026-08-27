@@ -63,7 +63,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Vehicle *</label>
                             <select name="vehicle_id" x-model="vehicleId"
-                                    class="mt-1 block w-full rounded-md border-input shadow-sm" required>
+                                    class="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm" required>
                                 <option value="">-- Select Vehicle --</option>
                                 <template x-for="vehicle in vehicles" :key="vehicle.id">
                                     <option :value="vehicle.id" x-text="vehicle.label"></option>
@@ -101,7 +101,7 @@
                             <div class="grid grid-cols-12 gap-2 mb-2 items-end">
                                 <div class="col-span-11">
                                     <input type="text" :name="`complaints[${index}][description]`" x-model="complaint.description"
-                                           placeholder="Describe the complaint" class="block w-full text-sm rounded-md border-input shadow-sm" required>
+                                           placeholder="Describe the complaint" class="block w-full text-sm rounded-md border border-gray-300 bg-white shadow-sm" required>
                                 </div>
                                 <div class="col-span-1">
                                     <button type="button" @click="removeComplaint(index)" title="Remove"
@@ -111,10 +111,6 @@
                                 </div>
                             </div>
                         </template>
-                    </div>
-
-                    <div>
-                        <x-input name="remarks" label="Remarks" type="textarea" rows="3" :value="old('remarks')" />
                     </div>
 
                     <div class="flex justify-end gap-3 pt-2">

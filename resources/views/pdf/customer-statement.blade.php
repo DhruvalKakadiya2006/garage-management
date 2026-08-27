@@ -34,17 +34,13 @@
         <div class="section-title">Customer Details</div>
         <table class="grid-2">
             <tr>
-                <td style="width:33%;">
+                <td style="width:50%;">
                     <div class="label">Name</div>
                     <div class="value">{{ $customer->display_name }}</div>
                 </td>
-                <td style="width:33%;">
+                <td style="width:50%;">
                     <div class="label">Mobile</div>
                     <div class="value">{{ $customer->mobile ?? '—' }} @if ($customer->alt_mobile)<span class="company-line"> / {{ $customer->alt_mobile }}</span>@endif</div>
-                </td>
-                <td style="width:34%;">
-                    <div class="label">Type</div>
-                    <div class="value">{{ ucwords(str_replace('_', ' ', $customer->customer_type)) }}</div>
                 </td>
             </tr>
             <tr>

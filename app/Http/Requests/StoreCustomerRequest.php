@@ -28,7 +28,6 @@ class StoreCustomerRequest extends FormRequest
             'address' => 'nullable|string',
             'city' => 'nullable|string|max:100',
             'gstin' => ['nullable', 'string', 'regex:/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/'],
-            'customer_type' => 'required|in:'.implode(',', array_keys(config('garage.option_lists.customer_type'))),
         ];
     }
 }

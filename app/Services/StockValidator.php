@@ -11,9 +11,9 @@ class StockValidator
      * Check that every requested line quantity can be covered by current stock,
      * accounting for the quantity a document already reserves for the same part.
      *
-     * @param array       $lines    Submitted lines: [['spare_part_id' => int, 'quantity' => int], ...]
-     * @param Model|null  $document Document whose line-item relation reserves stock (null when creating).
-     * @param string      $relation Line-item relation name on the document ('parts' | 'items').
+     * @param  array  $lines  Submitted lines: [['spare_part_id' => int, 'quantity' => int], ...]
+     * @param  Model|null  $document  Document whose line-item relation reserves stock (null when creating).
+     * @param  string  $relation  Line-item relation name on the document ('parts' | 'items').
      * @return array<string, string> Validation errors keyed as "<relation>.<line>.quantity"
      */
     public function validate(array $lines, ?Model $document, string $relation): array

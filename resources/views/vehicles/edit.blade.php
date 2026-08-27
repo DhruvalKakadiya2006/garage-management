@@ -33,7 +33,7 @@
 
                     <div class="space-y-1">
                         <label class="block text-sm font-medium text-gray-700">Customer</label>
-                        <p class="block w-full rounded-md border border-input bg-muted px-3 py-2 text-sm text-gray-900 cursor-not-allowed">
+                        <p class="block w-full rounded-md border border-gray-300 bg-muted px-3 py-2 text-sm text-gray-900 cursor-not-allowed">
                             {{ $vehicle->customer?->display_name }}<span class="text-gray-500"> — {{ $vehicle->customer?->mobile }}</span>
                         </p>
                         <p class="text-xs text-gray-500">A vehicle's owner cannot be changed from this form.</p>
@@ -52,7 +52,7 @@
                             <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
                                 <input type="checkbox" name="is_non_rto" value="1" x-model="isNonRto"
                                        {{ old('is_non_rto', $vehicle->is_non_rto) ? 'checked' : '' }}
-                                       class="rounded border-input text-primary shadow-sm focus:ring-ring">
+                                       class="rounded border border-gray-300 text-primary shadow-sm focus:ring-ring">
                                 Non-RTO Vehicle
                             </label>
                         </div>

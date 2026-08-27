@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('part_name');
             $table->string('part_code')->unique();
             $table->string('category')->nullable();
-            $table->string('compatible_vehicle_brand')->nullable();
             $table->enum('unit', ['pcs', 'set', 'meter', 'kg']);
             $table->decimal('purchase_price', 10, 2);
             $table->decimal('mrp', 10, 2);

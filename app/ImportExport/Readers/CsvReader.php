@@ -61,6 +61,7 @@ class CsvReader implements SpreadsheetReaderInterface
                 $headers = array_map(fn ($h) => trim((string) $h), $fields);
                 $headerCount = count($headers);
                 $first = false;
+
                 continue;
             }
 

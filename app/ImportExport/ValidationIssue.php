@@ -15,8 +15,7 @@ class ValidationIssue
         public readonly ?string $field,
         public readonly mixed $value,
         public readonly string $message,
-    ) {
-    }
+    ) {}
 
     public static function error(?int $row, ?string $field, mixed $value, string $message): self
     {

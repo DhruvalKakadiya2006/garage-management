@@ -14,16 +14,17 @@ class AuthenticationTest extends TestCase
     {
         $response = $this->get('/login');
 
-        $response->assertStatus(200);
+        $response
+            ->assertOk()
+            ->assertSee('Username')
+            ->assertDontSee('Forgot your password?');
     }
 
     public function test_users_can_authenticate_using_the_login_screen(): void
     {
-        $user = User::factory()->create();
-
         $response = $this->post('/login', [
-            'email' => $user->email,
-            'password' => 'password',
+            'username' => 'admin',
+            'password' => '321',
         ]);
 
         $this->assertAuthenticated();
@@ -32,10 +33,8 @@ class AuthenticationTest extends TestCase
 
     public function test_users_can_not_authenticate_with_invalid_password(): void
     {
-        $user = User::factory()->create();
-
         $this->post('/login', [
-            'email' => $user->email,
+            'username' => 'admin',
             'password' => 'wrong-password',
         ]);
 
@@ -50,5 +49,11 @@ class AuthenticationTest extends TestCase
 
         $this->assertGuest();
         $response->assertRedirect('/');
+    }
+
+    public function test_password_reset_routes_are_unavailable(): void
+    {
+        $this->get('/forgot-password')->assertNotFound();
+        $this->get('/reset-password/example-token')->assertNotFound();
     }
 }

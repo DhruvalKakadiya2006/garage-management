@@ -45,7 +45,7 @@ abstract class AbstractImportDefinition implements ImportDefinition
     /** @return Collection<int, object> */
     public function resolveCandidates(array $data): Collection
     {
-        return new Collection();
+        return new Collection;
     }
 
     public function applyCreate(array $data): object
@@ -137,7 +137,7 @@ abstract class AbstractImportDefinition implements ImportDefinition
      * Split timestamp fields out of a normalized row so they can be preserved
      * explicitly instead of being silently overwritten by Eloquent.
      *
-     * @param array<int, string> $timestampKeys
+     * @param  array<int, string>  $timestampKeys
      * @return array{0: array<string, mixed>, 1: array<string, mixed>}
      */
     protected function splitTimestamps(array $data, array $timestampKeys = ['created_at', 'updated_at']): array
@@ -152,7 +152,7 @@ abstract class AbstractImportDefinition implements ImportDefinition
      * Persist the explicitly preserved timestamps without Eloquent's own
      * updated_at handling kicking in.
      *
-     * @param array<string, mixed> $timestamps
+     * @param  array<string, mixed>  $timestamps
      */
     protected function restoreTimestamps(object $record, array $timestamps): void
     {
@@ -174,7 +174,7 @@ abstract class AbstractImportDefinition implements ImportDefinition
      * Definitions use this for entities whose keys are simple columns. Entities
      * with compound/nested keys override resolveCandidates() themselves.
      *
-     * @param array<int, string> $keys
+     * @param  array<int, string>  $keys
      * @return Collection<int, object>
      */
     protected function resolveByKeys(string $modelClass, array $data, array $keys): Collection
@@ -196,7 +196,7 @@ abstract class AbstractImportDefinition implements ImportDefinition
         });
 
         if (! $hasCondition) {
-            return new Collection();
+            return new Collection;
         }
 
         return $query->get();

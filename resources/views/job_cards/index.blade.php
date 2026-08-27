@@ -111,11 +111,11 @@
             </x-table-selection-bar>
 
             <!-- Filters -->
-            <div class="bg-white rounded-xl border border-border shadow-sm p-4">
+            <div class="bg-slate-50 rounded-xl border border-slate-200 shadow-sm p-4">
                 <form method="GET" action="{{ route('job-cards.index') }}" class="flex flex-wrap gap-4 items-end">
                     <div class="flex-1 min-w-[180px]">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Assigned Technician</label>
-                        <select name="technician" class="block w-full h-10 rounded-md border-input shadow-sm text-sm">
+                        <select name="technician" class="block w-full h-10 rounded-md border border-gray-300 bg-white shadow-sm text-sm focus:border-primary focus:ring-primary">
                             <option value="">-- All Technicians --</option>
                             @foreach ($technicians as $tech)
                                 <option value="{{ $tech->id }}" {{ request('technician') == $tech->id ? 'selected' : '' }}>
@@ -126,7 +126,7 @@
                     </div>
                     <div class="flex-1 min-w-[180px]">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                        <select name="status" class="block w-full h-10 rounded-md border-input shadow-sm text-sm">
+                        <select name="status" class="block w-full h-10 rounded-md border border-gray-300 bg-white shadow-sm text-sm focus:border-primary focus:ring-primary">
                             <option value="">-- All Statuses --</option>
                             @foreach (config('garage.option_lists.job_card_status') as $statusValue => $statusLabel)
                                 <option value="{{ $statusValue }}" {{ request('status') == $statusValue ? 'selected' : '' }}>
@@ -137,7 +137,7 @@
                     </div>
                     <div class="flex-1 min-w-[180px]">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Brand</label>
-                        <select name="brand" class="block w-full h-10 rounded-md border-input shadow-sm text-sm">
+                        <select name="brand" class="block w-full h-10 rounded-md border border-gray-300 bg-white shadow-sm text-sm focus:border-primary focus:ring-primary">
                             <option value="">-- All Brands --</option>
                             @foreach ($brands as $brand)
                                 <option value="{{ $brand }}" {{ request('brand') == $brand ? 'selected' : '' }}>
@@ -149,12 +149,12 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">From Date</label>
                         <input type="date" name="from_date" value="{{ request('from_date') }}"
-                               class="block w-full h-10 rounded-md border-input shadow-sm text-sm">
+                               class="block w-full h-10 rounded-md border border-gray-300 bg-white shadow-sm text-sm focus:border-primary focus:ring-primary">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">To Date</label>
                         <input type="date" name="to_date" value="{{ request('to_date') }}"
-                               class="block w-full h-10 rounded-md border-input shadow-sm text-sm">
+                               class="block w-full h-10 rounded-md border border-gray-300 bg-white shadow-sm text-sm focus:border-primary focus:ring-primary">
                     </div>
                     <div class="flex gap-3">
                         <x-button type="submit">Filter</x-button>
@@ -199,19 +199,19 @@
                         <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-600">
                             {{ $jc->job_date->format('d/m/Y') }}
                         </td>
-                        <td class="align-middle px-6 py-2 text-sm text-gray-600">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-600 max-w-[180px] truncate" title="{{ $jc->customer->display_name ?? '-' }}">
                             {{ $jc->customer->display_name ?? '-' }}
                         </td>
-                        <td class="align-middle px-6 py-2 text-sm text-gray-600">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-600">
                             {{ $jc->vehicle?->vehicleModel?->vehicleBrand?->name ?? '-' }}
                         </td>
-                        <td class="align-middle px-6 py-2 text-sm text-gray-600">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-600">
                             {{ $jc->vehicle?->vehicleModel?->name ?? '-' }}
                         </td>
                         <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-600">
                             {{ $jc->vehicle->color ?? '-' }}
                         </td>
-                        <td class="align-middle px-6 py-2 text-sm text-gray-600">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-600 max-w-[140px] truncate" title="{{ $jc->assignedTechnician->name ?? '-' }}">
                             {{ $jc->assignedTechnician->name ?? '-' }}
                         </td>
                         <td class="align-middle px-6 py-2 whitespace-nowrap text-xs">

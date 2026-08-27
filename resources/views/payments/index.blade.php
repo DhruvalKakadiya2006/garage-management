@@ -117,7 +117,7 @@
                                 <span class="text-gray-400 italic">Deleted record</span>
                             @endif
                         </td>
-                        <td class="align-middle px-6 py-2 text-sm text-gray-600">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-600 max-w-[180px] truncate" title="{{ $payable ? ($payable instanceof \App\Models\JobCard ? ($payable->customer->display_name ?? '-') : ($payable->customer_id ? ($payable->customer->display_name ?? '-') : ($payable->walkin_name ?? 'Walk-in'))) : '-' }}">
                             @if ($payable)
                                 @php
                                     if ($payable instanceof \App\Models\JobCard) {
@@ -142,7 +142,7 @@
                         <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
                             {{ config('garage.currency_symbol') }}{{ number_format($payment->amount, 2) }}
                         </td>
-                        <td class="align-middle px-6 py-2 text-sm text-gray-500">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-500 max-w-[200px] truncate" title="{{ $payment->notes ?? '' }}">
                             {{ $payment->notes ? \Illuminate\Support\Str::limit($payment->notes, 30) : '-' }}
                         </td>
                         <td class="align-middle px-6 py-2 whitespace-nowrap text-right">

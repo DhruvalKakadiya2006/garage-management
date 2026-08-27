@@ -65,11 +65,6 @@ return [
 
     'option_lists' => [
 
-        'customer_type' => [
-            'regular' => 'Regular',
-            'counter' => 'Counter',
-        ],
-
         'job_type' => [
             'free_service' => 'Free Service',
             'paid_service' => 'Paid Service',

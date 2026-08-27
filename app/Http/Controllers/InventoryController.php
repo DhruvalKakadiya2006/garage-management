@@ -19,8 +19,8 @@ class InventoryController extends Controller
         $lowStock = $request->boolean('low_stock');
 
         $spareParts = SparePart::when($lowStock, function ($query) {
-                $query->whereColumn('current_stock_qty', '<=', 'reorder_level');
-            })
+            $query->whereColumn('current_stock_qty', '<=', 'reorder_level');
+        })
             ->latest()
             ->paginate(15, ['*'], 'parts_page')
             ->withQueryString();

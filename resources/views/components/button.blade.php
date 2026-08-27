@@ -9,7 +9,7 @@ $baseClasses = 'inline-flex items-center justify-center gap-2 whitespace-nowrap 
 
 $variantClasses = [
     'primary' => 'bg-primary text-primary-foreground hover:bg-primary/90',
-    'secondary' => 'border border-border bg-background hover:bg-accent hover:text-accent-foreground',
+    'secondary' => 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 shadow-sm',
     'danger' => 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
     'success' => 'bg-green-600 text-white hover:bg-green-600/90',
     'ghost' => 'hover:bg-accent hover:text-accent-foreground',

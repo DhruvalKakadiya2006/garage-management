@@ -77,34 +77,33 @@
                         <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-600">
                             {{ $invoice->invoice_date->format('d/m/Y') }}
                         </td>
-                        <td class="align-middle px-6 py-2 text-sm text-gray-600">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-600 max-w-[180px] truncate" title="{{ $invoice->customer_id ? $invoice->customer->display_name : ($invoice->walkin_name ?? 'Walk-in') }}">
                             @if($invoice->customer_id)
                                 {{ $invoice->customer->display_name }}
                             @else
-                                {{ $invoice->walkin_name ?? 'Walk-in' }}
-                                @if($invoice->walkin_mobile)
-                                    <br><span class="text-xs text-gray-500">{{ $invoice->walkin_mobile }}</span>
-                                @endif
+                                {{ $invoice->walkin_name ?? 'Walk-in' }}@if($invoice->walkin_mobile)<span class="text-gray-400"> · </span><span class="text-xs text-gray-500">{{ $invoice->walkin_mobile }}</span>@endif
                             @endif
                         </td>
                         <td class="align-middle px-6 py-2 whitespace-nowrap text-xs">
-                            <x-badge :color="match ($invoice->payment_status_label) {
-                                'paid' => 'green',
-                                'partially_paid' => 'amber',
-                                default => 'red',
-                            }">
-                                @if ($invoice->payment_status_label === 'paid')
-                                    <x-heroicon-o-check-circle class="w-3.5 h-3.5" />
-                                @elseif ($invoice->payment_status_label === 'partially_paid')
-                                    <x-heroicon-o-clock class="w-3.5 h-3.5" />
-                                @else
-                                    <x-heroicon-o-x-circle class="w-3.5 h-3.5" />
+                            <span class="inline-flex items-center gap-1">
+                                <x-badge :color="match ($invoice->payment_status_label) {
+                                    'paid' => 'green',
+                                    'partially_paid' => 'amber',
+                                    default => 'red',
+                                }">
+                                    @if ($invoice->payment_status_label === 'paid')
+                                        <x-heroicon-o-check-circle class="w-3.5 h-3.5" />
+                                    @elseif ($invoice->payment_status_label === 'partially_paid')
+                                        <x-heroicon-o-clock class="w-3.5 h-3.5" />
+                                    @else
+                                        <x-heroicon-o-x-circle class="w-3.5 h-3.5" />
+                                    @endif
+                                    {{ ucwords(str_replace('_', ' ', $invoice->payment_status_label)) }}
+                                </x-badge>
+                                @if($invoice->payment_mode)
+                                    <span class="text-xs text-gray-500">· {{ ucfirst(str_replace('_', ' ', $invoice->payment_mode)) }}</span>
                                 @endif
-                                {{ ucwords(str_replace('_', ' ', $invoice->payment_status_label)) }}
-                            </x-badge>
-                            @if($invoice->payment_mode)
-                                <div class="text-xs text-gray-500 mt-1">{{ ucfirst(str_replace('_', ' ', $invoice->payment_mode)) }}</div>
-                            @endif
+                            </span>
                         </td>
                         <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
                             {{ config('garage.currency_symbol') }}{{ number_format($invoice->grand_total, 2) }}

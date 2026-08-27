@@ -40,7 +40,7 @@
                     @foreach ($details['mode_descriptions'] as $mode)
                         <label class="flex items-start gap-2 text-sm cursor-pointer">
                             <input type="radio" name="mode" value="{{ $mode['value'] }}"
-                                   class="mt-0.5 h-4 w-4 rounded-full border-input text-primary focus:ring-ring"
+                                   class="mt-0.5 h-4 w-4 rounded-full border border-gray-300 text-primary focus:ring-ring"
                                    {{ $loop->first ? 'checked' : '' }}>
                             <span>
                                 <span class="font-medium text-gray-800">{{ $mode['label'] }}</span>

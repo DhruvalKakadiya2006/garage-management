@@ -12,10 +12,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * Represents a customer who owns vehicles and receives services.
  * A customer can have multiple vehicles, job cards, counter invoices, and payments.
  *
- * Customer Types:
- *  - 'regular': Full service customers who get labor charges applied
- *  - 'counter': Walk-in parts-only customers (no labor)
- *
  * Display Name: Auto-generated from first_name + last_name + surname if not provided.
  * This ensures every customer has a human-readable identifier for UI display.
  */
@@ -25,7 +21,7 @@ class Customer extends Model
 
     protected $fillable = [
         'first_name', 'last_name', 'surname', 'company_name', 'display_name', 'mobile', 'alt_mobile', 'email',
-        'address', 'city', 'gstin', 'customer_type', 'external_ref',
+        'address', 'city', 'gstin', 'external_ref',
     ];
 
     /**

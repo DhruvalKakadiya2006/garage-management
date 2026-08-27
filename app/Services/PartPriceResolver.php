@@ -16,7 +16,7 @@ class PartPriceResolver
     /**
      * Overwrite the mrp on each part line with the master-record price.
      *
-     * @param array $lines Raw part lines, each containing a 'spare_part_id'.
+     * @param  array  $lines  Raw part lines, each containing a 'spare_part_id'.
      * @return array The same lines keyed by index with 'mrp' taken from the catalog.
      */
     public function priceLines(array $lines): array

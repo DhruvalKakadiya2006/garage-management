@@ -210,12 +210,12 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Amount *</label>
                                     <input type="number" step="0.01" name="amount" max="{{ $counterInvoice->outstanding }}"
                                            value="{{ old('amount', $counterInvoice->outstanding) }}"
-                                           class="block w-full rounded-md border-input shadow-sm text-sm" required>
+                                           class="block w-full rounded-md border border-gray-300 bg-white shadow-sm text-sm" required>
                                     <p class="text-xs text-gray-500 mt-1">Max: {{ config('garage.currency_symbol') }}{{ number_format($counterInvoice->outstanding, 2) }}</p>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Payment Mode *</label>
-                                    <select name="payment_mode" class="block w-full rounded-md border-input shadow-sm text-sm" required>
+                                    <select name="payment_mode" class="block w-full rounded-md border border-gray-300 bg-white shadow-sm text-sm" required>
                                         <option value="">-- Select --</option>
                                         @foreach (config('garage.option_lists.payment_mode') as $value => $label)
                                             <option value="{{ $value }}">{{ $label }}</option>
@@ -225,19 +225,19 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Payment Date *</label>
                                     <input type="date" name="payment_date" value="{{ old('payment_date', date('Y-m-d')) }}"
-                                           class="block w-full rounded-md border-input shadow-sm text-sm" required>
+                                           class="block w-full rounded-md border border-gray-300 bg-white shadow-sm text-sm" required>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Reference No</label>
                                     <input type="text" name="reference_no" value="{{ old('reference_no') }}"
-                                           class="block w-full rounded-md border-input shadow-sm text-sm"
+                                           class="block w-full rounded-md border border-gray-300 bg-white shadow-sm text-sm"
                                            placeholder="Txn ID / Cheque No">
                                 </div>
                             </div>
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                                <textarea name="notes" rows="2" class="block w-full rounded-md border-input shadow-sm text-sm"
+                                <textarea name="notes" rows="2" class="block w-full rounded-md border border-gray-300 bg-white shadow-sm text-sm"
                                           placeholder="Optional payment notes">{{ old('notes') }}</textarea>
                             </div>
 

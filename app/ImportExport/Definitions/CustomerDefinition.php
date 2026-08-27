@@ -44,8 +44,6 @@ class CustomerDefinition extends AbstractImportDefinition
 
     public function columns(): array
     {
-        $customerTypes = array_keys(config('garage.option_lists.customer_type'));
-
         return [
             [
                 'header' => 'external_ref',
@@ -146,14 +144,6 @@ class CustomerDefinition extends AbstractImportDefinition
                 'rules' => ['regex:/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/'],
             ],
             [
-                'header' => 'customer_type',
-                'field' => 'customer_type',
-                'label' => 'Customer Type',
-                'required' => true,
-                'type' => 'enum',
-                'enum' => $customerTypes,
-            ],
-            [
                 'header' => 'created_at',
                 'field' => 'created_at',
                 'label' => 'Created At',
@@ -217,7 +207,6 @@ class CustomerDefinition extends AbstractImportDefinition
             'address' => 'address',
             'city' => 'city',
             'gstin' => 'gstin',
-            'customer_type' => 'customer_type',
             'created_at' => 'created_at',
             'updated_at' => 'updated_at',
         ];
@@ -255,7 +244,6 @@ class CustomerDefinition extends AbstractImportDefinition
                 'address' => '12 Ring Road, Adajan',
                 'city' => 'Surat',
                 'gstin' => '24ABCDE1234F1Z5',
-                'customer_type' => 'regular',
                 'created_at' => '2026-01-05 10:30:00',
                 'updated_at' => '2026-01-05 10:30:00',
             ],
@@ -272,7 +260,6 @@ class CustomerDefinition extends AbstractImportDefinition
                 'address' => '45 Market Road',
                 'city' => 'Surat',
                 'gstin' => '',
-                'customer_type' => 'counter',
                 'created_at' => '2026-02-10 09:15:00',
                 'updated_at' => '2026-02-10 09:15:00',
             ],

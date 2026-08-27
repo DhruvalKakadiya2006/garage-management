@@ -111,7 +111,7 @@
                                             @combobox-selected="autofillPrice(index, $event.detail)" />
                                     </template>
                                     <template x-if="item.spare_part_id">
-                                        <div class="flex items-center justify-between gap-2 rounded-md border border-input bg-white px-3 py-1.5 shadow-sm">
+                                        <div class="flex items-center justify-between gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 shadow-sm">
                                             <span class="truncate text-sm text-gray-800" x-text="item.itemLabel"></span>
                                             <button type="button" @click="clearItem(index)" title="Change item"
                                                     class="inline-flex shrink-0 items-center rounded-md p-1 text-gray-400 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
@@ -122,16 +122,16 @@
                                 </div>
                                 <div class="col-span-2">
                                     <input type="number" :name="`items[${index}][quantity]`" x-model="item.quantity" @input="calculateItemLine(index)"
-                                           placeholder="Qty" class="block w-full text-sm rounded-md border-input shadow-sm" required min="1">
+                                           placeholder="Qty" class="block w-full text-sm rounded-md border border-gray-300 bg-white shadow-sm" required min="1">
                                 </div>
                                 <div class="col-span-2">
                                     <input type="number" step="0.01" :name="`items[${index}][mrp]`" x-model="item.mrp"
                                            placeholder="MRP" readonly
-                                           class="block w-full text-sm rounded-md border-input bg-muted shadow-sm cursor-not-allowed" title="MRP is set from the spare part master and cannot be edited">
+                                           class="block w-full text-sm rounded-md border border-gray-300 bg-muted shadow-sm cursor-not-allowed" title="MRP is set from the spare part master and cannot be edited">
                                 </div>
                                 <div class="col-span-1">
                                     <input type="number" step="0.01" :name="`items[${index}][discount_percent]`" x-model="item.discount_percent" @input="calculateItemLine(index)"
-                                           placeholder="Disc%" class="block w-full text-sm rounded-md border-input shadow-sm" min="0" max="100">
+                                           placeholder="Disc%" class="block w-full text-sm rounded-md border border-gray-300 bg-white shadow-sm" min="0" max="100">
                                 </div>
                                 <div class="col-span-1 text-right text-sm font-medium" x-text="'{{ config('garage.currency_symbol') }}' + item.lineTotal.toFixed(2)"></div>
                                 <div class="col-span-1">
@@ -144,6 +144,19 @@
                         </template>
                     </div>
 
+                    <!-- Discount Type -->
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Discount Type</label>
+                        <select name="discount_type" x-model="discountType"
+                                class="rounded border border-gray-300 bg-white shadow-sm py-2 px-3 w-full text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                @change="setDiscountType()">
+                            <option value="percentage">Percentage (%)</option>
+                            <option value="amount">Amount ({{
+                                config('garage.currency_symbol')
+                            }})</option>
+                        </select>
+                    </div>
+
                     <!-- Totals & Payment -->
                     <div class="border-t pt-4">
                         <div class="max-w-md ml-auto space-y-3">
@@ -151,14 +164,16 @@
 
                             <div class="grid grid-cols-2 gap-2">
                                 <input type="number" step="0.01" name="discount_percent" x-model="discountPercent" @input="calculateTotals()"
-                                       placeholder="Invoice Discount %" class="text-sm rounded-md border-input shadow-sm" min="0" max="100">
-                                <input type="number" step="0.01" name="discount_amount" x-model="discountAmount" @input="discountPercent=0; calculateTotals()"
-                                       placeholder="Invoice Discount {{ config('garage.currency_symbol') }}" class="text-sm rounded-md border-input shadow-sm" min="0">
+                                       placeholder="Invoice Discount %" class="text-sm rounded-md border border-gray-300 bg-white shadow-sm" min="0" max="100"
+                                       x-show="discountType === 'percentage'" :disabled="discountType !== 'percentage'">
+                                <input type="number" step="0.01" name="discount_amount" x-model="discountAmount" @input="calculateTotals()"
+                                       placeholder="Invoice Discount {{ config('garage.currency_symbol') }}" class="text-sm rounded-md border border-gray-300 bg-white shadow-sm" min="0"
+                                       x-show="discountType === 'amount'" :disabled="discountType !== 'amount'">
                             </div>
 
                             <div class="flex items-center gap-2">
                                 <input type="checkbox" name="gst_applicable" x-model="gstApplicable" @change="calculateTotals()"
-                                       class="rounded border-input text-primary shadow-sm">
+                                       class="rounded border border-gray-300 text-primary shadow-sm">
                                 <span class="text-sm">GST Applicable</span>
                             </div>
 
@@ -196,6 +211,7 @@
                 customerType: initial.customerType || '',
                 items: initial.items || [],
                 subtotal: 0,
+                discountType: initial.discountPercent > 0 ? 'percentage' : 'amount',
                 discountPercent: initial.discountPercent || 0,
                 discountAmount: initial.discountAmount || 0,
                 gstApplicable: initial.gstApplicable || false,
@@ -206,6 +222,12 @@
                     // Re-price every existing line from the master so the screen
                     // always reflects what will be charged on save.
                     this.items.forEach((item, index) => this.calculateItemLine(index));
+                    this.calculateTotals();
+                },
+
+                setDiscountType() {
+                    this.discountPercent = 0;
+                    this.discountAmount = 0;
                     this.calculateTotals();
                 },
 
@@ -245,8 +267,10 @@
                 calculateTotals() {
                     this.subtotal = this.items.reduce((sum, item) => sum + (parseFloat(item.lineTotal) || 0), 0);
 
-                    if (this.discountPercent > 0) {
+                    if (this.discountType === 'percentage') {
                         this.discountAmount = (this.subtotal * this.discountPercent) / 100;
+                    } else {
+                        this.discountPercent = 0;
                     }
 
                     const discountAmount = parseFloat(this.discountAmount) || 0;

@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('display_name')->default('')->after('company_name');
         });
 
-        DB::statement("UPDATE customers SET first_name = name, display_name = name");
+        DB::statement('UPDATE customers SET first_name = name, display_name = name');
 
         Schema::table('customers', function (Blueprint $table) {
             $table->dropColumn('name');
@@ -32,20 +32,6 @@ return new class extends Migration
 
         Schema::table('customers', function (Blueprint $table) {
             $table->string('city')->nullable()->default('Surat')->change();
-        });
-
-        /*
-         * ⚠️  DATA LOSS WARNING — Customer Type Mapping
-         * -----------------------------------------------
-         * This migration permanently collapses four customer types into two.
-         * Mapping: 'walk-in' → 'regular', 'regular' → 'regular', 'fleet' → 'regular', 'dealer' → 'regular'
-         * The fleet/dealer distinction is PERMANENTLY LOST after this migration.
-         * If you need to preserve this data historically, take a database backup BEFORE running.
-         */
-        DB::statement("UPDATE customers SET customer_type = 'regular' WHERE customer_type IN ('walk-in', 'fleet', 'dealer')");
-
-        Schema::table('customers', function (Blueprint $table) {
-            $table->enum('customer_type', ['regular', 'counter'])->default('regular')->change();
         });
     }
 
@@ -59,7 +45,7 @@ return new class extends Migration
             $table->string('pincode')->nullable();
         });
 
-        DB::statement("UPDATE customers SET name = display_name");
+        DB::statement('UPDATE customers SET name = display_name');
 
         Schema::table('customers', function (Blueprint $table) {
             $table->dropColumn('first_name');
@@ -75,10 +61,6 @@ return new class extends Migration
         });
         Schema::table('customers', function (Blueprint $table) {
             $table->dropColumn('display_name');
-        });
-
-        Schema::table('customers', function (Blueprint $table) {
-            $table->enum('customer_type', ['walk-in', 'regular', 'fleet', 'dealer'])->default('walk-in')->change();
         });
 
         Schema::table('customers', function (Blueprint $table) {

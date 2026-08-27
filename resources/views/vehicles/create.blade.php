@@ -58,7 +58,7 @@
                             <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
                                 <input type="checkbox" name="is_non_rto" value="1" x-model="isNonRto"
                                        {{ old('is_non_rto') ? 'checked' : '' }}
-                                       class="rounded border-input text-primary shadow-sm focus:ring-ring">
+                                       class="rounded border border-gray-300 text-primary shadow-sm focus:ring-ring">
                                 Non-RTO Vehicle
                             </label>
                         </div>

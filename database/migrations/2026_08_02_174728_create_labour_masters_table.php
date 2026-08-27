@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('service_name');
             $table->enum('category', ['battery', 'motor', 'brakes', 'electrical', 'general', 'other']);
             $table->decimal('standard_rate', 10, 2);
-            $table->integer('estimated_time_minutes')->nullable();
             $table->boolean('taxable')->default(true);
             $table->string('hsn_sac_code')->nullable();
             $table->timestamps();

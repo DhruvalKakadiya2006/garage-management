@@ -20,7 +20,7 @@ class CustomerImportExportTest extends TestCase
     private const EXPORT_HEADERS = [
         'external_ref', 'mobile', 'alt_mobile', 'email', 'first_name', 'last_name',
         'surname', 'company_name', 'display_name', 'address', 'city', 'gstin',
-        'customer_type', 'created_at', 'updated_at',
+        'created_at', 'updated_at',
     ];
 
     protected function setUp(): void
@@ -37,7 +37,6 @@ class CustomerImportExportTest extends TestCase
             'first_name' => 'Arjun',
             'last_name' => 'Patel',
             'mobile' => '9876543210',
-            'customer_type' => 'regular',
             'external_ref' => null,
         ], $overrides);
     }
@@ -158,7 +157,6 @@ class CustomerImportExportTest extends TestCase
         $idx = array_flip(self::EXPORT_HEADERS);
         $this->assertSame('EXT-77', $rows[1][$idx['external_ref']]);
         $this->assertSame('9876543210', $rows[1][$idx['mobile']]);
-        $this->assertSame('regular', $rows[1][$idx['customer_type']]);
         $this->assertSame('Arjun', $rows[1][$idx['first_name']]);
         $this->assertNotEmpty($rows[1][$idx['created_at']]);
         $this->assertNotEmpty($rows[1][$idx['updated_at']]);
@@ -240,7 +238,6 @@ class CustomerImportExportTest extends TestCase
             'mobile' => '9876543210',
             'first_name' => 'Arjun',
             'email' => 'arjun@example.com',
-            'customer_type' => 'regular',
         ]);
     }
 

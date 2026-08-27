@@ -141,7 +141,7 @@
                                             @combobox-selected="autofillPart(index, $event.detail)" />
                                     </template>
                                     <template x-if="part.spare_part_id">
-                                        <div class="flex items-center justify-between gap-2 rounded-md border border-input bg-white px-3 py-1.5 shadow-sm">
+                                        <div class="flex items-center justify-between gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 shadow-sm">
                                             <span class="truncate text-sm text-gray-800" x-text="part.partLabel"></span>
                                             <button type="button" @click="clearPart(index)" title="Change part"
                                                     class="inline-flex shrink-0 items-center rounded-md p-1 text-gray-400 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
@@ -152,21 +152,21 @@
                                 </div>
                                 <div class="col-span-1">
                                     <input type="number" :name="`parts[${index}][quantity]`" x-model="part.quantity" @input="calculatePartLine(index)"
-                                           placeholder="Qty" class="block w-full text-sm rounded-md border-input shadow-sm" required min="1">
+                                           placeholder="Qty" class="block w-full text-sm rounded-md border border-gray-300 bg-white shadow-sm" required min="1">
                                 </div>
                                 <div class="col-span-2">
                                     <input type="number" step="0.01" :name="`parts[${index}][mrp]`" x-model="part.mrp"
                                            placeholder="MRP" readonly
-                                           class="block w-full text-sm rounded-md border-input bg-muted shadow-sm cursor-not-allowed" title="MRP is set from the spare part master and cannot be edited">
+                                           class="block w-full text-sm rounded-md border border-gray-300 bg-muted shadow-sm cursor-not-allowed" title="MRP is set from the spare part master and cannot be edited">
                                 </div>
                                 <div class="col-span-2">
                                     <input type="number" step="0.01" :name="`parts[${index}][labor_charge]`" x-model="part.labor_charge" @input="calculatePartLine(index)"
-                                           placeholder="Labor" class="block w-full text-sm rounded-md border-input shadow-sm" required min="0">
+                                           placeholder="Labor" class="block w-full text-sm rounded-md border border-gray-300 bg-white shadow-sm" required min="0">
                                 </div>
                                 <div class="col-span-1">
                                     <label class="flex items-center justify-center">
                                         <input type="checkbox" :name="`parts[${index}][under_warranty]`" value="1" x-model="part.under_warranty"
-                                               @change="calculatePartLine(index)" class="rounded border-input text-primary shadow-sm">
+                                               @change="calculatePartLine(index)" class="rounded border border-gray-300 text-primary shadow-sm">
                                     </label>
                                 </div>
                                 <div class="col-span-2 text-right text-sm font-medium" x-text="'{{ config('garage.currency_symbol') }}' + part.lineTotal.toFixed(2)"></div>
@@ -198,7 +198,7 @@
                             <div class="grid grid-cols-12 gap-2 mb-2 items-end">
                                 <div class="col-span-4">
                                     <select :name="`labours[${index}][labour_master_id]`" x-model="labour.labour_master_id" @change="autofillLabour(index, $event)"
-                                            class="block w-full text-sm rounded-md border-input shadow-sm" required>
+                                            class="block w-full text-sm rounded-md border border-gray-300 bg-white shadow-sm" required>
                                         <option value="">-- Select Service --</option>
                                         @foreach ($labourMasters as $lm)
                                             <option value="{{ $lm->id }}" data-rate="{{ $lm->standard_rate }}" data-taxable="{{ $lm->taxable ? '1' : '0' }}" data-gst="{{ $lm->taxable ? $lm->gst_rate : 0 }}">
@@ -209,7 +209,7 @@
                                 </div>
                                 <div class="col-span-3">
                                     <select :name="`labours[${index}][technician_id]`" x-model="labour.technician_id"
-                                            class="block w-full text-sm rounded-md border-input shadow-sm">
+                                            class="block w-full text-sm rounded-md border border-gray-300 bg-white shadow-sm">
                                         <option value="">-- None --</option>
                                         @foreach ($employees as $employee)
                                             <option value="{{ $employee->id }}">{{ $employee->name }}</option>
@@ -218,11 +218,11 @@
                                 </div>
                                 <div class="col-span-1">
                                     <input type="number" step="0.01" :name="`labours[${index}][qty]`" x-model="labour.qty" @input="calculateLabourLine(index)"
-                                           placeholder="Qty" class="block w-full text-sm rounded-md border-input shadow-sm" required min="0">
+                                           placeholder="Qty" class="block w-full text-sm rounded-md border border-gray-300 bg-white shadow-sm" required min="0">
                                 </div>
                                 <div class="col-span-2">
                                     <input type="number" step="0.01" :name="`labours[${index}][rate]`" x-model="labour.rate" @input="calculateLabourLine(index)"
-                                           placeholder="Rate" class="block w-full text-sm rounded-md border-input shadow-sm" required min="0">
+                                           placeholder="Rate" class="block w-full text-sm rounded-md border border-gray-300 bg-white shadow-sm" required min="0">
                                 </div>
                                 <div class="col-span-1 text-right text-sm font-medium" x-text="'{{ config('garage.currency_symbol') }}' + labour.lineTotal.toFixed(2)"></div>
                                 <div class="col-span-1">
@@ -243,16 +243,27 @@
                             <div class="flex justify-between text-sm"><span>Labour Subtotal:</span><span x-text="'{{ config('garage.currency_symbol') }}' + laboursSubtotal.toFixed(2)"></span></div>
                             <div class="flex justify-between text-sm font-medium"><span>Subtotal:</span><span x-text="'{{ config('garage.currency_symbol') }}' + subtotal.toFixed(2)"></span></div>
 
+                            <div>
+                                <label class="mb-1 block text-sm font-medium text-gray-700">Discount Type</label>
+                                <select name="discount_type" x-model="discountType" @change="setDiscountType()"
+                                        class="w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                                    <option value="percentage">Percentage (%)</option>
+                                    <option value="amount">Amount ({{ config('garage.currency_symbol') }})</option>
+                                </select>
+                            </div>
+
                             <div class="grid grid-cols-2 gap-2">
                                 <input type="number" step="0.01" name="discount_percent" x-model="discountPercent" @input="calculateTotals()"
-                                       placeholder="Discount %" class="text-sm rounded-md border-input shadow-sm" min="0" max="100">
-                                <input type="number" step="0.01" name="discount_amount" x-model="discountAmount" @input="discountPercent=0; calculateTotals()"
-                                       placeholder="Discount {{ config('garage.currency_symbol') }}" class="text-sm rounded-md border-input shadow-sm" min="0">
+                                       placeholder="Discount %" class="text-sm rounded-md border border-gray-300 bg-white shadow-sm" min="0" max="100"
+                                       x-show="discountType === 'percentage'" :disabled="discountType !== 'percentage'">
+                                <input type="number" step="0.01" name="discount_amount" x-model="discountAmount" @input="calculateTotals()"
+                                       placeholder="Discount {{ config('garage.currency_symbol') }}" class="text-sm rounded-md border border-gray-300 bg-white shadow-sm" min="0"
+                                       x-show="discountType === 'amount'" :disabled="discountType !== 'amount'">
                             </div>
 
                             <div class="flex items-center gap-2">
                                 <input type="checkbox" name="gst_applicable" x-model="gstApplicable" @change="calculateTotals()"
-                                       class="rounded border-input text-primary shadow-sm">
+                                       class="rounded border border-gray-300 text-primary shadow-sm">
                                 <span class="text-sm">GST Applicable</span>
                             </div>
 
@@ -286,6 +297,7 @@
                 partsSubtotal: 0,
                 laboursSubtotal: 0,
                 subtotal: 0,
+                discountType: initial.discount_percent > 0 ? 'percentage' : 'amount',
                 discountPercent: parseFloat(initial.discount_percent || 0),
                 discountAmount: parseFloat(initial.discount_amount || 0),
                 gstApplicable: !!initial.gst_applicable,
@@ -296,6 +308,12 @@
                     // Re-price every existing line from the master so the screen
                     // always reflects what will be charged on save.
                     this.parts.forEach((part, index) => this.calculatePartLine(index));
+                    this.calculateTotals();
+                },
+
+                setDiscountType() {
+                    this.discountPercent = 0;
+                    this.discountAmount = 0;
                     this.calculateTotals();
                 },
 
@@ -362,8 +380,10 @@
                     this.laboursSubtotal = this.labours.reduce((sum, l) => sum + (parseFloat(l.lineTotal) || 0), 0);
                     this.subtotal = this.partsSubtotal + this.laboursSubtotal;
 
-                    if (this.discountPercent > 0) {
+                    if (this.discountType === 'percentage') {
                         this.discountAmount = (this.subtotal * this.discountPercent) / 100;
+                    } else {
+                        this.discountPercent = 0;
                     }
 
                     const discountAmount = parseFloat(this.discountAmount) || 0;

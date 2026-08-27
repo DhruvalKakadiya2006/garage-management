@@ -50,10 +50,6 @@
 
                     <x-input name="gstin" label="GSTIN (optional)" :value="$customer->gstin" />
 
-                    <x-select name="customer_type" label="Customer Type" :required="true"
-                              :options="config('garage.option_lists.customer_type')"
-                              :value="$customer->customer_type" />
-
                     <div class="flex justify-end gap-3 pt-2">
                         <x-button variant="secondary" :href="route('customers.index')">
                             Cancel

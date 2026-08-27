@@ -84,7 +84,7 @@ class InventoryPageTest extends TestCase
 
         for ($i = 1; $i <= 16; $i++) {
             $this->makePart(
-                'P-' . str_pad((string) $i, 3, '0', STR_PAD_LEFT),
+                'P-'.str_pad((string) $i, 3, '0', STR_PAD_LEFT),
                 "Part Number {$i}",
                 10,
                 now()->subMinutes(40 + (16 - $i) * 2)->toDateTimeString()

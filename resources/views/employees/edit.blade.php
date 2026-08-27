@@ -32,7 +32,7 @@
                     <div>
                         <label class="flex items-center gap-2">
                             <input type="checkbox" name="active" value="1" {{ old('active', $employee->active) ? 'checked' : '' }}
-                                   class="rounded border-input text-primary shadow-sm focus:ring-ring">
+                                   class="rounded border border-gray-300 text-primary shadow-sm focus:ring-ring">
                             <span class="text-sm text-gray-700">Active</span>
                         </label>
                     </div>

@@ -394,56 +394,6 @@ class AnalyticsControllerTest extends TestCase
         $this->assertEqualsWithDelta(300.0, $averageJobValue, 0.01);
     }
 
-    public function test_customers_report_splits_revenue_by_customer_type()
-    {
-        $user = $this->makeUser();
-
-        // Regular customer with delivered job card + counter invoice
-        $regularCustomer = $this->makeCustomer('Regular Customer', '9000000003');
-        $regularJobCard = $this->makeJobCard($regularCustomer, Carbon::now()->toDateString(), 'delivered', 'paid_service', 800);
-        $regularInvoice = $this->makeCounterInvoice($regularCustomer, Carbon::now()->toDateString(), 400);
-
-        // Counter customer with delivered job card
-        $counterCustomer = $this->makeCustomer('Counter Customer', '9000000004');
-        $counterCustomer->customer_type = 'counter';
-        $counterCustomer->save();
-        $counterJobCard = $this->makeJobCard($counterCustomer, Carbon::now()->toDateString(), 'delivered', 'paid_service', 600);
-
-        // Walk-in customer (null customer_id) with counter invoice
-        $walkInInvoice = $this->makeCounterInvoice(null, Carbon::now()->toDateString(), 200);
-
-        // Payments
-        Payment::create(['payable_id' => $regularJobCard->id, 'payable_type' => JobCard::class, 'amount' => 600, 'payment_mode' => 'cash', 'payment_date' => Carbon::now()->toDateString()]);
-        Payment::create(['payable_id' => $regularInvoice->id, 'payable_type' => CounterInvoice::class, 'amount' => 300, 'payment_mode' => 'upi', 'payment_date' => Carbon::now()->toDateString()]);
-        Payment::create(['payable_id' => $counterJobCard->id, 'payable_type' => JobCard::class, 'amount' => 450, 'payment_mode' => 'card', 'payment_date' => Carbon::now()->toDateString()]);
-
-        $response = $this->actingAs($user)->get(route('analytics.customers'));
-
-        $response->assertOk();
-
-        $revenueByType = $response->viewData('revenueByCustomerType');
-        $this->assertCount(3, $revenueByType);
-
-        // Regular: 800 (job card) + 300 (counter invoice payment) = 1100? Wait, revenueByCustomerType uses grand_total not payments.
-        // Actually the method uses SUM(grand_total) from delivered job cards + counter invoices.
-        // Regular: job card grand_total = 800 + counter invoice grand_total = 400 = 1200
-        // Counter: job card grand_total = 600 = 600
-        // Walk-in: counter invoice grand_total = 200 = 200
-
-        $regularEntry = $revenueByType->first(fn ($item) => $item['key'] === 'regular');
-        $counterEntry = $revenueByType->first(fn ($item) => $item['key'] === 'counter');
-        $walkInEntry = $revenueByType->first(fn ($item) => $item['key'] === 'walk_in');
-
-        $this->assertNotNull($regularEntry);
-        $this->assertEqualsWithDelta(1200.0, $regularEntry['total'], 0.01);
-
-        $this->assertNotNull($counterEntry);
-        $this->assertEqualsWithDelta(600.0, $counterEntry['total'], 0.01);
-
-        $this->assertNotNull($walkInEntry);
-        $this->assertEqualsWithDelta(200.0, $walkInEntry['total'], 0.01);
-    }
-
     public function test_analytics_index_shows_outstanding_kpis()
     {
         $user = $this->makeUser();

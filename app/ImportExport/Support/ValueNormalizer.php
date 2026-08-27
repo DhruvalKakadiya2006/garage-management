@@ -22,7 +22,7 @@ class ValueNormalizer
     /**
      * Coerce a raw value according to a column spec.
      *
-     * @param array{type?: string, enum?: array|null, max_length?: int} $spec
+     * @param  array{type?: string, enum?: array|null, max_length?: int}  $spec
      * @return array{0: mixed, 1: ValidationIssue|null}
      */
     public static function coerce(mixed $raw, array $spec, int $rowNumber): array

@@ -21,7 +21,6 @@ return new class extends Migration
             $table->string('city')->nullable();
             $table->string('pincode')->nullable();
             $table->string('gstin')->nullable();
-            $table->enum('customer_type', ['walk-in', 'regular', 'fleet', 'dealer'])->default('walk-in');
             $table->timestamps();
         });
     }

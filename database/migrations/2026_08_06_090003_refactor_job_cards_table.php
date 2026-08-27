@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('job_cards', function (Blueprint $table) {
             $table->dropColumn('urgent');
         });
-        
+
         Schema::table('job_cards', function (Blueprint $table) {
             $table->timestamp('invoice_generated_at')->nullable();
             $table->timestamp('estimate_generated_at')->nullable();
@@ -32,7 +32,7 @@ return new class extends Migration
         Schema::table('job_cards', function (Blueprint $table) {
             $table->dropColumn('estimate_generated_at');
         });
-        
+
         Schema::table('job_cards', function (Blueprint $table) {
             $table->boolean('urgent')->default(false);
         });

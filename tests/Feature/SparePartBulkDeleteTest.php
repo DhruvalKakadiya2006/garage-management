@@ -7,7 +7,6 @@ use App\Models\Customer;
 use App\Models\JobCard;
 use App\Models\SparePart;
 use App\Models\User;
-use App\Models\Vehicle;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Concerns\SeedsVehicleCatalog;
 use Tests\TestCase;

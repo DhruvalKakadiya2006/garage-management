@@ -8,13 +8,6 @@
                 <div>
                     <h2 class="flex items-center gap-2 font-semibold text-xl text-gray-800 leading-tight">
                         {{ $customer->display_name }}
-                        <x-badge :color="match ($customer->customer_type) {
-                            'regular' => 'green',
-                            'counter' => 'amber',
-                            default => 'gray',
-                        }">
-                            {{ ucwords(str_replace('_', ' ', $customer->customer_type)) }}
-                        </x-badge>
                     </h2>
                     <p class="text-sm text-gray-600 flex flex-wrap gap-x-3 gap-y-0.5">
                         @if ($customer->mobile)
@@ -389,7 +382,7 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Document *</label>
                 <select x-model="payableKey" @change="applyOutstanding()" required
-                        class="block w-full rounded-md border-input shadow-sm text-sm">
+                        class="block w-full rounded-md border border-gray-300 bg-white shadow-sm text-sm">
                     <option value="">-- Select document --</option>
                     <template x-for="doc in docs" :key="doc.type + '|' + doc.id">
                         <option :value="doc.type + '|' + doc.id" x-text="doc.label + ' — ' + doc.date + ' (outstanding ' + @js($currency) + doc.outstanding + ')'"></option>
@@ -404,14 +397,14 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Amount *</label>
                     <input type="number" step="0.01" min="0.01" name="amount" x-model="amount"
-                           class="block w-full rounded-md border-input shadow-sm text-sm" required>
+                           class="block w-full rounded-md border border-gray-300 bg-white shadow-sm text-sm" required>
                     <p class="text-xs text-gray-500 mt-1" x-show="selectedDoc">
                         Outstanding: <span class="font-medium" x-text="@js($currency) + selectedDoc.outstanding"></span>
                     </p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Payment Mode *</label>
-                    <select name="payment_mode" required class="block w-full rounded-md border-input shadow-sm text-sm">
+                    <select name="payment_mode" required class="block w-full rounded-md border border-gray-300 bg-white shadow-sm text-sm">
                         <option value="">-- Select --</option>
                         @foreach (config('garage.option_lists.payment_mode') as $value => $label)
                             <option value="{{ $value }}">{{ $label }}</option>
@@ -421,18 +414,18 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Payment Date *</label>
                     <input type="date" name="payment_date" x-model="paymentDate" required
-                           class="block w-full rounded-md border-input shadow-sm text-sm">
+                           class="block w-full rounded-md border border-gray-300 bg-white shadow-sm text-sm">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Reference No</label>
-                    <input type="text" name="reference_no" class="block w-full rounded-md border-input shadow-sm text-sm"
+                    <input type="text" name="reference_no" class="block w-full rounded-md border border-gray-300 bg-white shadow-sm text-sm"
                            placeholder="Txn ID / Cheque No">
                 </div>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                <textarea name="notes" rows="2" class="block w-full rounded-md border-input shadow-sm text-sm"
+                <textarea name="notes" rows="2" class="block w-full rounded-md border border-gray-300 bg-white shadow-sm text-sm"
                           placeholder="Optional payment notes"></textarea>
             </div>
 
@@ -459,12 +452,12 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">From Date</label>
                     <input type="date" name="from_date" value="{{ $statementDefaultFrom }}"
-                           class="block w-full rounded-md border-input shadow-sm text-sm">
+                           class="block w-full rounded-md border border-gray-300 bg-white shadow-sm text-sm">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">To Date</label>
                     <input type="date" name="to_date" value="{{ $statementDefaultTo }}"
-                           class="block w-full rounded-md border-input shadow-sm text-sm">
+                           class="block w-full rounded-md border border-gray-300 bg-white shadow-sm text-sm">
                 </div>
             </div>
             <p class="text-xs text-gray-500">Defaults to the current financial year (1 April – today).</p>

@@ -10,13 +10,12 @@ class LabourMaster extends Model
     use HasFactory;
 
     protected $fillable = [
-        'service_name', 'category', 'standard_rate', 'estimated_time_minutes',
+        'service_name', 'category', 'standard_rate',
         'taxable', 'gst_rate', 'hsn_sac_code', 'external_ref',
     ];
 
     protected $casts = [
         'standard_rate' => 'decimal:2',
-        'estimated_time_minutes' => 'integer',
         'taxable' => 'boolean',
         'gst_rate' => 'decimal:2',
     ];

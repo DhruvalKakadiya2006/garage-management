@@ -31,7 +31,7 @@ class FileFormatDetector
         }
 
         if ($extension === 'csv') {
-            return new CsvReader();
+            return new CsvReader;
         }
 
         throw ImportException::unsupportedFormat($extension);

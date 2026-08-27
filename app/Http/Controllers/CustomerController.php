@@ -96,13 +96,12 @@ class CustomerController extends Controller
             })
             ->orderBy('display_name')
             ->limit(10)
-            ->get(['id', 'display_name', 'mobile', 'customer_type']);
+            ->get(['id', 'display_name', 'mobile']);
 
         return response()->json($customers->map(fn ($c) => [
             'id' => (string) $c->id,
             'display_name' => $c->display_name,
             'mobile' => $c->mobile,
-            'customer_type' => $c->customer_type,
             'vehicles_count' => $c->vehicles_count,
             'label' => $c->display_name.' — '.$c->mobile,
         ]));
@@ -364,7 +363,6 @@ class CustomerController extends Controller
             'address' => 'nullable|string',
             'city' => 'nullable|string|max:100',
             'gstin' => ['nullable', 'string', 'regex:/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/'],
-            'customer_type' => 'required|in:'.implode(',', array_keys(config('garage.option_lists.customer_type'))),
         ]);
 
         $customer->update($validated);

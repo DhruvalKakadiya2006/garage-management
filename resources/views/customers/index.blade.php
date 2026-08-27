@@ -119,7 +119,7 @@
                         <td class="align-middle px-6 py-2 whitespace-nowrap">
                             <x-table-checkbox :id="$customer->id" />
                         </td>
-                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm font-medium">
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm font-medium max-w-[220px] truncate" title="{{ $customer->display_name }}">
                             <a href="{{ route('customers.show', $customer) }}"
                                class="text-primary hover:text-primary-700 transition-colors duration-150">
                                 {{ $customer->display_name }}
@@ -137,8 +137,8 @@
                         <td class="align-middle px-6 py-2 whitespace-nowrap text-right">
                             <button type="button" @click="toggleExpand('{{ $customer->id }}')"
                                     title="{{ $customer->vehicles->count() }} vehicle(s)"
-                                    class="inline-flex items-center justify-center rounded-md p-2 text-gray-500 transition-colors duration-150 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-                                <x-heroicon-o-chevron-down class="w-5 h-5 transition-transform duration-150"
+                                    class="inline-flex items-center justify-center rounded-md p-1 text-gray-500 transition-colors duration-150 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                                <x-heroicon-o-chevron-down class="w-4 h-4 transition-transform duration-150"
                                                            x-bind:class="expandedId === '{{ $customer->id }}' ? 'rotate-180' : ''" />
                             </button>
                         </td>

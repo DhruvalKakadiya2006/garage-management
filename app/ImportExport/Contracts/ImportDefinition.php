@@ -3,6 +3,7 @@
 namespace App\ImportExport\Contracts;
 
 use App\ImportExport\ProcessedRow;
+use Illuminate\Support\Collection;
 
 /**
  * Per-entity contract that describes how a spreadsheet maps to a model.
@@ -80,8 +81,8 @@ interface ImportDefinition
     /**
      * Find candidate existing records for the given normalized row values.
      *
-     * @param array<string, mixed> $data
-     * @return \Illuminate\Support\Collection<int, object>
+     * @param  array<string, mixed>  $data
+     * @return Collection<int, object>
      */
     public function resolveCandidates(array $data);
 

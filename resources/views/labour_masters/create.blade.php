@@ -21,16 +21,12 @@
                         <x-input name="standard_rate" label="Standard Rate ({{ config('garage.currency_symbol') }})" :required="true" type="number" step="0.01" placeholder="0.00" />
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <x-input name="estimated_time_minutes" label="Estimated Time (minutes)" type="number"
-                                 placeholder="e.g., 30, 60, 120" />
-                        <x-input name="hsn_sac_code" label="HSN/SAC Code" placeholder="Optional" />
-                    </div>
+                    <x-input name="hsn_sac_code" label="HSN/SAC Code" placeholder="Optional" />
 
                     <div>
                         <label class="flex items-center gap-2">
                             <input type="checkbox" name="taxable" value="1" x-model="taxable"
-                                   class="rounded border-input text-primary shadow-sm focus:ring-ring">
+                                   class="rounded border border-gray-300 text-primary shadow-sm focus:ring-ring">
                             <span class="text-sm text-gray-700">Taxable (GST applicable)</span>
                         </label>
                     </div>
