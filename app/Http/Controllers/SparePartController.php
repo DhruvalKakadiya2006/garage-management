@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\AppliesSearchFilterSort;
 use App\Http\Controllers\Concerns\BulkDeletesRecords;
 use App\Http\Controllers\Concerns\BulkExportsRecords;
 use App\Models\SparePart;
@@ -11,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 
 class SparePartController extends Controller
 {
+    use AppliesSearchFilterSort;
     use BulkDeletesRecords;
     use BulkExportsRecords;
 
@@ -26,13 +28,7 @@ class SparePartController extends Controller
 
     public function index(Request $request)
     {
-        $params = ['tab' => 'parts'];
-
-        if ($request->boolean('low_stock')) {
-            $params['low_stock'] = 1;
-        }
-
-        return redirect()->route('inventory.index', $params);
+        return redirect()->route('inventory.index', ['tab' => 'parts']);
     }
 
     /**

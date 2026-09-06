@@ -238,20 +238,21 @@ class AnalyticsControllerTest extends TestCase
         $response = $this->actingAs($user)->get(route('analytics.inventory'));
 
         $response->assertOk()
-            ->assertViewHas('lowStockCount', 1)
-            ->assertViewHas('totalUnits', 25)
-            ->assertViewHas('totalStockValue', 1500.0);
+            // Stock tracking disabled - totalUnits = 10 + 20 = 30 (no deduction)
+            ->assertViewHas('totalUnits', 30)
+            // Stock value also unchanged: (10*100) + (20*50) = 2000
+            ->assertViewHas('totalStockValue', 2000.0);
 
         $inventory = $response->viewData('inventory')->keyBy('id');
 
-        $this->assertTrue($inventory[$partA->id]['low_stock']);
+        // Stock tracking disabled - stock quantities unchanged
         $this->assertEquals(5, $inventory[$partA->id]['times_used']);
-        $this->assertEquals(5, $inventory[$partA->id]['current_stock_qty']);
-        $this->assertEqualsWithDelta(500.0, $inventory[$partA->id]['stock_value'], 0.01);
+        $this->assertEquals(10, $inventory[$partA->id]['current_stock_qty']); // Original 10, not deducted
+        $this->assertEqualsWithDelta(1000.0, $inventory[$partA->id]['stock_value'], 0.01); // 10 * 100
 
-        $this->assertFalse($inventory[$partB->id]['low_stock']);
         $this->assertEquals(0, $inventory[$partB->id]['times_used']);
-        $this->assertEqualsWithDelta(1000.0, $inventory[$partB->id]['stock_value'], 0.01);
+        $this->assertEquals(20, $inventory[$partB->id]['current_stock_qty']); // Original 20
+        $this->assertEqualsWithDelta(1000.0, $inventory[$partB->id]['stock_value'], 0.01); // 20 * 50
     }
 
     // ----------------------------------------------------------------

@@ -65,7 +65,8 @@ class CounterInvoiceBulkDeleteTest extends TestCase
 
         $plain = $this->makeInvoice();
 
-        $this->assertEquals(7, (int) $part->fresh()->current_stock_qty);
+        // Stock tracking disabled - no stock deduction occurs
+        $this->assertEquals(10, (int) $part->fresh()->current_stock_qty);
 
         $response = $this->actingAs($user)->postJson(route('counter-invoices.bulk-delete'), [
             'ids' => [$withItems->id, $plain->id],
@@ -79,6 +80,8 @@ class CounterInvoiceBulkDeleteTest extends TestCase
         $this->assertDatabaseMissing('counter_invoices', ['id' => $withItems->id]);
         $this->assertDatabaseMissing('counter_invoices', ['id' => $plain->id]);
         $this->assertDatabaseMissing('counter_invoice_items', ['counter_invoice_id' => $withItems->id]);
+
+        // Stock tracking disabled - stock remains unchanged after delete
         $this->assertEquals(10, (int) $part->fresh()->current_stock_qty);
     }
 

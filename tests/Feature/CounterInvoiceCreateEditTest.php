@@ -74,7 +74,9 @@ class CounterInvoiceCreateEditTest extends TestCase
         $this->assertEquals(100, (float) $invoice->items->sum('line_total'));
         $this->assertEquals(0, (float) $invoice->cgst_amount);
         $this->assertEqualsWithDelta(100, (float) $invoice->grand_total, 0.01);
-        $this->assertEquals(18, (int) $partA->fresh()->current_stock_qty);
+
+        // Stock tracking disabled - stock remains unchanged
+        $this->assertEquals(20, (int) $partA->fresh()->current_stock_qty);
     }
 
     public function test_store_rejects_fully_anonymous_invoice()
@@ -251,8 +253,9 @@ class CounterInvoiceCreateEditTest extends TestCase
             ->assertRedirect()
             ->assertSessionHasNoErrors();
 
-        $this->assertEquals(18, (int) $partA->fresh()->current_stock_qty);
-        $this->assertEquals(19, (int) $partB->fresh()->current_stock_qty);
+        // Stock tracking disabled - stock remains unchanged
+        $this->assertEquals(20, (int) $partA->fresh()->current_stock_qty);
+        $this->assertEquals(20, (int) $partB->fresh()->current_stock_qty);
 
         // Now edit: remove part B, change A qty 2->5, add part C qty 3, enable GST
         $this->actingAs($user)
@@ -286,10 +289,10 @@ class CounterInvoiceCreateEditTest extends TestCase
         $this->assertEquals('cash', $invoice->payment_mode);
         $this->assertEquals('2026-08-04', $invoice->invoice_date->format('Y-m-d'));
 
-        // Old B stock returned, A re-deducted to 15, C deducted to 17
-        $this->assertEquals(15, (int) $partA->fresh()->current_stock_qty);
+        // Stock tracking disabled - stock remains unchanged after edit
+        $this->assertEquals(20, (int) $partA->fresh()->current_stock_qty);
         $this->assertEquals(20, (int) $partB->fresh()->current_stock_qty);
-        $this->assertEquals(17, (int) $partC->fresh()->current_stock_qty);
+        $this->assertEquals(20, (int) $partC->fresh()->current_stock_qty);
     }
 
     public function test_create_and_edit_pages_render()

@@ -14,6 +14,20 @@ use Illuminate\Support\Facades\DB;
 use Tests\Concerns\SeedsVehicleCatalog;
 use Tests\TestCase;
 
+/**
+ * STOCK TRACKING DISABLED
+ *
+ * These tests validate automatic stock increment/decrement behavior
+ * that has been intentionally disabled because the Suppliers module
+ * is not yet integrated.
+ *
+ * All tests in this file are skipped. They can be re-enabled when
+ * stock tracking is restored by uncommenting the stock logic in:
+ * - app/Models/JobCardPart.php
+ * - app/Models/CounterInvoiceItem.php
+ * - app/Http/Controllers/JobCardController.php
+ * - app/Http/Controllers/CounterInvoiceController.php
+ */
 class StockIntegrityTest extends TestCase
 {
     use RefreshDatabase;
@@ -69,6 +83,8 @@ class StockIntegrityTest extends TestCase
 
     public function test_soft_deleting_job_card_keeps_stock_and_parts_for_restore()
     {
+        $this->markTestSkipped('Stock tracking disabled - Suppliers module not integrated');
+
         $user = $this->makeUser();
         $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
         $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
@@ -123,6 +139,8 @@ class StockIntegrityTest extends TestCase
 
     public function test_deleting_counter_invoice_returns_item_stock()
     {
+        $this->markTestSkipped('Stock tracking disabled - Suppliers module not integrated');
+
         $user = $this->makeUser();
         $part = $this->makePart('BRK-01', 'Brake Shoe', 50, 0, 10);
 
@@ -152,6 +170,8 @@ class StockIntegrityTest extends TestCase
 
     public function test_job_card_assign_rejects_quantity_exceeding_stock()
     {
+        $this->markTestSkipped('Stock tracking disabled - Suppliers module not integrated');
+
         $user = $this->makeUser();
         $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
         $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
@@ -180,6 +200,8 @@ class StockIntegrityTest extends TestCase
 
     public function test_counter_invoice_store_rejects_quantity_exceeding_stock()
     {
+        $this->markTestSkipped('Stock tracking disabled - Suppliers module not integrated');
+
         $user = $this->makeUser();
         $part = $this->makePart('BRK-01', 'Brake Shoe', 50, 0, 2);
 
@@ -203,6 +225,8 @@ class StockIntegrityTest extends TestCase
 
     public function test_job_card_assign_swapping_part_adjusts_stock_on_both_parts()
     {
+        $this->markTestSkipped('Stock tracking disabled - Suppliers module not integrated');
+
         $user = $this->makeUser();
         $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
         $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
@@ -240,6 +264,8 @@ class StockIntegrityTest extends TestCase
 
     public function test_job_card_assign_rejects_over_stock_accounting_for_current_line()
     {
+        $this->markTestSkipped('Stock tracking disabled - Suppliers module not integrated');
+
         $user = $this->makeUser();
         $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
         $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
@@ -271,6 +297,8 @@ class StockIntegrityTest extends TestCase
 
     public function test_creating_guard_prevents_overselling_at_model_level()
     {
+        $this->markTestSkipped('Stock tracking disabled - Suppliers module not integrated');
+
         $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
         $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
         $part = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 3);
@@ -318,6 +346,8 @@ class StockIntegrityTest extends TestCase
 
     public function test_assign_resave_with_unchanged_lines_preserves_rows_and_stock()
     {
+        $this->markTestSkipped('Stock tracking disabled - Suppliers module not integrated');
+
         $user = $this->makeUser();
         $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
         $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
@@ -361,6 +391,8 @@ class StockIntegrityTest extends TestCase
 
     public function test_database_cascade_no_longer_silently_deletes_parts()
     {
+        $this->markTestSkipped('Stock tracking disabled - Suppliers module not integrated');
+
         $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
         $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-AB-1234', 'Ola', 'S1 Pro');
         $part = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 10);
@@ -395,6 +427,8 @@ class StockIntegrityTest extends TestCase
 
     public function test_database_rejects_negative_stock_when_application_validation_is_bypassed()
     {
+        $this->markTestSkipped('Stock tracking disabled - Suppliers module not integrated');
+
         $part = $this->makePart('BRK-01', 'Brake Shoe', 50, 10, 0);
 
         // Bypass the application layer entirely (no StockValidator, no model

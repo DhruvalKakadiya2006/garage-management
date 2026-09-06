@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\AppliesSearchFilterSort;
 use App\Http\Controllers\Concerns\BulkDeletesRecords;
 use App\Http\Controllers\Concerns\BulkExportsRecords;
+use App\Http\Requests\FilterVehicleCatalogRequest;
 use App\Models\VehicleBrand;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 
 class VehicleBrandController extends Controller
 {
+    use AppliesSearchFilterSort;
     use BulkDeletesRecords;
     use BulkExportsRecords;
 
@@ -26,13 +29,27 @@ class VehicleBrandController extends Controller
     /**
      * Show the Vehicle Catalog: brands as expandable rows with their models.
      */
-    public function index()
+    public function index(FilterVehicleCatalogRequest $request)
     {
-        $brands = VehicleBrand::withCount('models')
-            ->with('models')
-            ->latest()
-            ->paginate(15)
-            ->withQueryString();
+        $validated = $request->validated();
+
+        $query = VehicleBrand::withCount('models')
+            ->with('models');
+
+        // Apply sorting
+        $sortColumn = $validated['sort'] ?? 'name';
+        $sortDirection = $validated['direction'] ?? 'asc';
+
+        $query = $this->applySort(
+            $query,
+            $sortColumn,
+            $sortDirection,
+            ['name', 'models_count'],
+            ['column' => 'name', 'direction' => 'asc']
+        );
+
+        $perPage = $this->getPerPage($request);
+        $brands = $query->paginate($perPage)->withQueryString();
 
         $catalogData = $brands->getCollection()->map(fn (VehicleBrand $brand) => [
             'id' => (string) $brand->id,

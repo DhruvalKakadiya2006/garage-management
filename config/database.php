@@ -29,6 +29,15 @@ return [
 
     'connections' => [
 
+        'legacy' => [
+            'driver' => 'sqlsrv',
+            'host' => env('LEGACY_DB_HOST', 'localhost\SQLEXPRESS'),
+            'database' => env('LEGACY_DB_DATABASE', 'VSMS4700011083'),
+            'username' => env('LEGACY_DB_USERNAME', ''),
+            'password' => env('LEGACY_DB_PASSWORD', ''),
+            'trust_server_certificate' => true,
+        ],
+
         'sqlite' => [
 
             'driver' => 'sqlite',

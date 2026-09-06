@@ -76,26 +76,6 @@
                     <p class="text-sm text-gray-500 mt-2">Delivered job cards + counter invoices ({{ now()->format('F Y') }})</p>
                 </x-card>
 
-                <!-- Low Stock Alert -->
-                <x-card>
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="flex items-center gap-2 text-sm font-semibold text-gray-900">
-                            <x-heroicon-o-cube class="w-5 h-5 text-primary" />
-                            Low Stock Alert
-                        </h3>
-                        <a href="{{ route('inventory.index', ['tab' => 'parts', 'low_stock' => 1]) }}" title="View low stock parts"
-                           class="text-gray-400 hover:text-primary">
-                            <x-heroicon-o-arrow-top-right-on-square class="w-4 h-4" />
-                        </a>
-                    </div>
-                    <div class="text-3xl font-bold {{ $lowStockCount > 0 ? 'text-red-600' : 'text-gray-900' }}">
-                        {{ $lowStockCount }}
-                    </div>
-                    <p class="text-sm {{ $lowStockCount > 0 ? 'text-red-600' : 'text-gray-500' }} mt-2">
-                        part(s) at or below reorder level
-                    </p>
-                </x-card>
-
                 <!-- Outstanding Dues -->
                 <x-card>
                     <div class="flex items-center justify-between mb-4">

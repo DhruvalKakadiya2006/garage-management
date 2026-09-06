@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\AppliesSearchFilterSort;
 use App\Http\Controllers\Concerns\BulkDeletesRecords;
 use App\Http\Controllers\Concerns\BulkExportsRecords;
+use App\Http\Requests\FilterJobCardsRequest;
 use App\Http\Requests\StoreJobCardRequest;
 use App\Models\Customer;
 use App\Models\Employee;
@@ -16,18 +18,17 @@ use App\Models\VehicleBrand;
 use App\Rules\DiscountWithinSubtotal;
 use App\Services\GstCalculator;
 use App\Services\PartPriceResolver;
-use App\Services\StockValidator;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 use RuntimeException;
 
 class JobCardController extends Controller
 {
+    use AppliesSearchFilterSort;
     use BulkDeletesRecords;
     use BulkExportsRecords;
 
@@ -52,54 +53,95 @@ class JobCardController extends Controller
         return null;
     }
 
-    public function index(Request $request)
+    public function index(FilterJobCardsRequest $request)
     {
-        // Reject malformed / one-sided date filters with a friendly redirect.
-        // List filters are whitelisted too so garbage input fails validation
-        // instead of silently matching nothing.
-        $validated = $request->validate([
-            'from_date' => 'nullable|date|required_with:to_date',
-            'to_date' => 'nullable|date|required_with:from_date',
-            'technician' => ['nullable', Rule::exists('employees', 'id')],
-            'status' => ['nullable', 'in:'.implode(',', array_keys(config('garage.option_lists.job_card_status')))],
-            'brand' => ['nullable', Rule::exists('vehicle_brands', 'name')],
-        ], [], [
-            'from_date' => 'From Date',
-            'to_date' => 'To Date',
-            'technician' => 'Technician',
-            'status' => 'Status',
-            'brand' => 'Brand',
-        ]);
+        $validated = $request->validated();
 
         $query = JobCard::with(['customer', 'vehicle.vehicleModel.vehicleBrand', 'assignedTechnician'])
             ->withSum('payments', 'amount')
             ->withExists('parts')
             ->withExists('labours');
 
+        // Apply search
+        if ($request->filled('search')) {
+            $query = $this->applySearch(
+                $query,
+                $validated['search'],
+                ['job_card_no', 'customer.display_name', 'vehicle.registration_no']
+            );
+        }
+
         // Filter by technician
         if ($request->filled('technician')) {
-            $query->where('assigned_technician_id', $request->technician);
+            $query->where('assigned_technician_id', $validated['technician']);
         }
 
         // Filter by status
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            $query->where('status', $validated['status']);
         }
 
-        // Filter by vehicle brand (from the Vehicle Catalog)
+        // Filter by vehicle brand
         if ($request->filled('brand')) {
-            $query->whereHas('vehicle.vehicleModel.vehicleBrand', fn ($q) => $q->where('name', $request->brand));
+            $query->whereHas('vehicle.vehicleModel.vehicleBrand', fn ($q) => $q->where('name', $validated['brand']));
         }
 
         // Filter by date range
-        if (! empty($validated['from_date'])) {
+        if ($request->filled('from_date')) {
             $query->whereDate('job_date', '>=', $validated['from_date']);
         }
-        if (! empty($validated['to_date'])) {
+        if ($request->filled('to_date')) {
             $query->whereDate('job_date', '<=', $validated['to_date']);
         }
 
-        $jobCards = $query->latest()->paginate(15)->withQueryString();
+        // Filter by payment status
+        if ($request->filled('payment_status') && $validated['payment_status'] !== 'all') {
+            $status = $validated['payment_status'];
+            if ($status === 'paid') {
+                $query->whereRaw('COALESCE(grand_total, 0) > 0 AND COALESCE(grand_total, 0) <= (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE payments.payable_id = job_cards.id AND payments.payable_type = ? AND payments.deleted_at IS NULL)', [JobCard::class]);
+            } elseif ($status === 'partially_paid') {
+                $query->whereRaw('COALESCE(grand_total, 0) > (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE payments.payable_id = job_cards.id AND payments.payable_type = ? AND payments.deleted_at IS NULL) AND (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE payments.payable_id = job_cards.id AND payments.payable_type = ? AND payments.deleted_at IS NULL) > 0', [JobCard::class, JobCard::class]);
+            } elseif ($status === 'unbilled') {
+                $query->where(function ($q) {
+                    $q->whereNull('grand_total')->orWhere('grand_total', '<=', 0);
+                });
+            } elseif ($status === 'unpaid') {
+                $query->whereRaw('COALESCE(grand_total, 0) > 0 AND COALESCE(grand_total, 0) > (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE payments.payable_id = job_cards.id AND payments.payable_type = ? AND payments.deleted_at IS NULL) AND (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE payments.payable_id = job_cards.id AND payments.payable_type = ? AND payments.deleted_at IS NULL) = 0', [JobCard::class, JobCard::class]);
+            }
+        }
+
+        // Filter by job type
+        if ($request->filled('job_type')) {
+            $query->where('job_type', $validated['job_type']);
+        }
+
+        // Apply sorting
+        $sortColumn = $validated['sort'] ?? 'job_date';
+        $sortDirection = $validated['direction'] ?? 'desc';
+
+        if ($sortColumn === 'payment_status_label') {
+            // Sort by payment status (computed field)
+            $query->orderByRaw('
+                CASE 
+                    WHEN COALESCE(grand_total, 0) <= 0 THEN 1
+                    WHEN COALESCE(grand_total, 0) <= (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE payments.payable_id = job_cards.id AND payments.payable_type = "'.addslashes(JobCard::class).'" AND payments.deleted_at IS NULL) THEN 2
+                    WHEN (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE payments.payable_id = job_cards.id AND payments.payable_type = "'.addslashes(JobCard::class).'" AND payments.deleted_at IS NULL) > 0 THEN 3
+                    ELSE 4
+                END '.$sortDirection
+            );
+        } else {
+            $query = $this->applySort(
+                $query,
+                $sortColumn,
+                $sortDirection,
+                ['job_date', 'status', 'assigned_technician_id', 'grand_total'],
+                ['column' => 'job_date', 'direction' => 'desc']
+            );
+        }
+
+        $perPage = $this->getPerPage($request);
+        $jobCards = $query->paginate($perPage)->withQueryString();
+
         $technicians = Employee::active()->orderBy('name')->get();
         $brands = VehicleBrand::query()->orderBy('name')->pluck('name');
 
@@ -276,18 +318,21 @@ class JobCardController extends Controller
 
         DB::beginTransaction();
         try {
-            // Stock check accounting for quantity this job card already
-            // reserves. Runs inside the transaction so the read guarding the
-            // deduction serializes with the write on row-locking databases.
-            $stockErrors = app(StockValidator::class)->validate($validated['parts'] ?? [], $jobCard, 'parts');
-            if (! empty($stockErrors)) {
-                DB::rollBack();
-
-                return back()->withErrors($stockErrors)->withInput();
-            }
-
             // MRP is always taken from the part master, never from the client submission
             $parts = app(PartPriceResolver::class)->priceLines($validated['parts'] ?? []);
+
+            // STOCK VALIDATION DISABLED: No stock checking because Suppliers module is not integrated
+            // Uncomment below to re-enable when Suppliers module is integrated:
+            //
+            // $stockErrors = app(StockValidator::class)->validate(
+            //     $parts,
+            //     $jobCard,
+            //     'parts'
+            // );
+            // if (! empty($stockErrors)) {
+            //     DB::rollBack();
+            //     return back()->withErrors($stockErrors)->withInput();
+            // }
 
             // The subtotal is only known once the lines are resolved. Reject a
             // discount (percent-derived or flat amount) that would exceed it,

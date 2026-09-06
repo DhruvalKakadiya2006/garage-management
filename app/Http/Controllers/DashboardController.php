@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\CounterInvoice;
 use App\Models\JobCard;
-use App\Models\SparePart;
 use App\Services\OutstandingBalanceService;
 use Carbon\Carbon;
 
@@ -35,10 +34,6 @@ class DashboardController extends Controller
                 ->whereDate('invoice_date', '<=', $toDate)
                 ->sum('grand_total');
 
-        // Low stock alert: parts at or below their reorder level.
-        $lowStockCount = SparePart::whereColumn('current_stock_qty', '<=', 'reorder_level')
-            ->count();
-
         // Outstanding dues across Job Cards + Counter Invoices — the shared
         // clamped per-document definition (an overpayment on one document can
         // never offset another document's unpaid balance).
@@ -51,7 +46,6 @@ class DashboardController extends Controller
             'todayJobCards',
             'todayJobCardsTotal',
             'monthRevenue',
-            'lowStockCount',
             'outstandingDues',
             'recentJobCards'
         ));

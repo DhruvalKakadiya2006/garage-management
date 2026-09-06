@@ -29,59 +29,80 @@ class JobCardPart extends Model
     private ?SparePart $resolvedSparePart = null;
 
     /**
-     * Model boot method - registers event listeners for stock management.
+     * Model boot method - registers event listeners for price locking.
      *
-     * Stock Flow:
-     * 1. creating: Validates stock availability under a row lock and locks
-     *    MRP from master
-     * 2. created: Deducts quantity from spare_parts.current_stock_qty
-     * 3. deleting: Returns quantity back to spare_parts.current_stock_qty
+     * Price Security:
+     * - creating: Locks MRP from master to prevent price manipulation
      *
-     * This ensures stock is always accurately tracked and prevents overselling.
-     * The CHECK constraint on spare_parts prevents negative stock at DB level.
+     * Stock Management: DISABLED
+     * - Stock tracking has been disabled because the Suppliers module is not integrated.
+     * - The current_stock_qty field remains in the database for future use.
+     * - Invoice/Job Card line-item quantities continue to work normally for billing.
      */
     protected static function boot()
     {
         parent::boot();
 
-        // Guard against overselling before the row is inserted. The row lock
-        // serialises concurrent reservations against the same part as long as
-        // callers run inside a transaction (the controllers do).
+        // Lock price from part master before inserting to prevent price manipulation
         static::creating(function ($jobCardPart) {
-            $sparePart = SparePart::whereKey($jobCardPart->spare_part_id)->lockForUpdate()->first();
+            $sparePart = SparePart::lockForUpdate()->whereKey($jobCardPart->spare_part_id)->first();
             if (! $sparePart) {
                 throw new \RuntimeException('Spare part not found for job card part.');
-            }
-            if ($jobCardPart->quantity > $sparePart->current_stock_qty) {
-                throw new \RuntimeException(
-                    "Insufficient stock for '{$sparePart->part_name}'. Requested {$jobCardPart->quantity}, only {$sparePart->current_stock_qty} available."
-                );
             }
 
             // SECURITY: The price is always sourced from the part master;
             // a client can never override it. This prevents price manipulation.
             $jobCardPart->mrp = $sparePart->mrp;
             $jobCardPart->resolvedSparePart = $sparePart;
+
+            // STOCK TRACKING DISABLED: No automatic stock decrement
+            // Uncomment below to re-enable when Suppliers module is integrated:
+            //
+            // $quantity = (int) $jobCardPart->quantity;
+            // if ($sparePart->current_stock_qty < $quantity) {
+            //     throw new \RuntimeException("Insufficient stock for '{$sparePart->part_name}'. Available: {$sparePart->current_stock_qty}, requested: {$quantity}.");
+            // }
+            // $sparePart->decrement('current_stock_qty', $quantity);
         });
 
-        // Deduct stock when created
-        static::created(function ($jobCardPart) {
-            $sparePart = $jobCardPart->resolvedSparePart
-                ?? SparePart::whereKey($jobCardPart->spare_part_id)->lockForUpdate()->first();
+        // STOCK TRACKING DISABLED: No automatic stock return on delete
+        // Uncomment below to re-enable when Suppliers module is integrated:
+        //
+        // static::deleting(function ($jobCardPart) {
+        //     $sparePart = SparePart::lockForUpdate()->whereKey($jobCardPart->spare_part_id)->first();
+        //     if ($sparePart) {
+        //         $sparePart->increment('current_stock_qty', (int) $jobCardPart->quantity);
+        //     }
+        // });
 
-            if ($sparePart) {
-                $sparePart->decrement('current_stock_qty', $jobCardPart->quantity);
-                $jobCardPart->resolvedSparePart = null;
-            }
-        });
-
-        // Return stock when deleted (job card deleted or parts edited)
-        static::deleting(function ($jobCardPart) {
-            $sparePart = SparePart::whereKey($jobCardPart->spare_part_id)->lockForUpdate()->first();
-            if ($sparePart) {
-                $sparePart->increment('current_stock_qty', $jobCardPart->quantity);
-            }
-        });
+        // STOCK TRACKING DISABLED: No automatic stock adjustment on update
+        // Uncomment below to re-enable when Suppliers module is integrated:
+        //
+        // static::updating(function ($jobCardPart) {
+        //     if ($jobCardPart->isDirty('quantity')) {
+        //         $oldQty = (int) $jobCardPart->getOriginal('quantity');
+        //         $newQty = (int) $jobCardPart->quantity;
+        //         $delta = $newQty - $oldQty;
+        //
+        //         if ($delta != 0) {
+        //             $sparePart = SparePart::lockForUpdate()->whereKey($jobCardPart->spare_part_id)->first();
+        //             if (! $sparePart) {
+        //                 throw new \RuntimeException('Spare part not found for job card part.');
+        //             }
+        //
+        //             if ($delta > 0) {
+        //                 // Increasing quantity - need more stock
+        //                 if ($sparePart->current_stock_qty < $delta) {
+        //                     throw new \RuntimeException("Insufficient stock for '{$sparePart->part_name}'. Available: {$sparePart->current_stock_qty}, need {$delta} more.");
+        //                 }
+        //                 $sparePart->decrement('current_stock_qty', $delta);
+        //             } else {
+        //                 // Decreasing quantity - return stock
+        //                 $sparePart->increment('current_stock_qty', abs($delta));
+        //             }
+        //         }
+        //     }
+        // });
     }
 
     public function jobCard()

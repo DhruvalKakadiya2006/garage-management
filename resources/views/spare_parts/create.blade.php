@@ -51,7 +51,6 @@
                     </div>
 
                     <div class="grid grid-cols-3 gap-4">
-                        <x-input name="current_stock_qty" label="Current Stock Qty" type="number" value="0" />
                         <x-input name="reorder_level" label="Reorder Level" type="number" value="0" />
                     </div>
 

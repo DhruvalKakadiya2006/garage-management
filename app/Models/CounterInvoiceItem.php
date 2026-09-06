@@ -26,47 +26,80 @@ class CounterInvoiceItem extends Model
      */
     private ?SparePart $resolvedSparePart = null;
 
+    /**
+     * Model boot method - registers event listeners for price locking.
+     *
+     * Price Security:
+     * - creating: Locks MRP from master to prevent price manipulation
+     *
+     * Stock Management: DISABLED
+     * - Stock tracking has been disabled because the Suppliers module is not integrated.
+     * - The current_stock_qty field remains in the database for future use.
+     * - Invoice/Job Card line-item quantities continue to work normally for billing.
+     */
     protected static function boot()
     {
         parent::boot();
 
-        // Guard against overselling before the row is inserted. The row lock
-        // serialises concurrent reservations against the same part as long as
-        // callers run inside a transaction (the controllers do).
+        // Lock price from part master before inserting to prevent price manipulation
         static::creating(function ($item) {
-            $sparePart = SparePart::whereKey($item->spare_part_id)->lockForUpdate()->first();
+            $sparePart = SparePart::lockForUpdate()->whereKey($item->spare_part_id)->first();
             if (! $sparePart) {
                 throw new \RuntimeException('Spare part not found for counter invoice item.');
-            }
-            if ($item->quantity > $sparePart->current_stock_qty) {
-                throw new \RuntimeException(
-                    "Insufficient stock for '{$sparePart->part_name}'. Requested {$item->quantity}, only {$sparePart->current_stock_qty} available."
-                );
             }
 
             // The price is always sourced from the part master; a client can never override it.
             $item->mrp = $sparePart->mrp;
             $item->resolvedSparePart = $sparePart;
+
+            // STOCK TRACKING DISABLED: No automatic stock decrement
+            // Uncomment below to re-enable when Suppliers module is integrated:
+            //
+            // $quantity = (int) $item->quantity;
+            // if ($sparePart->current_stock_qty < $quantity) {
+            //     throw new \RuntimeException("Insufficient stock for '{$sparePart->part_name}'. Available: {$sparePart->current_stock_qty}, requested: {$quantity}.");
+            // }
+            // $sparePart->decrement('current_stock_qty', $quantity);
         });
 
-        // Deduct stock when created
-        static::created(function ($item) {
-            $sparePart = $item->resolvedSparePart
-                ?? SparePart::whereKey($item->spare_part_id)->lockForUpdate()->first();
+        // STOCK TRACKING DISABLED: No automatic stock return on delete
+        // Uncomment below to re-enable when Suppliers module is integrated:
+        //
+        // static::deleting(function ($item) {
+        //     $sparePart = SparePart::lockForUpdate()->whereKey($item->spare_part_id)->first();
+        //     if ($sparePart) {
+        //         $sparePart->increment('current_stock_qty', (int) $item->quantity);
+        //     }
+        // });
 
-            if ($sparePart) {
-                $sparePart->decrement('current_stock_qty', $item->quantity);
-                $item->resolvedSparePart = null;
-            }
-        });
-
-        // Return stock when deleted
-        static::deleting(function ($item) {
-            $sparePart = SparePart::whereKey($item->spare_part_id)->lockForUpdate()->first();
-            if ($sparePart) {
-                $sparePart->increment('current_stock_qty', $item->quantity);
-            }
-        });
+        // STOCK TRACKING DISABLED: No automatic stock adjustment on update
+        // Uncomment below to re-enable when Suppliers module is integrated:
+        //
+        // static::updating(function ($item) {
+        //     if ($item->isDirty('quantity')) {
+        //         $oldQty = (int) $item->getOriginal('quantity');
+        //         $newQty = (int) $item->quantity;
+        //         $delta = $newQty - $oldQty;
+        //
+        //         if ($delta != 0) {
+        //             $sparePart = SparePart::lockForUpdate()->whereKey($item->spare_part_id)->first();
+        //             if (! $sparePart) {
+        //                 throw new \RuntimeException('Spare part not found for counter invoice item.');
+        //             }
+        //
+        //             if ($delta > 0) {
+        //                 // Increasing quantity - need more stock
+        //                 if ($sparePart->current_stock_qty < $delta) {
+        //                     throw new \RuntimeException("Insufficient stock for '{$sparePart->part_name}'. Available: {$sparePart->current_stock_qty}, need {$delta} more.");
+        //                 }
+        //                 $sparePart->decrement('current_stock_qty', $delta);
+        //             } else {
+        //                 // Decreasing quantity - return stock
+        //                 $sparePart->increment('current_stock_qty', abs($delta));
+        //             }
+        //         }
+        //     }
+        // });
     }
 
     public function counterInvoice()

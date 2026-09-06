@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\AppliesSearchFilterSort;
 use App\Http\Controllers\Concerns\BulkDeletesRecords;
 use App\Http\Controllers\Concerns\BulkExportsRecords;
+use App\Http\Requests\FilterCustomersRequest;
 use App\Http\Requests\StoreCustomerRequest;
 use App\Models\CounterInvoice;
 use App\Models\Customer;
@@ -18,6 +20,7 @@ use Illuminate\Support\Str;
 
 class CustomerController extends Controller
 {
+    use AppliesSearchFilterSort;
     use BulkDeletesRecords;
     use BulkExportsRecords;
 
@@ -31,12 +34,14 @@ class CustomerController extends Controller
         return 'customers';
     }
 
-    public function index()
+    public function index(FilterCustomersRequest $request)
     {
+        $validated = $request->validated();
+
         // Full-collection loads (chipping every job card / invoice row into
         // PHP just to sum balances) are replaced with database-side aggregates:
         // withSum for billed amounts, addSelect subqueries for paid amounts.
-        $customers = Customer::query()
+        $query = Customer::query()
             ->with(['vehicles.vehicleModel.vehicleBrand'])
             ->withCount(['jobCards', 'counterInvoices'])
             ->withSum('jobCards as job_billed', 'grand_total')
@@ -54,9 +59,48 @@ class CustomerController extends Controller
                     ->whereColumn('counter_invoices.customer_id', 'customers.id')
                     ->whereNull('payments.deleted_at')
                     ->selectRaw('COALESCE(SUM(payments.amount), 0)'),
-            ])
-            ->latest()
-            ->paginate(15);
+            ]);
+
+        // Apply search
+        if ($request->filled('search')) {
+            $query = $this->applySearch(
+                $query,
+                $validated['search'],
+                ['display_name', 'mobile']
+            );
+        }
+
+        // Apply outstanding balance filter
+        if ($request->filled('outstanding') && $validated['outstanding'] !== 'all') {
+            if ($validated['outstanding'] === 'has_outstanding') {
+                $query->havingRaw('(COALESCE(job_billed, 0) + COALESCE(invoice_billed, 0)) > (COALESCE(job_paid, 0) + COALESCE(invoice_paid, 0))');
+            } elseif ($validated['outstanding'] === 'no_outstanding') {
+                $query->havingRaw('(COALESCE(job_billed, 0) + COALESCE(invoice_billed, 0)) <= (COALESCE(job_paid, 0) + COALESCE(invoice_paid, 0))');
+            }
+        }
+
+        // Apply sorting
+        $sortColumn = $validated['sort'] ?? 'created_at';
+        $sortDirection = $validated['direction'] ?? 'desc';
+
+        if ($sortColumn === 'total_visits') {
+            // Sort by computed total visits (job_cards_count + counter_invoices_count)
+            $query->orderByRaw('(job_cards_count + counter_invoices_count) '.$sortDirection);
+        } elseif ($sortColumn === 'outstanding') {
+            // Sort by computed outstanding balance
+            $query->orderByRaw('((COALESCE(job_billed, 0) + COALESCE(invoice_billed, 0)) - (COALESCE(job_paid, 0) + COALESCE(invoice_paid, 0))) '.$sortDirection);
+        } else {
+            $query = $this->applySort(
+                $query,
+                $sortColumn,
+                $sortDirection,
+                ['display_name', 'created_at'],
+                ['column' => 'created_at', 'direction' => 'desc']
+            );
+        }
+
+        $perPage = $this->getPerPage($request);
+        $customers = $query->paginate($perPage)->withQueryString();
 
         $customers->getCollection()->transform(function (Customer $customer) {
             $customer->setAttribute(

@@ -6,7 +6,7 @@
         </h2>
     </x-slot>
 
-    @php
+@php
         $initialCustomerText = $initialCustomer
             ? $initialCustomer->display_name.' — '.$initialCustomer->mobile
             : '';
@@ -20,9 +20,7 @@
             'model' => $v->vehicleModel?->name,
             'label' => trim(($v->registration_no ?? 'NON-RTO').' — '.($v->vehicleModel?->vehicleBrand?->name ?? '').' '.($v->vehicleModel?->name ?? '')),
         ])->values();
-    @endphp
-
-    <div class="py-6" x-data='jobCardForm(@json($initialData), @json($initialVehiclesData))'>
+        @endphp
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white shadow-sm sm:rounded-lg p-6">
 

@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\AppliesSearchFilterSort;
 use App\Http\Controllers\Concerns\BulkDeletesRecords;
 use App\Http\Controllers\Concerns\BulkExportsRecords;
+use App\Http\Requests\FilterEmployeesRequest;
 use App\Models\Employee;
 use Illuminate\Http\Request;
 
 class EmployeeController extends Controller
 {
+    use AppliesSearchFilterSort;
     use BulkDeletesRecords;
     use BulkExportsRecords;
 
@@ -22,16 +25,40 @@ class EmployeeController extends Controller
         return 'employees';
     }
 
-    public function index(Request $request)
+    public function index(FilterEmployeesRequest $request)
     {
+        $validated = $request->validated();
+
         $query = Employee::query();
 
-        // Filter by active status if provided
-        if ($request->has('active')) {
-            $query->where('active', $request->active === '1');
+        // Filter by active status
+        if ($request->filled('active') && $validated['active'] !== 'all') {
+            if ($validated['active'] === 'active_only') {
+                $query->where('active', true);
+            } elseif ($validated['active'] === 'inactive_only') {
+                $query->where('active', false);
+            }
         }
 
-        $employees = $query->latest()->paginate(15)->withQueryString();
+        // Filter by role
+        if ($request->filled('role') && $validated['role'] !== 'all') {
+            $query->where('role', $validated['role']);
+        }
+
+        // Apply sorting
+        $sortColumn = $validated['sort'] ?? 'name';
+        $sortDirection = $validated['direction'] ?? 'asc';
+
+        $query = $this->applySort(
+            $query,
+            $sortColumn,
+            $sortDirection,
+            ['name', 'role', 'active'],
+            ['column' => 'name', 'direction' => 'asc']
+        );
+
+        $perPage = $this->getPerPage($request);
+        $employees = $query->paginate($perPage)->withQueryString();
 
         return view('employees.index', compact('employees'));
     }

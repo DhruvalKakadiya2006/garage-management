@@ -69,7 +69,8 @@ class JobCardBulkDeleteTest extends TestCase
 
         $plain = $this->makeJobCard($customer, $vehicle);
 
-        $this->assertEquals(8, (int) $part->fresh()->current_stock_qty);
+        // Stock tracking disabled - stock remains unchanged
+        $this->assertEquals(10, (int) $part->fresh()->current_stock_qty);
 
         $response = $this->actingAs($user)->postJson(route('job-cards.bulk-delete'), [
             'ids' => [$withParts->id, $plain->id],
@@ -85,7 +86,9 @@ class JobCardBulkDeleteTest extends TestCase
         $this->assertSoftDeleted('job_cards', ['id' => $withParts->id]);
         $this->assertSoftDeleted('job_cards', ['id' => $plain->id]);
         $this->assertDatabaseHas('job_card_parts', ['job_card_id' => $withParts->id]);
-        $this->assertEquals(8, (int) $part->fresh()->current_stock_qty);
+
+        // Stock tracking disabled - soft delete doesn't affect stock
+        $this->assertEquals(10, (int) $part->fresh()->current_stock_qty);
         $this->assertEquals(0, JobCard::count());
 
         // Restoring both cards brings the documents back intact

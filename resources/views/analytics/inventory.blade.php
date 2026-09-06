@@ -24,16 +24,10 @@
             />
 
             <!-- Summary Cards -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="bg-white shadow-sm rounded-xl p-5">
                     <p class="text-xs uppercase tracking-wide text-gray-500 mb-1">Total Parts</p>
                     <p class="text-2xl font-bold text-gray-900">{{ $inventory->count() }}</p>
-                </div>
-
-                <div class="bg-white shadow-sm rounded-xl p-5 border-l-4 border-red-500">
-                    <p class="text-xs uppercase tracking-wide text-gray-500 mb-1">Low Stock Alerts</p>
-                    <p class="text-2xl font-bold {{ $lowStockCount > 0 ? 'text-red-600' : 'text-gray-900' }}">{{ $lowStockCount }}</p>
-                    <p class="text-xs text-gray-500 mt-1">At or below reorder level</p>
                 </div>
 
                 <div class="bg-white shadow-sm rounded-xl p-5">
@@ -54,7 +48,7 @@
                     Parts used between 
                     <strong>{{ \Carbon\Carbon::parse($fromDate)->format('d/m/Y') }}</strong> and 
                     <strong>{{ \Carbon\Carbon::parse($toDate)->format('d/m/Y') }}</strong>,
-                    sorted by units used (fast movers first). Parts at or below reorder level are flagged red.
+                    sorted by units used (fast movers first).
                 </p>
 
                 @if($inventory->isEmpty())
@@ -75,16 +69,10 @@
                             </thead>
                             <tbody class="divide-y divide-border">
                                 @foreach($inventory as $part)
-                                <tr class="{{ $part['low_stock'] ? 'bg-red-50' : '' }} hover:bg-muted/50">
+                                <tr class="hover:bg-muted/50">
                                     <td class="align-middle px-6 py-2">
                                         <div class="font-medium text-gray-900">{{ $part['part_name'] }}</div>
                                         <div class="text-xs text-gray-500">{{ $part['part_code'] }}</div>
-                                        @if($part['low_stock'])
-                                            <span class="inline-flex items-center gap-1 text-xs font-medium text-red-700">
-                                                <x-heroicon-o-exclamation-triangle class="w-3.5 h-3.5" />
-                                                Low Stock
-                                            </span>
-                                        @endif
                                     </td>
                                     <td class="align-middle px-6 py-2 whitespace-nowrap text-gray-600 capitalize">{{ $part['category'] }}</td>
                                     <td class="align-middle px-6 py-2 whitespace-nowrap text-right font-medium {{ $part['current_stock_qty'] <= 0 ? 'text-red-600' : 'text-gray-900' }}">

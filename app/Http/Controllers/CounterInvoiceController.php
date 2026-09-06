@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\AppliesSearchFilterSort;
 use App\Http\Controllers\Concerns\BulkDeletesRecords;
 use App\Http\Controllers\Concerns\BulkExportsRecords;
+use App\Http\Requests\FilterCounterInvoicesRequest;
 use App\Models\CounterInvoice;
 use App\Models\SparePart;
 use App\Rules\DiscountWithinSubtotal;
 use App\Services\GstCalculator;
 use App\Services\PartPriceResolver;
-use App\Services\StockValidator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\Validator;
 
 class CounterInvoiceController extends Controller
 {
+    use AppliesSearchFilterSort;
     use BulkDeletesRecords;
     use BulkExportsRecords;
 
@@ -49,12 +51,67 @@ class CounterInvoiceController extends Controller
         };
     }
 
-    public function index()
+    public function index(FilterCounterInvoicesRequest $request)
     {
-        $invoices = CounterInvoice::with('customer')
-            ->withSum('payments', 'amount')
-            ->latest()
-            ->paginate(15);
+        $validated = $request->validated();
+
+        $query = CounterInvoice::with('customer')
+            ->withSum('payments', 'amount');
+
+        // Filter by date range
+        if ($request->filled('from_date')) {
+            $query->whereDate('invoice_date', '>=', $validated['from_date']);
+        }
+        if ($request->filled('to_date')) {
+            $query->whereDate('invoice_date', '<=', $validated['to_date']);
+        }
+
+        // Filter by payment status
+        if ($request->filled('payment_status') && $validated['payment_status'] !== 'all') {
+            $status = $validated['payment_status'];
+            if ($status === 'paid') {
+                $query->whereRaw('COALESCE(grand_total, 0) > 0 AND COALESCE(grand_total, 0) <= (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE payments.payable_id = counter_invoices.id AND payments.payable_type = ? AND payments.deleted_at IS NULL)', [CounterInvoice::class]);
+            } elseif ($status === 'partially_paid') {
+                $query->whereRaw('COALESCE(grand_total, 0) > (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE payments.payable_id = counter_invoices.id AND payments.payable_type = ? AND payments.deleted_at IS NULL) AND (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE payments.payable_id = counter_invoices.id AND payments.payable_type = ? AND payments.deleted_at IS NULL) > 0', [CounterInvoice::class, CounterInvoice::class]);
+            } elseif ($status === 'unpaid') {
+                $query->whereRaw('COALESCE(grand_total, 0) > (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE payments.payable_id = counter_invoices.id AND payments.payable_type = ? AND payments.deleted_at IS NULL) AND (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE payments.payable_id = counter_invoices.id AND payments.payable_type = ? AND payments.deleted_at IS NULL) = 0', [CounterInvoice::class, CounterInvoice::class]);
+            }
+        }
+
+        // Filter by customer type
+        if ($request->filled('customer_type') && $validated['customer_type'] !== 'all') {
+            if ($validated['customer_type'] === 'registered') {
+                $query->whereNotNull('customer_id');
+            } elseif ($validated['customer_type'] === 'walk_in') {
+                $query->whereNull('customer_id');
+            }
+        }
+
+        // Apply sorting
+        $sortColumn = $validated['sort'] ?? 'invoice_date';
+        $sortDirection = $validated['direction'] ?? 'desc';
+
+        if ($sortColumn === 'payment_status_label') {
+            // Sort by payment status (computed field)
+            $query->orderByRaw('
+                CASE 
+                    WHEN COALESCE(grand_total, 0) <= (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE payments.payable_id = counter_invoices.id AND payments.payable_type = "'.addslashes(CounterInvoice::class).'" AND payments.deleted_at IS NULL) THEN 1
+                    WHEN (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE payments.payable_id = counter_invoices.id AND payments.payable_type = "'.addslashes(CounterInvoice::class).'" AND payments.deleted_at IS NULL) > 0 THEN 2
+                    ELSE 3
+                END '.$sortDirection
+            );
+        } else {
+            $query = $this->applySort(
+                $query,
+                $sortColumn,
+                $sortDirection,
+                ['invoice_date', 'invoice_no', 'grand_total'],
+                ['column' => 'invoice_date', 'direction' => 'desc']
+            );
+        }
+
+        $perPage = $this->getPerPage($request);
+        $invoices = $query->paginate($perPage)->withQueryString();
 
         return view('counter_invoices.index', compact('invoices'));
     }
@@ -85,18 +142,21 @@ class CounterInvoiceController extends Controller
 
         DB::beginTransaction();
         try {
-            // Stock check before any writes so stock can never go negative.
-            // Runs inside the transaction so the read guarding the deduction
-            // serializes with the write on row-locking databases.
-            $stockErrors = app(StockValidator::class)->validate($validated['items'], null, 'items');
-            if (! empty($stockErrors)) {
-                DB::rollBack();
-
-                return back()->withErrors($stockErrors)->withInput();
-            }
-
             // MRP is always taken from the part master, never from the client submission
             $items = app(PartPriceResolver::class)->priceLines($validated['items']);
+
+            // STOCK VALIDATION DISABLED: No stock checking because Suppliers module is not integrated
+            // Uncomment below to re-enable when Suppliers module is integrated:
+            //
+            // $stockErrors = app(StockValidator::class)->validate(
+            //     $items,
+            //     null,
+            //     'items'
+            // );
+            // if (! empty($stockErrors)) {
+            //     DB::rollBack();
+            //     return back()->withErrors($stockErrors)->withInput();
+            // }
 
             // The subtotal is only known once the lines are resolved. Reject a
             // discount (percent-derived or flat amount) that would exceed it,
@@ -186,16 +246,6 @@ class CounterInvoiceController extends Controller
 
         DB::beginTransaction();
         try {
-            // Stock check accounting for quantity this invoice already
-            // reserves. Runs inside the transaction so the read guarding the
-            // deduction serializes with the write on row-locking databases.
-            $stockErrors = app(StockValidator::class)->validate($validated['items'], $counterInvoice, 'items');
-            if (! empty($stockErrors)) {
-                DB::rollBack();
-
-                return back()->withErrors($stockErrors)->withInput();
-            }
-
             // MRP is always taken from the part master, never from the client submission
             $items = app(PartPriceResolver::class)->priceLines($validated['items']);
 

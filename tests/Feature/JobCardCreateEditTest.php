@@ -131,9 +131,9 @@ class JobCardCreateEditTest extends TestCase
         $this->assertEquals(0, (float) $jobCard->cgst_amount);
         $this->assertEquals(0, (float) $jobCard->sgst_amount);
 
-        // Stock deducted for BOTH parts (warranty part physically used)
-        $this->assertEquals(18, (int) $partA->fresh()->current_stock_qty);
-        $this->assertEquals(19, (int) $partB->fresh()->current_stock_qty);
+        // Stock tracking disabled - stock remains unchanged
+        $this->assertEquals(20, (int) $partA->fresh()->current_stock_qty);
+        $this->assertEquals(20, (int) $partB->fresh()->current_stock_qty);
     }
 
     public function test_assign_resyncs_line_items_recalculates_totals_and_adjusts_stock()
@@ -173,8 +173,9 @@ class JobCardCreateEditTest extends TestCase
             ->assertRedirect()
             ->assertSessionHasNoErrors();
 
-        $this->assertEquals(18, (int) $partA->fresh()->current_stock_qty);
-        $this->assertEquals(19, (int) $partB->fresh()->current_stock_qty);
+        // Stock tracking disabled - stock remains unchanged
+        $this->assertEquals(20, (int) $partA->fresh()->current_stock_qty);
+        $this->assertEquals(20, (int) $partB->fresh()->current_stock_qty);
 
         // Re-assign: change part A qty 2->5, remove the labour line, add part C, enable GST
         $this->actingAs($user)
@@ -211,10 +212,10 @@ class JobCardCreateEditTest extends TestCase
         $this->assertEqualsWithDelta(0.10, (float) $jobCard->round_off_amount, 0.01);
         $this->assertEqualsWithDelta(478.00, (float) $jobCard->grand_total, 0.01);
 
-        // Stock: A -> 15 (5 total), B -> 19 (1 total), C -> 17 (3 total)
-        $this->assertEquals(15, (int) $partA->fresh()->current_stock_qty);
-        $this->assertEquals(19, (int) $partB->fresh()->current_stock_qty);
-        $this->assertEquals(17, (int) $partC->fresh()->current_stock_qty);
+        // Stock tracking disabled - stock remains unchanged after reassign
+        $this->assertEquals(20, (int) $partA->fresh()->current_stock_qty);
+        $this->assertEquals(20, (int) $partB->fresh()->current_stock_qty);
+        $this->assertEquals(20, (int) $partC->fresh()->current_stock_qty);
 
         // Basic edit: update status + complaints only, line items stay untouched
         $this->actingAs($user)

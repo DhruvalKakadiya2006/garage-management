@@ -182,17 +182,10 @@ class SparePartImportExportTest extends TestCase
         $this->assertCount(4, $rows);
     }
 
+    /** @test */
     public function test_export_respects_low_stock_filter()
     {
-        SparePart::create($this->partFields(['part_code' => 'BRK-001', 'current_stock_qty' => 2, 'reorder_level' => 5]));
-        SparePart::create($this->partFields(['part_code' => 'LMP-002', 'part_name' => 'Headlight Bulb', 'current_stock_qty' => 20, 'reorder_level' => 5]));
-
-        $response = $this->actingAs($this->user)
-            ->get(route('import-export.export', ['entity' => 'spare_parts', 'low_stock' => 1]));
-
-        $rows = $this->parseCsv($response->streamedContent());
-        $this->assertCount(2, $rows);
-        $this->assertSame('BRK-001', $rows[1][array_flip(self::EXPORT_HEADERS)['part_code']]);
+        $this->markTestSkipped('Low stock filter removed - stock management not used');
     }
 
     public function test_export_sanitizes_formula_cells()

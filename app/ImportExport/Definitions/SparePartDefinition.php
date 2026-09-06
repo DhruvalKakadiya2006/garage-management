@@ -304,13 +304,7 @@ class SparePartDefinition extends AbstractImportDefinition
 
     public function exportQuery(array $filters = [])
     {
-        $query = SparePart::query();
-
-        if (! empty($filters['low_stock'])) {
-            $query->whereColumn('current_stock_qty', '<=', 'reorder_level');
-        }
-
-        return $query->orderBy('part_name')->orderBy('id');
+        return SparePart::query()->orderBy('part_name')->orderBy('id');
     }
 
     public function exportFileName(): string

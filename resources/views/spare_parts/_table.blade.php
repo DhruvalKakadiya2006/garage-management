@@ -1,21 +1,10 @@
 @php
     $indexRoute = $indexRoute ?? 'inventory.index';
-    $lowStock = $lowStock ?? false;
 @endphp
 
 <div x-data="tableSelection({ bulkEndpoint: '{{ route('spare-parts.bulk-delete') }}', bulkExportEndpoint: '{{ route('spare-parts.bulk-export') }}', modalName: 'bulk-delete-confirm-parts' })">
 
-    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div class="flex items-center gap-2">
-            <a href="{{ route($indexRoute) }}"
-               class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-150 {{ !$lowStock ? 'bg-primary text-white' : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground' }}">
-                All Parts
-            </a>
-            <a href="{{ route($indexRoute, ['low_stock' => 1]) }}"
-               class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-150 {{ $lowStock ? 'bg-primary text-white' : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground' }}">
-                Low Stock
-            </a>
-        </div>
+    <div class="mb-4 flex flex-wrap items-center justify-end gap-3">
         <div class="flex flex-wrap items-center gap-2">
             <x-button variant="secondary" type="button" @click="$dispatch('open-modal', 'import-csv-spare-parts')">
                 <x-heroicon-o-arrow-up-tray class="w-4 h-4" />
@@ -33,17 +22,9 @@
                     <x-dropdown-link :href="route('import-export.export', array_merge(['entity' => 'spare_parts'], request()->query()))">
                         <span class="inline-flex items-center gap-2">
                             <x-heroicon-o-document-text class="w-4 h-4" />
-                            Export All (CSV){{ $lowStock ? ' (Low Stock)' : '' }}
+                            Export All (CSV)
                         </span>
                     </x-dropdown-link>
-                    @if (! $lowStock)
-                        <x-dropdown-link :href="route('import-export.export', ['entity' => 'spare_parts', 'low_stock' => 1])">
-                            <span class="inline-flex items-center gap-2">
-                                <x-heroicon-o-exclamation-triangle class="w-4 h-4" />
-                                Export Low Stock
-                            </span>
-                        </x-dropdown-link>
-                    @endif
                     <div class="my-1 border-t border-border"></div>
                     <x-dropdown-link :href="route('import-export.template', ['entity' => 'spare_parts'])">
                         <span class="inline-flex items-center gap-2">
@@ -82,7 +63,7 @@
 
     <x-data-table
         :empty="$spareParts->isEmpty()"
-        emptyMessage="{{ $lowStock ? 'No low stock parts - everything is above its reorder level.' : 'No spare parts yet. Click Add Spare Part to create one.' }}"
+        emptyMessage="No spare parts yet. Click Add Spare Part to create one."
         emptyIcon="cube"
         :emptyHref="route('spare-parts.create')"
         emptyLabel="Add Spare Part"
@@ -97,7 +78,6 @@
                 <th class="align-middle px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">MRP</th>
                 <th class="align-middle px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Labor Charge</th>
                 <th class="align-middle px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Total</th>
-                <th class="align-middle px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Current Stock</th>
             </tr>
         </x-slot>
 
@@ -123,15 +103,6 @@
                 </td>
                 <td class="align-middle px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
                     {{ config('garage.currency_symbol') }}{{ number_format($part->total_price, 2) }}
-                </td>
-                <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-center">
-                    @if ($part->current_stock_qty <= 0)
-                        <x-badge color="red">{{ $part->current_stock_qty }}</x-badge>
-                    @elseif ($part->current_stock_qty <= $part->reorder_level)
-                        <x-badge color="amber">{{ $part->current_stock_qty }}</x-badge>
-                    @else
-                        <span class="text-gray-900">{{ $part->current_stock_qty }}</span>
-                    @endif
                 </td>
             </tr>
         @endforeach

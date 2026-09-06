@@ -156,14 +156,13 @@ class AnalyticsController extends Controller
         $technicianStats = JobCard::where('status', 'delivered')->whereNotNull('assigned_technician_id')->selectRaw('assigned_technician_id, COUNT(*) as jobs, SUM(grand_total) as revenue')->groupBy('assigned_technician_id')->with('assignedTechnician')->get()->map(fn ($row) => ['technician' => $row->assignedTechnician, 'jobs' => (int) $row->jobs, 'revenue' => round((float) $row->revenue, 2)])->sortByDesc('revenue')->values();
 
         // ── Inventory ──
-        $lowStockParts = SparePart::whereColumn('current_stock_qty', '<=', 'reorder_level')->orderBy('part_name')->limit(5)->get(['part_name', 'part_code', 'current_stock_qty', 'reorder_level']);
-        $lowStockCount = SparePart::whereColumn('current_stock_qty', '<=', 'reorder_level')->count();
+        // Stock tracking disabled - no low stock alerts
         // Fast vs slow movers (last 30 days usage)
         $jcUsage = DB::table('job_card_parts')->join('job_cards', 'job_cards.id', '=', 'job_card_parts.job_card_id')->whereDate('job_cards.job_date', '>=', $dailyFrom)->whereDate('job_cards.job_date', '<=', $endOfMonth)->select('spare_part_id', DB::raw('SUM(quantity) as c'))->groupBy('spare_part_id')->pluck('c', 'spare_part_id');
         $ciUsage = DB::table('counter_invoice_items')->join('counter_invoices', 'counter_invoices.id', '=', 'counter_invoice_items.counter_invoice_id')->whereDate('counter_invoices.invoice_date', '>=', $dailyFrom)->whereDate('counter_invoices.invoice_date', '<=', $endOfMonth)->select('spare_part_id', DB::raw('SUM(quantity) as c'))->groupBy('spare_part_id')->pluck('c', 'spare_part_id');
-        $partsUsage = SparePart::select(['id', 'part_name', 'part_code', 'current_stock_qty'])->get()->map(fn ($p) => ['part' => $p, 'used' => (int) ($jcUsage[$p->id] ?? 0) + (int) ($ciUsage[$p->id] ?? 0)])->sortByDesc('used');
-        $fastMoving = $partsUsage->take(5)->values();
-        $slowMoving = $partsUsage->filter(fn ($x) => $x['used'] > 0)->sortBy('used')->take(5)->values();
+        $partsUsage = SparePart::select(['id', 'part_name', 'part_code', 'current_stock_qty', 'mrp'])->get()->map(fn ($p) => ['part' => $p, 'used' => (int) ($jcUsage[$p->id] ?? 0) + (int) ($ciUsage[$p->id] ?? 0)])->sortByDesc('used');
+        $fastMoving = $partsUsage->take(10)->values();
+        $slowMoving = $partsUsage->filter(fn ($x) => $x['used'] > 0)->sortBy('used')->take(10)->values();
 
         // Module counts for header
         $totalCustomers = Customer::count();
@@ -177,7 +176,7 @@ class AnalyticsController extends Controller
             'agingBuckets',
             'topCustomersBySpend', 'newVsReturning',
             'technicianStats',
-            'lowStockParts', 'lowStockCount', 'fastMoving', 'slowMoving',
+            'fastMoving', 'slowMoving',
             'totalCustomers', 'totalVehicles', 'totalEmployees'
         ));
     }
@@ -368,19 +367,16 @@ class AnalyticsController extends Controller
                 'current_stock_qty' => (int) $part->current_stock_qty,
                 'reorder_level' => (int) $part->reorder_level,
                 'times_used' => (int) ($jobCardUsage[$part->id] ?? 0) + (int) ($counterUsage[$part->id] ?? 0),
-            ])
-            ->map(fn (array $item) => $item + [
-                'low_stock' => $item['current_stock_qty'] <= $item['reorder_level'],
-                'stock_value' => round($item['current_stock_qty'] * $item['purchase_price'], 2),
+                'stock_value' => round((int) $part->current_stock_qty * (float) $part->purchase_price, 2),
             ])
             ->sortByDesc('times_used')
             ->values();
 
-        $lowStockCount = $inventory->where('low_stock', true)->count();
+        // Stock tracking disabled - no low stock alerts
         $totalStockValue = $inventory->sum('stock_value');
         $totalUnits = $inventory->sum('current_stock_qty');
 
-        return view('analytics.inventory', compact('fromDate', 'toDate', 'inventory', 'lowStockCount', 'totalStockValue', 'totalUnits'));
+        return view('analytics.inventory', compact('fromDate', 'toDate', 'inventory', 'totalStockValue', 'totalUnits'));
     }
 
     /**

@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\AppliesSearchFilterSort;
 use App\Http\Controllers\Concerns\BulkDeletesRecords;
 use App\Http\Controllers\Concerns\BulkExportsRecords;
+use App\Http\Requests\FilterPaymentsRequest;
 use App\Models\CounterInvoice;
 use App\Models\JobCard;
 use App\Models\Payment;
@@ -15,6 +17,7 @@ use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
+    use AppliesSearchFilterSort;
     use BulkDeletesRecords;
     use BulkExportsRecords;
 
@@ -31,12 +34,48 @@ class PaymentController extends Controller
     /**
      * Display a listing of all payments (read-only view).
      */
-    public function index()
+    public function index(FilterPaymentsRequest $request)
     {
-        $payments = Payment::with('payable.customer')
-            ->orderBy('payment_date', 'desc')
-            ->orderBy('created_at', 'desc')
-            ->paginate((int) config('garage.pagination.per_page', 15));
+        $validated = $request->validated();
+
+        $query = Payment::with('payable.customer');
+
+        // Filter by payment mode
+        if ($request->filled('payment_mode') && $validated['payment_mode'] !== 'all') {
+            $query->where('payment_mode', $validated['payment_mode']);
+        }
+
+        // Filter by date range
+        if ($request->filled('from_date')) {
+            $query->whereDate('payment_date', '>=', $validated['from_date']);
+        }
+        if ($request->filled('to_date')) {
+            $query->whereDate('payment_date', '<=', $validated['to_date']);
+        }
+
+        // Filter by document type
+        if ($request->filled('document_type') && $validated['document_type'] !== 'all') {
+            if ($validated['document_type'] === 'job_card') {
+                $query->where('payable_type', JobCard::class);
+            } elseif ($validated['document_type'] === 'counter_invoice') {
+                $query->where('payable_type', CounterInvoice::class);
+            }
+        }
+
+        // Apply sorting
+        $sortColumn = $validated['sort'] ?? 'payment_date';
+        $sortDirection = $validated['direction'] ?? 'desc';
+
+        $query = $this->applySort(
+            $query,
+            $sortColumn,
+            $sortDirection,
+            ['payment_date', 'amount', 'payment_mode'],
+            ['column' => 'payment_date', 'direction' => 'desc']
+        );
+
+        $perPage = $this->getPerPage($request);
+        $payments = $query->paginate($perPage)->withQueryString();
 
         return view('payments.index', compact('payments'));
     }

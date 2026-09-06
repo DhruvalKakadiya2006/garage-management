@@ -1,40 +1,75 @@
-*.log
-.DS_Store
-.env
-.env.backup
-.env.production
-.phpactor.json
-.phpunit.result.cache
-/.codex
-/.cursor/
-/.idea
-/.nova
-/.phpunit.cache
-/.vscode
-/.zed
-/auth.json
+# ──────────────────────────────────────────────────────────────
+# Laravel Core
+# ──────────────────────────────────────────────────────────────
+/vendor
 /node_modules
-/public/build
-/public/fonts-manifest.dev.json
 /public/hot
+/public/build
 /public/storage
 /storage/*.key
 /storage/pail
-# DomPDF font cache (regenerated on first render from the @font-face rules in
-# resources/views/pdf/job-card.blade.php; only the source OpenSans-*.ttf files
-# and LICENSE.txt in storage/fonts are tracked)
+
+# ──────────────────────────────────────────────────────────────
+# Environment & Secrets
+# ──────────────────────────────────────────────────────────────
+.env
+.env.backup
+.env.production
+.env.*.php
+.env.php
+/auth.json
+/.secrets
+
+# ──────────────────────────────────────────────────────────────
+# IDE & Editor Configurations
+# ──────────────────────────────────────────────────────────────
+/.idea
+/.vscode
+/.nova
+/.zed
+/.cursor/
+/.phpactor.json
+/opencode.json
+
+# ──────────────────────────────────────────────────────────────
+# Testing & Build Artifacts
+# ──────────────────────────────────────────────────────────────
+.phpunit.result.cache
+/.phpunit.cache
+/coverage
+/public/fonts-manifest.dev.json
+
+# ──────────────────────────────────────────────────────────────
+# DomPDF Font Cache
+# ──────────────────────────────────────────────────────────────
+# Regenerated on first render from @font-face rules in
+# resources/views/pdf/job-card.blade.php
+# Only source OpenSans-*.ttf files and LICENSE.txt are tracked
 /storage/fonts/installed-fonts.json
 /storage/fonts/Helvetica.afm.json
 /storage/fonts/Helvetica-Bold.afm.json
 /storage/fonts/*.ufm
 /storage/fonts/*.ufm.json
 /storage/fonts/open_sans_*.ttf
-/vendor
+
+# ──────────────────────────────────────────────────────────────
+# Laravel Helpers & Dev Tools
+# ──────────────────────────────────────────────────────────────
 _ide_helper.php
+_ide_helper_models.php
+.phpstorm.meta.php
+
+# ──────────────────────────────────────────────────────────────
+# Homestead & Local Development
+# ──────────────────────────────────────────────────────────────
 Homestead.json
 Homestead.yaml
-Thumbs.db
+npm-debug.log
+yarn-error.log
 
+# ──────────────────────────────────────────────────────────────
+# AI-Assisted Development
+# ──────────────────────────────────────────────────────────────
 # AI-generated documentation (regenerated as needed)
 /AGENTS.md
 /AI_AGENT_CONTEXT.md
@@ -45,9 +80,34 @@ Thumbs.db
 /SAMPLE_DATA_SUMMARY.md
 /project-rules.md
 
-# IDE and Editor configurations
-/.secrets
+# AI agent configurations
 /.agents
 /.ai
-/opencode.json
+/.kiro
+/.codex
 /boost.json
+
+# ──────────────────────────────────────────────────────────────
+# OS-Specific Files
+# ──────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.log
+*~
+.*.swp
+.*.swo
+
+# ──────────────────────────────────────────────────────────────
+# Database
+# ──────────────────────────────────────────────────────────────
+*.sqlite
+*.sqlite-journal
+/database/*.sqlite
+/database/*.sqlite-journal
+
+# ──────────────────────────────────────────────────────────────
+# Backup Files
+# ──────────────────────────────────────────────────────────────
+*.bak
+*.backup
+*.tmp

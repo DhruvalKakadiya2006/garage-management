@@ -73,6 +73,62 @@
                 </div>
             @endif
 
+            {{-- Search and Filter Form --}}
+            <form method="GET" action="{{ route('customers.index') }}" class="mb-6">
+                <div class="space-y-4">
+                    {{-- Search Bar --}}
+                    <div class="flex gap-3">
+                        <div class="flex-1">
+                            <x-search-bar 
+                                name="search" 
+                                placeholder="Search by name or mobile..." 
+                                :value="request('search')"
+                            />
+                        </div>
+                        <x-button type="submit">
+                            <x-heroicon-o-magnifying-glass class="w-4 h-4" />
+                            Search
+                        </x-button>
+                        @if(request()->hasAny(['search', 'outstanding', 'sort']))
+                            <x-button variant="secondary" type="button" onclick="window.location.href='{{ route('customers.index') }}'">
+                                Clear
+                            </x-button>
+                        @endif
+                    </div>
+
+                    {{-- Filters --}}
+                    <x-filter-panel>
+                        <div>
+                            <label for="outstanding" class="block text-sm font-medium text-gray-700 mb-1">Outstanding Balance</label>
+                            <select name="outstanding" id="outstanding" class="w-full border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="all" {{ request('outstanding', 'all') === 'all' ? 'selected' : '' }}>All Customers</option>
+                                <option value="has_outstanding" {{ request('outstanding') === 'has_outstanding' ? 'selected' : '' }}>Has Outstanding</option>
+                                <option value="no_outstanding" {{ request('outstanding') === 'no_outstanding' ? 'selected' : '' }}>No Outstanding</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="per_page" class="block text-sm font-medium text-gray-700 mb-1">Items Per Page</label>
+                            <select name="per_page" id="per_page" class="w-full border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="15" {{ request('per_page', 15) == 15 ? 'selected' : '' }}>15</option>
+                                <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
+                                <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+                                <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
+                            </select>
+                        </div>
+                    </x-filter-panel>
+
+                    {{-- Active Filters --}}
+                    <x-active-filters-bar 
+                        :filters="[
+                            'search' => request('search'),
+                            'outstanding' => request('outstanding') !== 'all' ? request('outstanding') : null,
+                        ]"
+                        :baseRoute="'customers.index'"
+                    />
+                </div>
+            </form>
+
             {{-- Contextual action bar --}}
             <x-table-selection-bar
                 :bulk-endpoint="route('customers.bulk-delete')"
@@ -106,10 +162,25 @@
                 <x-slot name="header">
                     <tr>
                         <th class="align-middle w-10 px-6 py-3 text-left"><x-table-select-all /></th>
-                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Display Name</th>
+                        <x-sortable-header 
+                            column="display_name" 
+                            label="Display Name" 
+                            :currentSort="request('sort')" 
+                            :currentDirection="request('direction', 'asc')"
+                        />
                         <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Mobile</th>
-                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Outstanding</th>
-                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Visits</th>
+                        <x-sortable-header 
+                            column="outstanding" 
+                            label="Outstanding" 
+                            :currentSort="request('sort')" 
+                            :currentDirection="request('direction', 'asc')"
+                        />
+                        <x-sortable-header 
+                            column="total_visits" 
+                            label="Total Visits" 
+                            :currentSort="request('sort')" 
+                            :currentDirection="request('direction', 'asc')"
+                        />
                         <th class="align-middle w-10 px-6 py-3 text-right"></th>
                     </tr>
                 </x-slot>
