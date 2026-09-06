@@ -79,6 +79,7 @@ yarn-error.log
 /REVIEW_SUMMARY.md
 /SAMPLE_DATA_SUMMARY.md
 /project-rules.md
+/FRONTEND_IMPLEMENTATION_STATUS.md
 
 # AI agent configurations
 /.agents
