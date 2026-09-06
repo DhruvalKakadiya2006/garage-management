@@ -70,17 +70,8 @@ yarn-error.log
 # ──────────────────────────────────────────────────────────────
 # AI-Assisted Development
 # ──────────────────────────────────────────────────────────────
-# AI-generated documentation (regenerated as needed)
-/AGENTS.md
-/AI_AGENT_CONTEXT.md
-/CODE_REVIEW_REPORT.md
-/FINAL_STATUS.md
-/POST_REVIEW_CHECKLIST.md
-/REVIEW_SUMMARY.md
-/SAMPLE_DATA_SUMMARY.md
-/project-rules.md
-/FRONTEND_IMPLEMENTATION_STATUS.md
-/SEARCH_FILTER_SORT_IMPLEMENTATION.md
+# Main AI context file (regenerated/updated as needed)
+/AI_CONTEXT.md
 
 # AI agent configurations
 /.agents
