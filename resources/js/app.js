@@ -382,6 +382,74 @@ document.addEventListener('alpine:init', () => {
     window.tableSelection = tableSelection;
 
     /**
+     * Job Card creation form with dynamic vehicle loading based on selected customer.
+     * 
+     * Handles:
+     * - Auto-selecting vehicle when customer has exactly 1 vehicle
+     * - Loading vehicles when customer changes
+     * - Managing complaints array
+     * 
+     * Props:
+     *   initial         {customer_id, vehicle_id, job_date, complaints[]}
+     *   initialVehicles [{id, registration_no, brand, model, label}, ...]
+     */
+    Alpine.data('jobCardForm', (initial = {}, initialVehicles = []) => ({
+        selectedCustomer: initial.customer_id || '',
+        vehicles: initialVehicles || [],
+        vehicleId: initial.vehicle_id || '',
+        vehiclesLoading: false,
+        complaints: initial.complaints || [],
+
+        init() {
+            // Fallback: if controller didn't set vehicleId but we have exactly 1 vehicle, select it
+            if (this.vehicles.length === 1 && !this.vehicleId) {
+                this.vehicleId = this.vehicles[0].id;
+            }
+        },
+
+        onCustomerSelected(record) {
+            this.selectedCustomer = record.id;
+            this.vehicleId = '';
+            this.loadVehicles(record.id);
+        },
+
+        onCustomerCleared() {
+            this.selectedCustomer = '';
+            this.vehicles = [];
+            this.vehicleId = '';
+        },
+
+        async loadVehicles(customerId) {
+            this.vehiclesLoading = true;
+            this.vehicles = [];
+            this.vehicleId = '';
+            const vehiclesBase = window.location.origin + '/customers';
+            try {
+                const res = await fetch(`${vehiclesBase}/${customerId}/vehicles`, {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                });
+                if (!res.ok) throw new Error('Request failed');
+                this.vehicles = await res.json();
+                if (this.vehicles.length === 1) {
+                    this.vehicleId = this.vehicles[0].id;
+                }
+            } catch (e) {
+                this.vehicles = [];
+            } finally {
+                this.vehiclesLoading = false;
+            }
+        },
+
+        addComplaint() {
+            this.complaints.push({description: ''});
+        },
+
+        removeComplaint(index) {
+            this.complaints.splice(index, 1);
+        },
+    }));
+
+    /**
      * Merge several Alpine component objects while preserving accessor
      * properties (getters). A plain `{ ...a, ...b }` spread invokes every
      * getter eagerly and copies its *value*, freezing it at that instant —

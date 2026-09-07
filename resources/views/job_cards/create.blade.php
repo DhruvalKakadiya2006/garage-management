@@ -65,7 +65,7 @@
                                     class="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm" required>
                                 <option value="">-- Select Vehicle --</option>
                                 <template x-for="vehicle in vehicles" :key="vehicle.id">
-                                    <option :value="vehicle.id" x-text="vehicle.label" :selected="vehicle.id === vehicleId"></option>
+                                    <option :value="vehicle.id" x-text="vehicle.label"></option>
                                 </template>
                             </select>
                             <p class="text-xs text-gray-500 mt-1" x-show="vehiclesLoading">Loading vehicles…</p>
@@ -125,65 +125,4 @@
             </div>
         </div>
     </div>
-
-    <script>
-        function jobCardForm(initial = @json($initialData), initialVehicles = []) {
-            const vehiclesBase = @js(url('customers'));
-
-            return {
-                selectedCustomer: initial.customer_id || '',
-                vehicles: initialVehicles || [],
-                vehicleId: initial.vehicle_id || '',
-                vehiclesLoading: false,
-                complaints: initial.complaints || [],
-
-                init() {
-                    // Auto-select the only vehicle when the customer has exactly one.
-                    if (this.vehicles.length === 1 && !this.vehicleId) {
-                        this.vehicleId = this.vehicles[0].id;
-                    }
-                },
-
-                onCustomerSelected(record) {
-                    this.selectedCustomer = record.id;
-                    this.vehicleId = '';
-                    this.loadVehicles(record.id);
-                },
-
-                onCustomerCleared() {
-                    this.selectedCustomer = '';
-                    this.vehicles = [];
-                    this.vehicleId = '';
-                },
-
-                async loadVehicles(customerId) {
-                    this.vehiclesLoading = true;
-                    this.vehicles = [];
-                    this.vehicleId = '';
-                    try {
-                        const res = await fetch(`${vehiclesBase}/${customerId}/vehicles`, {
-                            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                        });
-                        if (!res.ok) throw new Error('Request failed');
-                        this.vehicles = await res.json();
-                        if (this.vehicles.length === 1) {
-                            this.vehicleId = this.vehicles[0].id;
-                        }
-                    } catch (e) {
-                        this.vehicles = [];
-                    } finally {
-                        this.vehiclesLoading = false;
-                    }
-                },
-
-                addComplaint() {
-                    this.complaints.push({description: ''});
-                },
-
-                removeComplaint(index) {
-                    this.complaints.splice(index, 1);
-                },
-            }
-        }
-    </script>
 </x-app-layout>

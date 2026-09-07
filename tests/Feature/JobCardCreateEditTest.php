@@ -337,14 +337,16 @@ class JobCardCreateEditTest extends TestCase
         // Blade's @json() emits literal quotes (unlike @js()'s \u0022 above).
         $this->assertStringContainsString('"vehicle_id":"'.$vehicle->id.'"', $html);
 
-        // A vehicle owned by somebody else is never pre-selected
+        // A vehicle owned by somebody else is never pre-selected, BUT if the customer
+        // has exactly 1 vehicle, that vehicle IS auto-selected (UX improvement)
         $response = $this->actingAs($user)
             ->get(route('job-cards.create', ['customer_id' => $customer->id, 'vehicle_id' => $foreignVehicle->id]));
         $response->assertOk();
 
         $html = html_entity_decode($response->getContent(), ENT_QUOTES | ENT_HTML5, 'UTF-8');
         $this->assertStringNotContainsString('"vehicle_id":"'.$foreignVehicle->id.'"', $html);
-        $this->assertStringContainsString('"vehicle_id":""', $html);
+        // The customer's own vehicle is auto-selected (customer has exactly 1 vehicle)
+        $this->assertStringContainsString('"vehicle_id":"'.$vehicle->id.'"', $html);
     }
 
     public function test_assign_rejects_discount_amount_exceeding_subtotal()
@@ -799,5 +801,49 @@ class JobCardCreateEditTest extends TestCase
         $this->actingAs($user)
             ->post(route('job-cards.assign-update', $jobCard), ['parts' => $parts])
             ->assertSessionHasErrors('parts');
+    }
+
+    public function test_create_page_returns_vehicle_data_for_customer_with_one_vehicle()
+    {
+        $user = $this->makeUser();
+        $customer = Customer::create(['first_name' => 'Single', 'mobile' => '9111111111', 'customer_type' => 'regular']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-05-CD-5678', 'Ola', 'S1 Air');
+
+        $response = $this->actingAs($user)
+            ->get(route('job-cards.create', ['customer_id' => $customer->id]));
+
+        $response->assertOk();
+        $html = $response->getContent();
+
+        // Verify initialVehiclesData contains the vehicle
+        $this->assertStringContainsString('GJ-05-CD-5678', $html);
+        $this->assertStringContainsString('Ola', $html);
+        $this->assertStringContainsString('S1 Air', $html);
+
+        // Verify vehicle_id is auto-selected
+        $this->assertStringContainsString('"vehicle_id":"'.$vehicle->id.'"', $html);
+    }
+
+    public function test_create_page_returns_vehicle_data_for_customer_with_multiple_vehicles()
+    {
+        $user = $this->makeUser();
+        $customer = Customer::create(['first_name' => 'Multi', 'mobile' => '9222222222', 'customer_type' => 'regular']);
+        $vehicle1 = $this->makeCatalogVehicle($customer, 'GJ-06-EF-1111', 'Ather', '450X');
+        $vehicle2 = $this->makeCatalogVehicle($customer, 'GJ-06-EF-2222', 'Ola', 'S1 Pro');
+
+        $response = $this->actingAs($user)
+            ->get(route('job-cards.create', ['customer_id' => $customer->id]));
+
+        $response->assertOk();
+        $html = $response->getContent();
+
+        // Verify initialVehiclesData contains both vehicles
+        $this->assertStringContainsString('GJ-06-EF-1111', $html);
+        $this->assertStringContainsString('GJ-06-EF-2222', $html);
+        $this->assertStringContainsString('Ather', $html);
+        $this->assertStringContainsString('450X', $html);
+
+        // Verify vehicle_id is NOT auto-selected (empty string)
+        $this->assertStringContainsString('"vehicle_id":""', $html);
     }
 }

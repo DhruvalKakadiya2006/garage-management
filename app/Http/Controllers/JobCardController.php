@@ -169,9 +169,8 @@ class JobCardController extends Controller
                 ->orderBy('registration_no')
                 ->get();
 
-            // Auto-select vehicle if customer has only one vehicle
-            // Only auto-select if no vehicle_id was provided in the request
-            if ($initialVehicles->count() === 1 && ! $vehicleId && ! $request->has('vehicle_id')) {
+            // Auto-select vehicle if customer has only one vehicle AND no valid vehicle was already provided
+            if ($initialVehicles->count() === 1 && ! $vehicleId) {
                 $vehicleId = $initialVehicles->first()->id;
             }
         }
