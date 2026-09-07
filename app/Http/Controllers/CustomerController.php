@@ -303,6 +303,9 @@ class CustomerController extends Controller
         $filename = 'CUSTOMER-STATEMENT-'.Str::slug($customer->display_name).'.pdf';
 
         $pdf = Pdf::setBasePath(base_path())
+            ->setOption('isHtml5ParserEnabled', false)
+            ->setOption('isRemoteEnabled', false)
+            ->setOption('defaultFont', 'sans-serif')
             ->loadView('pdf.customer-statement', $data);
 
         return $pdf->download($filename);

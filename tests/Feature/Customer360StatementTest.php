@@ -208,11 +208,11 @@ class Customer360StatementTest extends TestCase
         $this->assertStringContainsString('CUSTOMER STATEMENT', $html);
         $this->assertStringContainsString('JC-', $html);
         $this->assertStringContainsString('CI-', $html);
-        $this->assertStringContainsString('₹340.00', $html);
-        $this->assertStringContainsString('₹500.00', $html);
-        $this->assertStringContainsString('₹840.00', $html);      // billed in range
-        $this->assertStringContainsString('₹300.00', $html);      // collected in range
-        $this->assertStringContainsString('₹540.00', $html);      // outstanding as on to
+        $this->assertStringContainsString('Rs. 340.00', $html);
+        $this->assertStringContainsString('Rs. 500.00', $html);
+        $this->assertStringContainsString('Rs. 840.00', $html);      // billed in range
+        $this->assertStringContainsString('Rs. 300.00', $html);      // collected in range
+        $this->assertStringContainsString('Rs. 540.00', $html);      // outstanding as on to
     }
 
     public function test_statement_rows_show_per_document_collected_and_outstanding()
@@ -239,15 +239,15 @@ class Customer360StatementTest extends TestCase
 
         $html = view('pdf.customer-statement', $data)->render();
 
-        $this->assertStringContainsString('₹40.00', $html);    // job card collected cell
-        $this->assertStringContainsString('₹71.00', $html);    // job card outstanding cell (111 - 40)
-        $this->assertStringContainsString('₹50.00', $html);    // invoice collected cell
-        $this->assertStringContainsString('₹172.00', $html);   // invoice outstanding cell (222 - 50)
+        $this->assertStringContainsString('Rs. 40.00', $html);    // job card collected cell
+        $this->assertStringContainsString('Rs. 71.00', $html);    // job card outstanding cell (111 - 40)
+        $this->assertStringContainsString('Rs. 50.00', $html);    // invoice collected cell
+        $this->assertStringContainsString('Rs. 172.00', $html);   // invoice outstanding cell (222 - 50)
 
         // Header totals stay distinct from the per-row figures above.
-        $this->assertStringContainsString('₹333.00', $html);   // billed in range
-        $this->assertStringContainsString('₹90.00', $html);    // collected in range total
-        $this->assertStringContainsString('₹243.00', $html);   // outstanding as on to
+        $this->assertStringContainsString('Rs. 333.00', $html);   // billed in range
+        $this->assertStringContainsString('Rs. 90.00', $html);    // collected in range total
+        $this->assertStringContainsString('Rs. 243.00', $html);   // outstanding as on to
     }
 
     public function test_voided_payments_do_not_count_toward_customer_balances()
@@ -293,8 +293,8 @@ class Customer360StatementTest extends TestCase
 
         $html = view('pdf.customer-statement', $data)->render();
 
-        $this->assertStringContainsString('₹340.00', $html);
-        $this->assertStringNotContainsString('₹999.00', $html);
+        $this->assertStringContainsString('Rs. 340.00', $html);
+        $this->assertStringNotContainsString('Rs. 999.00', $html);
 
         // The route itself still streams a valid PDF.
         $response = $this->actingAs($user)->get(route('customers.statement', [

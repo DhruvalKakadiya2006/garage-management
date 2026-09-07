@@ -275,6 +275,9 @@ class JobCardController extends Controller
         // when a PDF was actually produced. Rendering to string first ensures
         // dompdf errors do not leave a timestamp without a deliverable PDF.
         $pdf = Pdf::setBasePath(base_path())
+            ->setOption('isHtml5ParserEnabled', false)
+            ->setOption('isRemoteEnabled', false)
+            ->setOption('defaultFont', 'sans-serif')
             ->loadView('pdf.job-card', compact('jobCard', 'documentType'));
 
         // Force rendering now; if dompdf throws, the timestamp is never written.

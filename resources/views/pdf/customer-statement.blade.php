@@ -1,6 +1,7 @@
 @php
     $profile = \App\Models\CompanyProfile::profile();
-    $currency = config('garage.currency_symbol');
+    // Use "Rs." for PDF compatibility (₹ symbol not supported in core PDF fonts)
+    $currency = 'Rs. ';
     $money = fn ($value) => $currency . number_format((float) $value, 2);
     $outstandingTo = fn ($doc) => max(0, (float) $doc->grand_total - (float) ($doc->paid_to ?? 0));
     $rangeLabel = $from->format('d/m/Y') . ' to ' . $to->format('d/m/Y');
@@ -8,7 +9,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>Customer Statement — {{ $customer->display_name }}</title>
     <style>
         @include('pdf.partials.styles')

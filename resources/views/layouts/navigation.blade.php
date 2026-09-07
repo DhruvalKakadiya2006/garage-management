@@ -7,7 +7,8 @@ $navItems = [
     ['route' => 'counter-invoices.index', 'pattern' => 'counter-invoices.*', 'icon' => 'receipt-percent', 'label' => __('Counter Invoice')],
     ['route' => 'payments.index', 'pattern' => 'payments.*', 'icon' => 'banknotes', 'label' => __('Payments')],
     ['route' => 'inventory.index', 'pattern' => ['inventory.*', 'spare-parts.*', 'labour-masters.*'], 'icon' => 'cube', 'label' => __('Inventory')],
-    ['route' => 'analytics.index', 'pattern' => 'analytics.*', 'icon' => 'chart-bar', 'label' => __('Analytics')],
+    // Analytics hidden from nav but accessible via direct URL: /analytics
+    // ['route' => 'analytics.index', 'pattern' => 'analytics.*', 'icon' => 'chart-bar', 'label' => __('Analytics')],
     ['route' => 'employees.index', 'pattern' => 'employees.*', 'icon' => 'user-group', 'label' => __('Employees')],
     ['route' => 'company-profile.index', 'pattern' => 'company-profile.*', 'icon' => 'building-office-2', 'label' => __('Company Profile')],
 ];
