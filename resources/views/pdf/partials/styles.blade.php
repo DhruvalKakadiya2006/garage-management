@@ -1,39 +1,16 @@
-@font-face {
-    font-family: 'Open Sans';
-    font-style: normal;
-    font-weight: 400;
-    src: url('storage/fonts/OpenSans-Regular.ttf') format('truetype');
-}
-@font-face {
-    font-family: 'Open Sans';
-    font-style: normal;
-    font-weight: 700;
-    src: url('storage/fonts/OpenSans-Bold.ttf') format('truetype');
-}
-@font-face {
-    font-family: 'Open Sans';
-    font-style: italic;
-    font-weight: 400;
-    src: url('storage/fonts/OpenSans-Italic.ttf') format('truetype');
-}
-@font-face {
-    font-family: 'Open Sans';
-    font-style: italic;
-    font-weight: 700;
-    src: url('storage/fonts/OpenSans-BoldItalic.ttf') format('truetype');
-}
 @page {
     size: A4 portrait;
     margin: 14mm 14mm 18mm 14mm;
 }
 * { box-sizing: border-box; }
 body {
-    font-family: 'Open Sans', sans-serif;
+    font-family: sans-serif;
     font-size: 10pt;
-    color: #000000;
+    color: #000000 !important;
     margin: 0;
     padding: 0;
     line-height: 1.4;
+    background: #ffffff;
 }
 table { border-collapse: collapse; }
 
@@ -124,6 +101,8 @@ table.data td {
     border: 1pt solid #555555;
     padding: 4pt 6pt;
     vertical-align: top;
+    color: #000000 !important;
+    background: #ffffff;
 }
 .right { text-align: right; }
 .center { text-align: center; }

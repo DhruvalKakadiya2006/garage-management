@@ -1,7 +1,8 @@
 @php
     $isInvoice = $documentType === 'invoice';
     $profile = \App\Models\CompanyProfile::profile();
-    $currency = config('garage.currency_symbol');
+    // Use "Rs." for PDF compatibility (₹ symbol not supported in core PDF fonts)
+    $currency = 'Rs. ';
     $money = fn ($value) => $currency . number_format((float) $value, 2);
     $trimGst = fn ($value) => rtrim(rtrim(number_format((float) $value, 2), '0'), '.');
 
@@ -57,7 +58,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>{{ $isInvoice ? 'TAX INVOICE' : 'ESTIMATE' }} — {{ $jobCard->job_card_no }}</title>
     <style>
         @include('pdf.partials.styles')

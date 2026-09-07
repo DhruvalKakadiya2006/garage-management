@@ -267,9 +267,7 @@ class CustomerController extends Controller
             ->values();
 
         $createJobCardParams = ['customer_id' => $customer->id];
-        if ($customer->vehicles_count === 1) {
-            $createJobCardParams['vehicle_id'] = $customer->vehicles->first()->id;
-        }
+        // Don't pass vehicle_id here - let JobCardController handle auto-selection
 
         return view('customers.show', compact('customer', 'tab', 'jobCards', 'counterInvoices', 'payments', 'outstandingDocuments', 'createJobCardParams'));
     }
@@ -303,6 +301,9 @@ class CustomerController extends Controller
         $filename = 'CUSTOMER-STATEMENT-'.Str::slug($customer->display_name).'.pdf';
 
         $pdf = Pdf::setBasePath(base_path())
+            ->setOption('isHtml5ParserEnabled', false)
+            ->setOption('isRemoteEnabled', false)
+            ->setOption('defaultFont', 'sans-serif')
             ->loadView('pdf.customer-statement', $data);
 
         return $pdf->download($filename);

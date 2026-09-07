@@ -298,15 +298,16 @@
 
                 createJobCard() {
                     const vehicles = this.selectedCustomer ? this.selectedCustomer.vehicles : [];
-                    if (vehicles.length === 1) {
-                        this.goToJobCard(vehicles[0].id);
+                    if (vehicles.length === 0) {
+                        alert('This customer has no vehicles yet. Add a vehicle first.');
                         return;
                     }
                     if (vehicles.length > 1) {
                         this.$dispatch('open-modal', 'pick-vehicle');
                         return;
                     }
-                    alert('This customer has no vehicles yet. Add a vehicle first.');
+                    // For single vehicle, let the controller handle auto-selection
+                    window.location.href = jobCardsCreate + '?customer_id=' + this.singleId;
                 },
 
                 goToJobCard(vehicleId) {

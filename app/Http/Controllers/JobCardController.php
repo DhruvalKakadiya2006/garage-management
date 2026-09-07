@@ -168,11 +168,18 @@ class JobCardController extends Controller
                 ->with(['vehicleModel.vehicleBrand'])
                 ->orderBy('registration_no')
                 ->get();
+
+            // Auto-select vehicle if customer has only one vehicle
+            // Only auto-select if no vehicle_id was provided in the request
+            if ($initialVehicles->count() === 1 && ! $vehicleId && ! $request->has('vehicle_id')) {
+                $vehicleId = $initialVehicles->first()->id;
+            }
         }
 
         $initialData = [
             'customer_id' => $customerId ? (string) $customerId : '',
             'vehicle_id' => $vehicleId ? (string) $vehicleId : '',
+            'job_date' => now()->toDateString(), // Pre-fill today's date
             'complaints' => [],
         ];
 
@@ -275,6 +282,9 @@ class JobCardController extends Controller
         // when a PDF was actually produced. Rendering to string first ensures
         // dompdf errors do not leave a timestamp without a deliverable PDF.
         $pdf = Pdf::setBasePath(base_path())
+            ->setOption('isHtml5ParserEnabled', false)
+            ->setOption('isRemoteEnabled', false)
+            ->setOption('defaultFont', 'sans-serif')
             ->loadView('pdf.job-card', compact('jobCard', 'documentType'));
 
         // Force rendering now; if dompdf throws, the timestamp is never written.

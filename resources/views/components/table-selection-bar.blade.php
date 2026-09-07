@@ -60,10 +60,12 @@
 
         @if ($bulkEndpoint)
             @can('admin')
-                <x-button variant="danger" type="button" @click="$dispatch('open-modal', '{{ $modalName }}')">
-                    <x-heroicon-o-trash class="w-4 h-4" />
-                    {{ $bulkActionLabel }}
-                </x-button>
+                <div x-show="selectedCount > 1" x-transition.opacity.duration.150>
+                    <x-button variant="danger" type="button" @click="$dispatch('open-modal', '{{ $modalName }}')">
+                        <x-heroicon-o-trash class="w-4 h-4" />
+                        {{ $bulkActionLabel }}
+                    </x-button>
+                </div>
             @endcan
         @endif
 

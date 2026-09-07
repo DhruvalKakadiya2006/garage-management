@@ -24,7 +24,8 @@
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white shadow-sm sm:rounded-lg p-6">
 
-                <form action="{{ route('job-cards.store') }}" method="POST" class="space-y-6">
+                <form action="{{ route('job-cards.store') }}" method="POST" class="space-y-6" 
+                      x-data="jobCardForm(@json($initialData), @json($initialVehiclesData))">
                     @csrf
 
                     @if($errors->any())
@@ -64,7 +65,7 @@
                                     class="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm" required>
                                 <option value="">-- Select Vehicle --</option>
                                 <template x-for="vehicle in vehicles" :key="vehicle.id">
-                                    <option :value="vehicle.id" x-text="vehicle.label"></option>
+                                    <option :value="vehicle.id" x-text="vehicle.label" :selected="vehicle.id === vehicleId"></option>
                                 </template>
                             </select>
                             <p class="text-xs text-gray-500 mt-1" x-show="vehiclesLoading">Loading vehicles…</p>
