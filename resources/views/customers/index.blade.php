@@ -241,36 +241,6 @@
                 @endforeach
             </x-data-table>
 
-            {{-- Vehicle picker for customers with multiple vehicles --}}
-            <x-modal name="pick-vehicle" maxWidth="lg">
-                <div class="p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-1">Select Vehicle</h3>
-                    <p class="text-sm text-gray-500 mb-4">
-                        <span class="font-medium text-gray-700" x-text="selectedCustomer ? selectedCustomer.display_name : ''"></span>
-                        has multiple vehicles. Choose one to create a Job Card.
-                    </p>
-                    <div class="space-y-2">
-                        <template x-for="v in (selectedCustomer ? selectedCustomer.vehicles : [])" :key="v.id">
-                            <button type="button" @click="goToJobCard(v.id)"
-                                    class="w-full flex items-center justify-between rounded-lg border border-border px-4 py-3 text-left text-sm transition-colors duration-150 hover:border-primary hover:bg-accent">
-                                <span class="flex items-center gap-2">
-                                    <span class="font-medium text-gray-900" x-text="v.registration_no || 'NON-RTO'"></span>
-                                    <template x-if="v.is_non_rto">
-                                        <span class="inline-flex items-center rounded-full bg-amber-100 text-amber-800 px-2.5 py-0.5 text-xs font-medium">NON-RTO</span>
-                                    </template>
-                                </span>
-                                <span class="text-gray-500" x-text="[v.brand, v.model].filter(Boolean).join(' ') || '—'"></span>
-                            </button>
-                        </template>
-                    </div>
-                    <div class="mt-5 flex justify-end">
-                        <x-button variant="secondary" type="button" @click="$dispatch('close-modal', 'pick-vehicle')">
-                            Cancel
-                        </x-button>
-                    </div>
-                </div>
-            </x-modal>
-
         </div>
     </div>
 
@@ -297,21 +267,18 @@
                 },
 
                 createJobCard() {
-                    const vehicles = this.selectedCustomer ? this.selectedCustomer.vehicles : [];
+                    const customer = this.selectedCustomer;
+                    if (!customer) return;
+                    
+                    const vehicles = customer.vehicles || [];
                     if (vehicles.length === 0) {
                         alert('This customer has no vehicles yet. Add a vehicle first.');
                         return;
                     }
-                    if (vehicles.length > 1) {
-                        this.$dispatch('open-modal', 'pick-vehicle');
-                        return;
-                    }
-                    // For single vehicle, let the controller handle auto-selection
+                    
+                    // Navigate directly to Job Card create page
+                    // Job Card form handles vehicle selection (0/1/multiple)
                     window.location.href = jobCardsCreate + '?customer_id=' + this.singleId;
-                },
-
-                goToJobCard(vehicleId) {
-                    window.location.href = jobCardsCreate + '?customer_id=' + this.singleId + '&vehicle_id=' + vehicleId;
                 },
 
                 addVehicle() {

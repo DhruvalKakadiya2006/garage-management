@@ -846,4 +846,50 @@ class JobCardCreateEditTest extends TestCase
         // Verify vehicle_id is NOT auto-selected (empty string)
         $this->assertStringContainsString('"vehicle_id":""', $html);
     }
+
+    public function test_customers_page_no_longer_contains_vehicle_picker_modal()
+    {
+        $user = $this->makeUser();
+        $customer = Customer::create(['first_name' => 'Test', 'mobile' => '9000000099', 'customer_type' => 'regular']);
+        $this->makeCatalogVehicle($customer, 'GJ-01-AA-1111', 'Ola', 'S1');
+        $this->makeCatalogVehicle($customer, 'GJ-01-AA-2222', 'Ather', '450X');
+
+        $response = $this->actingAs($user)->get(route('customers.index'));
+
+        $response->assertOk();
+        $html = $response->getContent();
+
+        // Verify pick-vehicle modal is removed
+        $this->assertStringNotContainsString('name="pick-vehicle"', $html);
+        $this->assertStringNotContainsString('Select Vehicle', $html);
+        $this->assertStringNotContainsString('has multiple vehicles. Choose one to create a Job Card', $html);
+
+        // Verify goToJobCard() method is removed
+        $this->assertStringNotContainsString('goToJobCard', $html);
+    }
+
+    public function test_job_card_create_uses_json_script_tags_not_inline_json()
+    {
+        $user = $this->makeUser();
+        $customer = Customer::create(['first_name' => 'Test', 'mobile' => '9000000098', 'customer_type' => 'regular']);
+        $vehicle = $this->makeCatalogVehicle($customer, 'GJ-01-XY-9999', 'Ola', 'S1 Pro');
+
+        $response = $this->actingAs($user)
+            ->get(route('job-cards.create', ['customer_id' => $customer->id]));
+
+        $response->assertOk();
+        $html = $response->getContent();
+
+        // Verify JSON is in script tags, not inline in x-data attribute
+        $this->assertStringContainsString('<script type="application/json" id="job-card-initial-data">', $html);
+        $this->assertStringContainsString('<script type="application/json" id="job-card-initial-vehicles">', $html);
+
+        // Verify x-data uses JSON.parse() to read from script tags
+        $this->assertStringContainsString('JSON.parse(document.getElementById(\'job-card-initial-data\').textContent)', $html);
+        $this->assertStringContainsString('JSON.parse(document.getElementById(\'job-card-initial-vehicles\').textContent)', $html);
+
+        // Verify @json() is NOT directly in x-data attribute (which causes HTML escaping issues)
+        $this->assertStringNotContainsString('x-data="jobCardForm({&', $html);
+        $this->assertStringNotContainsString('x-data="jobCardForm(&', $html);
+    }
 }
