@@ -21,11 +21,22 @@
             'label' => trim(($v->registration_no ?? 'NON-RTO').' — '.($v->vehicleModel?->vehicleBrand?->name ?? '').' '.($v->vehicleModel?->name ?? '')),
         ])->values();
         @endphp
+
+        <script type="application/json" id="job-card-initial-data">
+            @json($initialData)
+        </script>
+        <script type="application/json" id="job-card-initial-vehicles">
+            @json($initialVehiclesData)
+        </script>
+
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white shadow-sm sm:rounded-lg p-6">
 
                 <form action="{{ route('job-cards.store') }}" method="POST" class="space-y-6" 
-                      x-data="jobCardForm(@json($initialData), @json($initialVehiclesData))">
+                      x-data="jobCardForm(
+                          JSON.parse(document.getElementById('job-card-initial-data').textContent),
+                          JSON.parse(document.getElementById('job-card-initial-vehicles').textContent)
+                      )">
                     @csrf
 
                     @if($errors->any())
