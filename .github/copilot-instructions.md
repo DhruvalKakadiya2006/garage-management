@@ -3,10 +3,7 @@
 **Single source of truth for AI agents working on this project.**
 
 Paste this into new agent sessions or save as:
-- Cursor: `.cursorrules` or `.cursor/rules/project.mdc`
-- Kiro: `.kiro/steering/project-rules.md`
 - GitHub Copilot: `.github/copilot-instructions.md`
-- Windsurf: `.windsurfrules`
 - Any other: paste as first message or system prompt
 
 **If a new request conflicts with anything below, STOP and ask — don't silently override a deliberate decision.**
