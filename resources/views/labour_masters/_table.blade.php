@@ -38,9 +38,26 @@
         <x-slot name="header">
             <tr>
                 <th class="align-middle w-10 px-6 py-3 text-left"><x-table-select-all /></th>
-                <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Service Name</th>
+                <x-sortable-header 
+                    column="service_name" 
+                    label="Service Name" 
+                    :currentSort="request('sort')" 
+                    :currentDirection="request('direction', 'asc')"
+                />
                 <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Category</th>
-                <th class="align-middle px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Standard Rate</th>
+                <x-sortable-header 
+                    column="standard_rate" 
+                    label="Standard Rate" 
+                    :currentSort="request('sort')" 
+                    :currentDirection="request('direction', 'asc')"
+                    class="text-right"
+                />
+                <x-sortable-header 
+                    column="taxable" 
+                    label="Taxable" 
+                    :currentSort="request('sort')" 
+                    :currentDirection="request('direction', 'asc')"
+                />
             </tr>
         </x-slot>
 
@@ -65,6 +82,13 @@
                 </td>
                 <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
                     {{ config('garage.currency_symbol') }}{{ number_format($labour->standard_rate, 2) }}
+                </td>
+                <td class="align-middle px-6 py-2 whitespace-nowrap text-center">
+                    @if($labour->taxable)
+                        <x-badge color="green">Taxable</x-badge>
+                    @else
+                        <x-badge color="gray">Non-Taxable</x-badge>
+                    @endif
                 </td>
             </tr>
         @endforeach

@@ -72,11 +72,33 @@
         <x-slot name="header">
             <tr>
                 <th class="align-middle w-10 px-6 py-3 text-left"><x-table-select-all /></th>
-                <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Part Name</th>
+                <x-sortable-header 
+                    column="part_name" 
+                    label="Part Name" 
+                    :currentSort="request('sort')" 
+                    :currentDirection="request('direction', 'asc')"
+                />
                 <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Part Code</th>
-                <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Category</th>
-                <th class="align-middle px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">MRP</th>
-                <th class="align-middle px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Labor Charge</th>
+                <x-sortable-header 
+                    column="category" 
+                    label="Category" 
+                    :currentSort="request('sort')" 
+                    :currentDirection="request('direction', 'asc')"
+                />
+                <x-sortable-header 
+                    column="mrp" 
+                    label="MRP" 
+                    :currentSort="request('sort')" 
+                    :currentDirection="request('direction', 'asc')"
+                    class="text-right"
+                />
+                <x-sortable-header 
+                    column="labor_charge" 
+                    label="Labor Charge" 
+                    :currentSort="request('sort')" 
+                    :currentDirection="request('direction', 'asc')"
+                    class="text-right"
+                />
                 <th class="align-middle px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Total</th>
             </tr>
         </x-slot>

@@ -28,6 +28,39 @@
                 </div>
             @endif
 
+            {{-- Search and Filter Form --}}
+            <form method="GET" action="{{ route('vehicle-catalog.index') }}" class="mb-6">
+                <div class="space-y-4">
+                    {{-- Filters --}}
+                    <x-filter-panel>
+                        <div>
+                            <label for="per_page" class="block text-sm font-medium text-gray-700 mb-1">Items Per Page</label>
+                            <select name="per_page" id="per_page" class="w-full border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="15" {{ request('per_page', 15) == 15 ? 'selected' : '' }}>15</option>
+                                <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
+                                <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+                                <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
+                            </select>
+                        </div>
+
+                        <div class="flex items-end">
+                            <x-button type="submit" class="w-full">
+                                <x-heroicon-o-funnel class="w-4 h-4" />
+                                Apply
+                            </x-button>
+                        </div>
+
+                        @if(request()->hasAny(['sort', 'per_page']))
+                            <div class="flex items-end">
+                                <x-button variant="secondary" type="button" onclick="window.location.href='{{ route('vehicle-catalog.index') }}'" class="w-full">
+                                    Clear
+                                </x-button>
+                            </div>
+                        @endif
+                    </x-filter-panel>
+                </div>
+            </form>
+
             {{-- Contextual action bar --}}
             <x-table-selection-bar
                 :bulk-endpoint="route('vehicle-brands.bulk-delete')"
@@ -60,8 +93,18 @@
                 <x-slot name="header">
                     <tr>
                         <th class="align-middle w-10 px-6 py-3 text-left"><x-table-select-all /></th>
-                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Brand</th>
-                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Models</th>
+                        <x-sortable-header 
+                            column="name" 
+                            label="Brand" 
+                            :currentSort="request('sort')" 
+                            :currentDirection="request('direction', 'asc')"
+                        />
+                        <x-sortable-header 
+                            column="models_count" 
+                            label="Models" 
+                            :currentSort="request('sort')" 
+                            :currentDirection="request('direction', 'asc')"
+                        />
                         <th class="align-middle w-10 px-6 py-3 text-right"></th>
                     </tr>
                 </x-slot>

@@ -3,8 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\AppliesSearchFilterSort;
-use App\Http\Requests\FilterLabourMastersRequest;
-use App\Http\Requests\FilterSparePartsRequest;
 use App\Models\LabourMaster;
 use App\Models\SparePart;
 use Illuminate\Http\Request;
@@ -13,7 +11,7 @@ class InventoryController extends Controller
 {
     use AppliesSearchFilterSort;
 
-    public function index(Request $request, FilterSparePartsRequest $partsRequest, FilterLabourMastersRequest $labourRequest)
+    public function index(Request $request)
     {
         $tab = $request->query('tab', 'parts');
 
@@ -24,25 +22,23 @@ class InventoryController extends Controller
         // Build spare parts query with search/filter/sort
         $partsQuery = SparePart::query();
 
-        $partsValidated = $partsRequest->validated();
-
         // Apply search to spare parts
-        if ($partsRequest->filled('search')) {
+        if ($request->filled('search')) {
             $partsQuery = $this->applySearch(
                 $partsQuery,
-                $partsValidated['search'],
+                $request->input('search'),
                 ['part_name', 'part_code', 'category']
             );
         }
 
         // Filter by category
-        if ($partsRequest->filled('category')) {
-            $partsQuery->where('category', $partsValidated['category']);
+        if ($request->filled('category')) {
+            $partsQuery->where('category', $request->input('category'));
         }
 
         // Apply sorting for spare parts
-        $partsSortColumn = $partsValidated['sort'] ?? 'part_name';
-        $partsSortDirection = $partsValidated['direction'] ?? 'asc';
+        $partsSortColumn = $request->input('sort', 'part_name');
+        $partsSortDirection = $request->input('direction', 'asc');
 
         $partsQuery = $this->applySort(
             $partsQuery,
@@ -52,35 +48,33 @@ class InventoryController extends Controller
             ['column' => 'part_name', 'direction' => 'asc']
         );
 
-        $partsPerPage = $this->getPerPage($partsRequest);
+        $partsPerPage = $this->getPerPage($request);
         $spareParts = $partsQuery->paginate($partsPerPage, ['*'], 'parts_page')->withQueryString();
 
         // Build labour masters query with search/filter/sort
         $labourQuery = LabourMaster::query();
 
-        $labourValidated = $labourRequest->validated();
-
         // Apply search to labour masters
-        if ($labourRequest->filled('search')) {
+        if ($request->filled('search')) {
             $labourQuery = $this->applySearch(
                 $labourQuery,
-                $labourValidated['search'],
+                $request->input('search'),
                 ['service_name', 'category']
             );
         }
 
         // Filter by taxable status
-        if ($labourRequest->filled('taxable') && $labourValidated['taxable'] !== 'all') {
-            if ($labourValidated['taxable'] === 'taxable') {
+        if ($request->filled('taxable') && $request->input('taxable') !== 'all') {
+            if ($request->input('taxable') === 'taxable') {
                 $labourQuery->where('taxable', true);
-            } elseif ($labourValidated['taxable'] === 'non_taxable') {
+            } elseif ($request->input('taxable') === 'non_taxable') {
                 $labourQuery->where('taxable', false);
             }
         }
 
         // Apply sorting for labour masters
-        $labourSortColumn = $labourValidated['sort'] ?? 'service_name';
-        $labourSortDirection = $labourValidated['direction'] ?? 'asc';
+        $labourSortColumn = $request->input('sort', 'service_name');
+        $labourSortDirection = $request->input('direction', 'asc');
 
         $labourQuery = $this->applySort(
             $labourQuery,
@@ -90,7 +84,7 @@ class InventoryController extends Controller
             ['column' => 'service_name', 'direction' => 'asc']
         );
 
-        $labourPerPage = $this->getPerPage($labourRequest);
+        $labourPerPage = $this->getPerPage($request);
         $labourMasters = $labourQuery->paginate($labourPerPage, ['*'], 'labours_page')->withQueryString();
 
         // Get unique categories for filter dropdown

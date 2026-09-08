@@ -28,6 +28,81 @@
                 </div>
             @endif
 
+            {{-- Search and Filter Form --}}
+            <form method="GET" action="{{ route('counter-invoices.index') }}" class="mb-6">
+                <div class="space-y-4">
+                    {{-- Filters --}}
+                    <x-filter-panel>
+                        <div>
+                            <label for="from_date" class="block text-sm font-medium text-gray-700 mb-1">From Date</label>
+                            <input type="date" name="from_date" id="from_date" value="{{ request('from_date') }}" 
+                                   class="w-full border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+
+                        <div>
+                            <label for="to_date" class="block text-sm font-medium text-gray-700 mb-1">To Date</label>
+                            <input type="date" name="to_date" id="to_date" value="{{ request('to_date') }}" 
+                                   class="w-full border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+
+                        <div>
+                            <label for="payment_status" class="block text-sm font-medium text-gray-700 mb-1">Payment Status</label>
+                            <select name="payment_status" id="payment_status" class="w-full border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="all" {{ request('payment_status', 'all') === 'all' ? 'selected' : '' }}>All</option>
+                                <option value="paid" {{ request('payment_status') === 'paid' ? 'selected' : '' }}>Paid</option>
+                                <option value="partially_paid" {{ request('payment_status') === 'partially_paid' ? 'selected' : '' }}>Partially Paid</option>
+                                <option value="unpaid" {{ request('payment_status') === 'unpaid' ? 'selected' : '' }}>Unpaid</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="customer_type" class="block text-sm font-medium text-gray-700 mb-1">Customer Type</label>
+                            <select name="customer_type" id="customer_type" class="w-full border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="all" {{ request('customer_type', 'all') === 'all' ? 'selected' : '' }}>All</option>
+                                <option value="registered" {{ request('customer_type') === 'registered' ? 'selected' : '' }}>Registered</option>
+                                <option value="walk_in" {{ request('customer_type') === 'walk_in' ? 'selected' : '' }}>Walk-in</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="per_page" class="block text-sm font-medium text-gray-700 mb-1">Items Per Page</label>
+                            <select name="per_page" id="per_page" class="w-full border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="15" {{ request('per_page', 15) == 15 ? 'selected' : '' }}>15</option>
+                                <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
+                                <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+                                <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
+                            </select>
+                        </div>
+
+                        <div class="flex items-end">
+                            <x-button type="submit" class="w-full">
+                                <x-heroicon-o-funnel class="w-4 h-4" />
+                                Apply Filters
+                            </x-button>
+                        </div>
+
+                        @if(request()->hasAny(['from_date', 'to_date', 'payment_status', 'customer_type', 'sort']))
+                            <div class="flex items-end">
+                                <x-button variant="secondary" type="button" onclick="window.location.href='{{ route('counter-invoices.index') }}'" class="w-full">
+                                    Clear
+                                </x-button>
+                            </div>
+                        @endif
+                    </x-filter-panel>
+
+                    {{-- Active Filters --}}
+                    <x-active-filters-bar 
+                        :filters="[
+                            'from_date' => request('from_date'),
+                            'to_date' => request('to_date'),
+                            'payment_status' => request('payment_status') !== 'all' ? request('payment_status') : null,
+                            'customer_type' => request('customer_type') !== 'all' ? request('customer_type') : null,
+                        ]"
+                        :baseRoute="'counter-invoices.index'"
+                    />
+                </div>
+            </form>
+
             <x-table-selection-bar
                 :bulk-endpoint="route('counter-invoices.bulk-delete')"
                 :bulk-export-endpoint="route('counter-invoices.bulk-export')"
@@ -58,11 +133,27 @@
                 <x-slot name="header">
                     <tr>
                         <th class="align-middle w-10 px-6 py-3 text-left"><x-table-select-all /></th>
-                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Invoice No.</th>
-                        <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
+                        <x-sortable-header 
+                            column="invoice_no" 
+                            label="Invoice No." 
+                            :currentSort="request('sort')" 
+                            :currentDirection="request('direction', 'asc')"
+                        />
+                        <x-sortable-header 
+                            column="invoice_date" 
+                            label="Date" 
+                            :currentSort="request('sort')" 
+                            :currentDirection="request('direction', 'asc')"
+                        />
                         <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Customer</th>
                         <th class="align-middle px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Payment</th>
-                        <th class="align-middle px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Grand Total</th>
+                        <x-sortable-header 
+                            column="grand_total" 
+                            label="Grand Total" 
+                            :currentSort="request('sort')" 
+                            :currentDirection="request('direction', 'asc')"
+                            class="text-right"
+                        />
                     </tr>
                 </x-slot>
 
