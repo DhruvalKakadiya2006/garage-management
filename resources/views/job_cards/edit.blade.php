@@ -73,16 +73,19 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Vehicle *</label>
                             <select name="vehicle_id" x-model="vehicleId"
-                                    class="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm" required>
+                                    class="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm py-2 px-3" required>
                                 <option value="">-- Select Vehicle --</option>
-                                <template x-for="vehicle in vehicles" :key="vehicle.id">
-                                    <option :value="vehicle.id" x-text="vehicle.label"></option>
-                                </template>
+                                @foreach($initialVehiclesData as $vehicle)
+                                    <option value="{{ $vehicle['id'] }}" {{ old('vehicle_id', $jobCard->vehicle_id) == $vehicle['id'] ? 'selected' : '' }}>
+                                        {{ $vehicle['label'] }}
+                                    </option>
+                                @endforeach
                             </select>
-                            <p class="text-xs text-gray-500 mt-1" x-show="vehiclesLoading">Loading vehicles…</p>
-                            <p class="text-xs text-amber-600 mt-1" x-show="selectedCustomer && !vehiclesLoading && vehicles.length === 0">
-                                No vehicles for this customer yet.
-                            </p>
+                            @if($initialVehiclesData->isEmpty())
+                                <p class="text-xs text-amber-600 mt-1">⚠️ This customer has no vehicles registered.</p>
+                            @else
+                                <p class="text-xs text-gray-500 mt-1">{{ $initialVehiclesData->count() }} vehicle(s) available</p>
+                            @endif
                             @error('vehicle_id') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
                         </div>
                     </div>
@@ -117,7 +120,7 @@
                             <div class="grid grid-cols-12 gap-2 mb-2 items-end">
                                 <div class="col-span-11">
                                     <input type="text" :name="`complaints[${index}][description]`" x-model="complaint.description"
-                                           placeholder="Describe the complaint" class="block w-full text-sm rounded-md border border-gray-300 bg-white shadow-sm" required>
+                                           placeholder="Describe the complaint" class="block w-full h-10 text-sm rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm" required>
                                 </div>
                                 <div class="col-span-1">
                                     <button type="button" @click="removeComplaint(index)" title="Remove"

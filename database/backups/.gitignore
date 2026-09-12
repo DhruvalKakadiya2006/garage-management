@@ -1,0 +1,6 @@
+# Backup files should not be committed to version control
+*.sqlite
+*.db
+
+# But keep this directory in git
+!.gitignore

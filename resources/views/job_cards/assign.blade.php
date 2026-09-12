@@ -32,7 +32,6 @@
             ])->values(),
             'labours' => $jobCard->labours->map(fn($l) => [
                 'labour_master_id' => (int) $l->labour_master_id,
-                'technician_id' => $l->technician_id ? (int) $l->technician_id : '',
                 'qty' => (float) $l->qty,
                 'rate' => (float) $l->rate,
                 'gstRate' => (float) ($labourMasters->firstWhere('id', $l->labour_master_id)?->taxable ? ($labourMasters->firstWhere('id', $l->labour_master_id)?->gst_rate ?? 0) : 0),
@@ -152,7 +151,7 @@
                                 </div>
                                 <div class="col-span-1">
                                     <input type="number" :name="`parts[${index}][quantity]`" x-model="part.quantity" @input="calculatePartLine(index)"
-                                           placeholder="Qty" class="block w-full text-sm rounded-md border border-gray-300 bg-white shadow-sm" required min="1">
+                                           placeholder="Qty" class="block w-full h-10 text-sm rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm" required min="1">
                                 </div>
                                 <div class="col-span-2">
                                     <input type="number" step="0.01" :name="`parts[${index}][mrp]`" x-model="part.mrp"
@@ -161,7 +160,7 @@
                                 </div>
                                 <div class="col-span-2">
                                     <input type="number" step="0.01" :name="`parts[${index}][labor_charge]`" x-model="part.labor_charge" @input="calculatePartLine(index)"
-                                           placeholder="Labor" class="block w-full text-sm rounded-md border border-gray-300 bg-white shadow-sm" required min="0">
+                                           placeholder="Labor" class="block w-full h-10 text-sm rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm" required min="0">
                                 </div>
                                 <div class="col-span-1">
                                     <label class="flex items-center justify-center">
@@ -187,18 +186,17 @@
                             <button type="button" @click="addLabour()" class="text-sm text-primary hover:text-primary-700">+ Add Labour</button>
                         </div>
                         <div class="grid grid-cols-12 gap-2 mb-1 text-xs text-gray-500">
-                            <div class="col-span-4">Service</div>
-                            <div class="col-span-3">Technician</div>
-                            <div class="col-span-1">Qty</div>
+                            <div class="col-span-5">Service</div>
+                            <div class="col-span-2">Qty</div>
                             <div class="col-span-2">Rate</div>
-                            <div class="col-span-1">Line Total</div>
+                            <div class="col-span-2">Line Total</div>
                             <div class="col-span-1"></div>
                         </div>
                         <template x-for="(labour, index) in labours" :key="index">
                             <div class="grid grid-cols-12 gap-2 mb-2 items-end">
-                                <div class="col-span-4">
+                                <div class="col-span-5">
                                     <select :name="`labours[${index}][labour_master_id]`" x-model="labour.labour_master_id" @change="autofillLabour(index, $event)"
-                                            class="block w-full text-sm rounded-md border border-gray-300 bg-white shadow-sm" required>
+                                            class="block w-full h-10 text-sm rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm" required>
                                         <option value="">-- Select Service --</option>
                                         @foreach ($labourMasters as $lm)
                                             <option value="{{ $lm->id }}" data-rate="{{ $lm->standard_rate }}" data-taxable="{{ $lm->taxable ? '1' : '0' }}" data-gst="{{ $lm->taxable ? $lm->gst_rate : 0 }}">
@@ -207,24 +205,15 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="col-span-3">
-                                    <select :name="`labours[${index}][technician_id]`" x-model="labour.technician_id"
-                                            class="block w-full text-sm rounded-md border border-gray-300 bg-white shadow-sm">
-                                        <option value="">-- None --</option>
-                                        @foreach ($employees as $employee)
-                                            <option value="{{ $employee->id }}">{{ $employee->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-span-1">
+                                <div class="col-span-2">
                                     <input type="number" step="0.01" :name="`labours[${index}][qty]`" x-model="labour.qty" @input="calculateLabourLine(index)"
-                                           placeholder="Qty" class="block w-full text-sm rounded-md border border-gray-300 bg-white shadow-sm" required min="0">
+                                           placeholder="Qty" class="block w-full h-10 text-sm rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm" required min="0">
                                 </div>
                                 <div class="col-span-2">
                                     <input type="number" step="0.01" :name="`labours[${index}][rate]`" x-model="labour.rate" @input="calculateLabourLine(index)"
-                                           placeholder="Rate" class="block w-full text-sm rounded-md border border-gray-300 bg-white shadow-sm" required min="0">
+                                           placeholder="Rate" class="block w-full h-10 text-sm rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm" required min="0">
                                 </div>
-                                <div class="col-span-1 text-right text-sm font-medium" x-text="'{{ config('garage.currency_symbol') }}' + labour.lineTotal.toFixed(2)"></div>
+                                <div class="col-span-2 text-right text-sm font-medium" x-text="'{{ config('garage.currency_symbol') }}' + labour.lineTotal.toFixed(2)"></div>
                                 <div class="col-span-1">
                                     <button type="button" @click="removeLabour(index)" title="Remove"
                                             class="inline-flex items-center justify-center rounded-md p-1.5 text-red-600 transition-colors duration-150 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
@@ -254,10 +243,10 @@
 
                             <div class="grid grid-cols-2 gap-2">
                                 <input type="number" step="0.01" name="discount_percent" x-model="discountPercent" @input="calculateTotals()"
-                                       placeholder="Discount %" class="text-sm rounded-md border border-gray-300 bg-white shadow-sm" min="0" max="100"
+                                       placeholder="Discount %" class="h-10 text-sm rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm" min="0" max="100"
                                        x-show="discountType === 'percentage'" :disabled="discountType !== 'percentage'">
                                 <input type="number" step="0.01" name="discount_amount" x-model="discountAmount" @input="calculateTotals()"
-                                       placeholder="Discount {{ config('garage.currency_symbol') }}" class="text-sm rounded-md border border-gray-300 bg-white shadow-sm" min="0"
+                                       placeholder="Discount {{ config('garage.currency_symbol') }}" class="h-10 text-sm rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm" min="0"
                                        x-show="discountType === 'amount'" :disabled="discountType !== 'amount'">
                             </div>
 
@@ -353,7 +342,7 @@
                 },
 
                 addLabour() {
-                    this.labours.push({labour_master_id: '', technician_id: '', qty: 1, rate: 0, gstRate: 0, lineTotal: 0});
+                    this.labours.push({labour_master_id: '', qty: 1, rate: 0, gstRate: 0, lineTotal: 0});
                     this.calculateTotals();
                 },
 

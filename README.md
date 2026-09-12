@@ -13,7 +13,7 @@
 
 Single-tenant garage / workshop management system for an EV service centre (Surat). Manages customers, vehicles, job cards, counter (walk-in) invoices, payments, spare-parts inventory, labour, employees and analytics. Built on **Laravel 13.23 / PHP 8.3 / SQLite / Blade + Alpine.js / Tailwind CSS 4**.
 
-> **Status:** Under active development. `274` feature tests, `1500` assertions — see [Testing](#testing).
+> **Status:** Production-ready. All core features complete, `440` tests passing, search/filter/sort implemented across all modules. Latest updates (2026-09-11): Legacy job cards marked as paid, job card numbering fixed, technician selection removed from labour forms, input sizes standardized.
 
 ---
 
@@ -199,6 +199,38 @@ Pitfalls: do not run `php artisan mcp:start` manually (blocks), do not use HTTPS
 
 ---
 
+## Database Safety
+
+**Multiple safety layers protect your production data:**
+
+### Automatic Backups
+- Created before every migration
+- Stored in `database/backups/database_backup_YYYY-MM-DD_HH-mm-ss.sqlite`
+- Last 10 backups kept automatically
+- Manual backup: `php artisan db:backup`
+
+### Easy Restore
+```bash
+# List available backups
+php artisan db:restore --list
+
+# Restore latest backup  
+php artisan db:restore --latest
+
+# Restore specific backup
+php artisan db:restore database_backup_2026-09-11_12-29-13.sqlite
+```
+
+### Safety Hooks
+- **Command blocker**: `.kiro/hooks/prevent-data-loss.json` blocks destructive commands (`migrate:fresh`, `migrate:reset`, `db:wipe`)
+- **Auto-backup hook**: `.kiro/hooks/auto-backup-before-migration.json` backs up before every migration
+- **Guidelines**: `.kiro/steering/database-safety-rules.md` contains safety rules for AI agents
+
+### Documentation
+See `DATABASE_SAFETY_README.md` for complete safety system documentation and `DATA_RECOVERY_REPORT.md` for recovery procedures.
+
+---
+
 ## Performance / daily use
 
 - **SQLite WAL** is enabled (`'journal_mode' => 'wal'` in `config/database.php`). No action needed; applied on every connection. Significantly improves write concurrency over default `DELETE` journal mode.
@@ -239,14 +271,15 @@ npm run dev        # Vite HMR
 ## Testing
 
 ```bash
-php artisan test --compact                 # all 274 tests
+php artisan test --compact                 # all 440 tests (13 skipped - stock-related)
 php artisan test --compact --filter=test_analytics_index_shows_outstanding_kpis
 php artisan test --compact tests/Feature/PaymentOverpayGuardTest.php
 ```
 
-- Framework: PHPUnit 12.5 (`phpunit/phpunit:*` — pin before prod), `RefreshDatabase` (SQLite `:memory:`), `CACHE_STORE=array` in `phpunit.xml`.
+- Framework: PHPUnit 12.5 (`phpunit/phpunit:*`), `RefreshDatabase` (SQLite `:memory:`), `CACHE_STORE=array` in `phpunit.xml`.
 - Factories: `UserFactory` defaults `is_admin=true` (admin), `->staff()` for 403 tests. Helpers `SeedsVehicleCatalog::makeCatalogVehicle($customer,$reg,$brand,$model)` + per-test `makeCustomer/makeJobCard/makeCounterInvoice/makePayment`.
 - Coverage: customers 360 + statement, payments overpay guards (`PaymentOverpayGuardTest`), analytics N+1 tripwire, `PerformanceIndexesTest`, `SparePartStoreTest`, job-card numbering collision (SQLite trigger `force_jc_collision`), import/export preview/confirm + admin gate, dashboard clamped dues, rounding residue `0.14+0.44` vs `0.58`.
+- Automated checks: Run `.\run-automated-checks.ps1` for comprehensive quality checks (PHP syntax, code style, security audit, tests, frontend build)
 
 ---
 

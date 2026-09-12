@@ -90,7 +90,7 @@
                                 </div>
                                 <div class="col-span-2">
                                     <input type="number" :name="`items[${index}][quantity]`" x-model="item.quantity" @input="calculateItemLine(index)"
-                                           placeholder="Qty" class="block w-full text-sm rounded-md border border-gray-300 bg-white shadow-sm" required min="1">
+                                           placeholder="Qty" class="block w-full h-10 text-sm rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm" required min="1">
                                 </div>
                                 <div class="col-span-2">
                                     <input type="number" step="0.01" :name="`items[${index}][mrp]`" x-model="item.mrp"
@@ -99,7 +99,7 @@
                                 </div>
                                 <div class="col-span-1">
                                     <input type="number" step="0.01" :name="`items[${index}][discount_percent]`" x-model="item.discount_percent" @input="calculateItemLine(index)"
-                                           placeholder="Disc%" class="block w-full text-sm rounded-md border border-gray-300 bg-white shadow-sm" min="0" max="100">
+                                           placeholder="Disc%" class="block w-full h-10 text-sm rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm" min="0" max="100">
                                 </div>
                                 <div class="col-span-1 text-right text-sm font-medium" x-text="'{{ config('garage.currency_symbol') }}' + item.lineTotal.toFixed(2)"></div>
                                 <div class="col-span-1">
@@ -132,10 +132,10 @@
 
                             <div class="grid grid-cols-2 gap-2">
                                 <input type="number" step="0.01" name="discount_percent" x-model="discountPercent" @input="calculateTotals()"
-                                       placeholder="Invoice Discount %" class="text-sm rounded-md border border-gray-300 bg-white shadow-sm" min="0" max="100"
+                                       placeholder="Invoice Discount %" class="h-10 text-sm rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm" min="0" max="100"
                                        x-show="discountType === 'percentage'" :disabled="discountType !== 'percentage'">
                                 <input type="number" step="0.01" name="discount_amount" x-model="discountAmount" @input="calculateTotals()"
-                                       placeholder="Invoice Discount {{ config('garage.currency_symbol') }}" class="text-sm rounded-md border border-gray-300 bg-white shadow-sm" min="0"
+                                       placeholder="Invoice Discount {{ config('garage.currency_symbol') }}" class="h-10 text-sm rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm" min="0"
                                        x-show="discountType === 'amount'" :disabled="discountType !== 'amount'">
                             </div>
 

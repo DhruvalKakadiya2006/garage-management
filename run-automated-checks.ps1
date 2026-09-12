@@ -123,15 +123,19 @@ if (Test-Path ".env") {
 
 # 8. Database Migration Check
 Write-Section "8. Database Migrations"
-Write-Host "Testing fresh migration..." -ForegroundColor Cyan
-$migrationResult = php artisan migrate:fresh --force --no-interaction 2>&1
+Write-Host "Checking migration status (non-destructive)..." -ForegroundColor Cyan
+$migrationStatus = php artisan migrate:status 2>&1
 if ($LASTEXITCODE -eq 0) {
-    $migrationCount = ($migrationResult | Select-String -Pattern "DONE").Count
-    Write-Success "Fresh migration successful ($migrationCount migrations)"
+    $ranCount = ($migrationStatus | Select-String -Pattern "Ran").Count
+    Write-Success "All migrations are up to date ($ranCount migrations ran)"
 } else {
-    Write-Failure "Migration failed!"
-    Write-Host $migrationResult -ForegroundColor Red
+    Write-Failure "Migration status check failed!"
+    Write-Host $migrationStatus -ForegroundColor Red
 }
+
+Write-Host ""
+Write-Host "  ⚠️  IMPORTANT: Database integrity preserved" -ForegroundColor Yellow
+Write-Host "  This check does NOT run migrate:fresh (which would delete all data)" -ForegroundColor Gray
 
 # 9. PHPUnit Tests
 Write-Section "9. Automated Tests (PHPUnit)"

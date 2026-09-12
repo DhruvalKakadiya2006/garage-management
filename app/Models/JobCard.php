@@ -85,7 +85,10 @@ class JobCard extends Model
         // Soft-deleted rows still occupy their number through the unique
         // index, so the sequence must be derived from every row, trashed
         // included.
+        // IMPORTANT: Only count job cards that start with our prefix (JC-)
+        // to exclude legacy imported cards with different formats (LEG-*)
         $maxSuffix = (int) self::withTrashed()
+            ->where('job_card_no', 'like', self::JOB_CARD_NO_PREFIX.'%')
             ->selectRaw('MAX(CAST(substr(job_card_no, ?) AS INTEGER)) as max_suffix', [strlen(self::JOB_CARD_NO_PREFIX) + 1])
             ->value('max_suffix');
 

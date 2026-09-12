@@ -72,6 +72,9 @@ yarn-error.log
 # ──────────────────────────────────────────────────────────────
 # Main AI context file (regenerated/updated as needed)
 /AI_CONTEXT.md
+/CLEANUP_SUMMARY.md
+/DATA_RECOVERY_REPORT.md
+/DATABASE_SAFETY_README.md
 
 # AI agent configurations
 /.agents

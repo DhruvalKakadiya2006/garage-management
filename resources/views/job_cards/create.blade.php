@@ -111,7 +111,7 @@
                             <div class="grid grid-cols-12 gap-2 mb-2 items-end">
                                 <div class="col-span-11">
                                     <input type="text" :name="`complaints[${index}][description]`" x-model="complaint.description"
-                                           placeholder="Describe the complaint" class="block w-full text-sm rounded-md border border-gray-300 bg-white shadow-sm" required>
+                                           placeholder="Describe the complaint" class="block w-full h-10 text-sm rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm" required>
                                 </div>
                                 <div class="col-span-1">
                                     <button type="button" @click="removeComplaint(index)" title="Remove"

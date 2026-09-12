@@ -5,10 +5,16 @@
                 <x-heroicon-o-book-open class="w-6 h-6 text-primary" />
                 Vehicle Catalog
             </h2>
-            <x-button :href="route('vehicle-brands.create')">
-                <x-heroicon-o-plus class="w-4 h-4" />
-                Add Brand
-            </x-button>
+            <div class="flex gap-2">
+                <x-button :href="route('vehicle-models.create')" variant="secondary">
+                    <x-heroicon-o-plus class="w-4 h-4" />
+                    Add Model
+                </x-button>
+                <x-button :href="route('vehicle-brands.create')">
+                    <x-heroicon-o-plus class="w-4 h-4" />
+                    Add Brand
+                </x-button>
+            </div>
         </div>
     </x-slot>
 
@@ -69,6 +75,14 @@
                 bulkConfirmMessage="Brands with models under them will be skipped."
             >
                 <x-slot name="single">
+                    <x-button type="button" @click="goAddModel" variant="secondary" title="Add model to selected brand">
+                        <x-heroicon-o-plus class="w-4 h-4" />
+                        Add Model
+                    </x-button>
+                    <x-button type="button" @click="goEditBrand" variant="secondary">
+                        <x-heroicon-o-pencil-square class="w-4 h-4" />
+                        Edit Brand
+                    </x-button>
                     <x-button type="button" @click="$dispatch('open-modal', 'bulk-delete-confirm')" class="flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                         <x-heroicon-o-trash class="w-4 h-4" />
                         Delete
