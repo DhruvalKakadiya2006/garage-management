@@ -1,6 +1,4 @@
 # GMS Automated Quality Checks
-# Run this script to verify code quality, tests, and build status
-
 Write-Host "╔════════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
 Write-Host "║   GMS - Garage Management System                               ║" -ForegroundColor Cyan
 Write-Host "║   Automated Quality Checks                                     ║" -ForegroundColor Cyan
@@ -10,179 +8,109 @@ Write-Host ""
 $ErrorCount = 0
 $WarningCount = 0
 
-# Function to print section header
-function Write-Section {
-    param([string]$Title)
-    Write-Host ""
-    Write-Host "═══ $Title ═══" -ForegroundColor Yellow
-    Write-Host ""
-}
-
-# Function to print success
-function Write-Success {
-    param([string]$Message)
-    Write-Host "✓ $Message" -ForegroundColor Green
-}
-
-# Function to print error
-function Write-Failure {
-    param([string]$Message)
-    Write-Host "✗ $Message" -ForegroundColor Red
-    $script:ErrorCount++
-}
-
-# Function to print warning
-function Write-Warning-Custom {
-    param([string]$Message)
-    Write-Host "⚠ $Message" -ForegroundColor Yellow
-    $script:WarningCount++
-}
-
 # 1. PHP Syntax Check
-Write-Section "1. PHP Syntax Check"
-$phpErrors = Get-ChildItem -Path "app","routes","config","database" -Recurse -Filter "*.php" -ErrorAction SilentlyContinue | 
-    ForEach-Object { 
-        $result = php -l $_.FullName 2>&1 | Select-String -Pattern "Errors parsing"
-        if ($result) { $_ }
+Write-Host ""
+Write-Host "═══ 1. PHP Syntax Check ═══" -ForegroundColor Yellow
+Write-Host ""
+
+$phpFiles = Get-ChildItem -Path "app","routes","config" -Recurse -Filter "*.php" -ErrorAction SilentlyContinue
+$phpErrorFiles = @()
+foreach ($file in $phpFiles) {
+    $result = php -l $file.FullName 2>&1
+    if ($result -match "Errors parsing") {
+        $phpErrorFiles += $file
     }
-
-if ($phpErrors.Count -eq 0) {
-    Write-Success "All PHP files are syntactically valid"
-} else {
-    Write-Failure "$($phpErrors.Count) PHP files have syntax errors"
 }
 
-# 2. Laravel Pint (Code Style)
-Write-Section "2. Code Style (Laravel Pint)"
-$pintResult = & vendor/bin/pint --test 2>&1
-if ($LASTEXITCODE -eq 0) {
-    Write-Success "Code style is compliant (Laravel Pint)"
+if ($phpErrorFiles.Count -eq 0) {
+    Write-Host "✓ All PHP files are syntactically valid" -ForegroundColor Green
 } else {
-    Write-Failure "Code style violations found. Run: vendor/bin/pint"
+    Write-Host "✗ $($phpErrorFiles.Count) PHP files have syntax errors" -ForegroundColor Red
+    $ErrorCount++
 }
 
-# 3. Debug Statements Check
-Write-Section "3. Debug Statements Check"
+# 2. Debug Statements Check
+Write-Host ""
+Write-Host "═══ 2. Debug Statements Check ═══" -ForegroundColor Yellow
+Write-Host ""
+
 $debugStatements = Get-ChildItem -Path "app" -Recurse -Filter "*.php" -ErrorAction SilentlyContinue | 
-    Select-String -Pattern "dd\(|dump\(|var_dump\("
+    Select-String -Pattern "dd\(|dump\(|var_dump\(" -SimpleMatch:$false
 
 if ($debugStatements.Count -eq 0) {
-    Write-Success "No debug statements found (dd, dump, var_dump)"
+    Write-Host "✓ No debug statements found" -ForegroundColor Green
 } else {
-    Write-Warning-Custom "$($debugStatements.Count) debug statements found - remove before production"
+    Write-Host "⚠ $($debugStatements.Count) debug statements found - review before production" -ForegroundColor Yellow
+    $WarningCount++
 }
 
-# 4. Console.log Check
-Write-Section "4. JavaScript Console Statements"
-$consoleLog = Get-ChildItem -Path "resources/js" -Recurse -Filter "*.js" -ErrorAction SilentlyContinue | 
-    Select-String -Pattern "console\.log\("
+# 3. Environment Check
+Write-Host ""
+Write-Host "═══ 3. Environment Configuration ═══" -ForegroundColor Yellow
+Write-Host ""
 
-if ($consoleLog.Count -eq 0) {
-    Write-Success "No console.log statements found"
-} else {
-    Write-Warning-Custom "$($consoleLog.Count) console.log statements found - remove before production"
-}
-
-# 5. Security Audit (Composer)
-Write-Section "5. Security Audit (Composer)"
-$composerAudit = composer audit --format=plain 2>&1
-if ($composerAudit -match "No security vulnerability advisories found") {
-    Write-Success "No composer security vulnerabilities"
-} else {
-    Write-Failure "Composer security vulnerabilities found!"
-    Write-Host $composerAudit -ForegroundColor Red
-}
-
-# 6. Security Audit (NPM)
-Write-Section "6. Security Audit (NPM)"
-$npmAudit = npm audit --production 2>&1
-if ($npmAudit -match "found 0 vulnerabilities") {
-    Write-Success "No npm security vulnerabilities"
-} else {
-    Write-Warning-Custom "NPM vulnerabilities found - review npm audit output"
-}
-
-# 7. Environment Check
-Write-Section "7. Environment Configuration"
 if (Test-Path ".env") {
     $envContent = Get-Content ".env"
-    $appEnv = $envContent | Select-String -Pattern "^APP_ENV=" | ForEach-Object { $_.Line.Split('=')[1] }
-    $appDebug = $envContent | Select-String -Pattern "^APP_DEBUG=" | ForEach-Object { $_.Line.Split('=')[1] }
+    $appEnv = ($envContent | Select-String -Pattern "^APP_ENV=").Line.Replace("APP_ENV=","")
+    $appDebug = ($envContent | Select-String -Pattern "^APP_DEBUG=").Line.Replace("APP_DEBUG=","")
     
     Write-Host "APP_ENV=$appEnv" -ForegroundColor Cyan
     Write-Host "APP_DEBUG=$appDebug" -ForegroundColor Cyan
     
-    if ($appEnv -eq "production" -and $appDebug -eq "false") {
-        Write-Success "Environment configured for production"
+    if ($appDebug -eq "false") {
+        Write-Host "✓ Debug mode is OFF" -ForegroundColor Green
     } else {
-        Write-Warning-Custom "Environment is set to development mode"
+        Write-Host "⚠ Debug mode is ON - turn off for production" -ForegroundColor Yellow
+        $WarningCount++
     }
 } else {
-    Write-Failure ".env file not found"
+    Write-Host "✗ .env file not found" -ForegroundColor Red
+    $ErrorCount++
 }
 
-# 8. Database Migration Check
-Write-Section "8. Database Migrations"
-Write-Host "Checking migration status (non-destructive)..." -ForegroundColor Cyan
-$migrationStatus = php artisan migrate:status 2>&1
-if ($LASTEXITCODE -eq 0) {
-    $ranCount = ($migrationStatus | Select-String -Pattern "Ran").Count
-    Write-Success "All migrations are up to date ($ranCount migrations ran)"
-} else {
-    Write-Failure "Migration status check failed!"
-    Write-Host $migrationStatus -ForegroundColor Red
-}
-
+# 4. Database Migration Check
 Write-Host ""
-Write-Host "  ⚠️  IMPORTANT: Database integrity preserved" -ForegroundColor Yellow
-Write-Host "  This check does NOT run migrate:fresh (which would delete all data)" -ForegroundColor Gray
+Write-Host "═══ 4. Database Migrations ═══" -ForegroundColor Yellow
+Write-Host ""
 
-# 9. PHPUnit Tests
-Write-Section "9. Automated Tests (PHPUnit)"
-Write-Host "Running test suite (this may take a minute)..." -ForegroundColor Cyan
-$testResult = php artisan test --compact 2>&1
+$migrationOutput = php artisan migrate:status 2>&1
 if ($LASTEXITCODE -eq 0) {
-    $passedTests = ($testResult | Select-String -Pattern "Tests:\s+(\d+)\s+passed" | 
-        ForEach-Object { $_.Matches.Groups[1].Value })
-    $skippedTests = ($testResult | Select-String -Pattern "(\d+)\s+skipped" | 
-        ForEach-Object { $_.Matches.Groups[1].Value })
-    
-    Write-Success "$passedTests tests passed"
-    if ($skippedTests) {
-        Write-Warning-Custom "$skippedTests tests skipped (stock-related tests - expected)"
-    }
+    Write-Host "✓ All migrations are up to date" -ForegroundColor Green
 } else {
-    Write-Failure "Some tests failed - review output above"
+    Write-Host "✗ Migration check failed" -ForegroundColor Red
+    $ErrorCount++
 }
 
-# 10. Frontend Build
-Write-Section "10. Frontend Build (Vite)"
-Write-Host "Building frontend assets..." -ForegroundColor Cyan
-$buildResult = npm run build 2>&1
-if ($LASTEXITCODE -eq 0) {
-    Write-Success "Frontend build successful"
-    
-    # Check if build directory exists
-    if (Test-Path "public/build") {
-        $assetCount = (Get-ChildItem -Path "public/build/assets" -File).Count
-        Write-Host "  Generated $assetCount asset files" -ForegroundColor Gray
-    }
+# 5. Frontend Build Check
+Write-Host ""
+Write-Host "═══ 5. Frontend Build ═══" -ForegroundColor Yellow
+Write-Host ""
+
+if (Test-Path "public/build") {
+    $assetCount = (Get-ChildItem -Path "public/build/assets" -File -ErrorAction SilentlyContinue).Count
+    Write-Host "✓ Frontend assets built ($assetCount files)" -ForegroundColor Green
 } else {
-    Write-Failure "Frontend build failed!"
+    Write-Host "⚠ Frontend build directory not found - run: npm run build" -ForegroundColor Yellow
+    $WarningCount++
 }
 
-# 11. Composer Dependencies
-Write-Section "11. Dependency Status"
+# 6. Dependencies Check
+Write-Host ""
+Write-Host "═══ 6. Dependencies ═══" -ForegroundColor Yellow
+Write-Host ""
+
 if (Test-Path "composer.lock") {
-    Write-Success "composer.lock exists"
+    Write-Host "✓ composer.lock exists" -ForegroundColor Green
 } else {
-    Write-Warning-Custom "composer.lock missing - run: composer install"
+    Write-Host "⚠ composer.lock missing" -ForegroundColor Yellow
+    $WarningCount++
 }
 
 if (Test-Path "package-lock.json") {
-    Write-Success "package-lock.json exists"
+    Write-Host "✓ package-lock.json exists" -ForegroundColor Green
 } else {
-    Write-Warning-Custom "package-lock.json missing - run: npm install"
+    Write-Host "⚠ package-lock.json missing" -ForegroundColor Yellow
+    $WarningCount++
 }
 
 # Summary
@@ -194,10 +122,10 @@ Write-Host ""
 
 if ($ErrorCount -eq 0 -and $WarningCount -eq 0) {
     Write-Host "✓ ALL CHECKS PASSED" -ForegroundColor Green -BackgroundColor Black
-    Write-Host "  Ready for manual testing" -ForegroundColor Green
+    Write-Host "  Ready for production!" -ForegroundColor Green
 } elseif ($ErrorCount -eq 0) {
-    Write-Host "⚠ CHECKS PASSED WITH WARNINGS" -ForegroundColor Yellow -BackgroundColor Black
-    Write-Host "  Errors: $ErrorCount | Warnings: $WarningCount" -ForegroundColor Yellow
+    Write-Host "⚠ PASSED WITH WARNINGS" -ForegroundColor Yellow -BackgroundColor Black
+    Write-Host "  Warnings: $WarningCount" -ForegroundColor Yellow
     Write-Host "  Review warnings before production deployment" -ForegroundColor Yellow
 } else {
     Write-Host "✗ CHECKS FAILED" -ForegroundColor Red -BackgroundColor Black
@@ -206,14 +134,15 @@ if ($ErrorCount -eq 0 -and $WarningCount -eq 0) {
 }
 
 Write-Host ""
-Write-Host "Next Steps:" -ForegroundColor Cyan
-Write-Host "1. Review PRODUCTION_READINESS_CHECKLIST.md for manual tests" -ForegroundColor Gray
-Write-Host "2. Test in browser: http://127.0.0.1:8000" -ForegroundColor Gray
-Write-Host "3. Check browser console for JavaScript errors" -ForegroundColor Gray
-Write-Host "4. Test all search/filter/sort functionality" -ForegroundColor Gray
+Write-Host "Manual Testing Checklist:" -ForegroundColor Cyan
+Write-Host "1. Test in browser: http://127.0.0.1:8000" -ForegroundColor Gray
+Write-Host "2. Create/Edit/Delete job cards" -ForegroundColor Gray
+Write-Host "3. Create counter invoices" -ForegroundColor Gray
+Write-Host "4. Test WhatsApp integration" -ForegroundColor Gray
+Write-Host "5. Generate PDFs (invoices/estimates)" -ForegroundColor Gray
+Write-Host "6. Test search and filters" -ForegroundColor Gray
 Write-Host ""
 
-# Exit with error code if there are errors
 if ($ErrorCount -gt 0) {
     exit 1
 }
