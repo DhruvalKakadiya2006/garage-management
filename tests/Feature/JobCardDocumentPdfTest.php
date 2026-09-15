@@ -152,9 +152,11 @@ class JobCardDocumentPdfTest extends TestCase
 
         $estimateHtml = view('pdf.job-card', ['jobCard' => $jobCard, 'documentType' => 'estimate'])->render();
         $this->assertStringContainsString('ESTIMATE', $estimateHtml);
-        $this->assertStringContainsString("valid for {$validity} days", $estimateHtml);
+        // Validity text removed per user request
+        $this->assertStringNotContainsString("valid for {$validity} days", $estimateHtml);
         $this->assertStringContainsString('Estimated Total', $estimateHtml);
-        $this->assertStringContainsString('Proposed quotation', $estimateHtml);
+        // Subtitle removed per user request
+        $this->assertStringNotContainsString('Proposed quotation', $estimateHtml);
         $this->assertStringNotContainsString('TAX INVOICE', $estimateHtml);
         $this->assertStringNotContainsString('Payment Terms', $estimateHtml);
     }

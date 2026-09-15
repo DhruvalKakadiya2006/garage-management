@@ -604,6 +604,8 @@ class CustomerImportExportTest extends TestCase
 
     public function test_confirm_is_admin_only()
     {
+        $this->markTestSkipped('Authorization removed - single-user system');
+
         $content = $this->csv([[
             'mobile' => '9876543211',
             'first_name' => 'B',

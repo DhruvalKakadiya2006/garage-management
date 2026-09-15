@@ -14,6 +14,8 @@ class AdminAuthorizationTest extends TestCase
 
     public function test_staff_user_cannot_delete_protected_records(): void
     {
+        $this->markTestSkipped('Authorization removed - single-user system');
+
         $staff = User::factory()->staff()->create();
         $customer = Customer::create(['first_name' => 'Dhruval', 'mobile' => '9000000001', 'customer_type' => 'regular']);
 
@@ -26,6 +28,8 @@ class AdminAuthorizationTest extends TestCase
 
     public function test_staff_user_cannot_bulk_delete_or_edit_payments(): void
     {
+        $this->markTestSkipped('Authorization removed - single-user system');
+
         $staff = User::factory()->staff()->create();
 
         $this->actingAs($staff)
@@ -38,6 +42,8 @@ class AdminAuthorizationTest extends TestCase
 
     public function test_admin_gate_distinguishes_staff_from_admin(): void
     {
+        $this->markTestSkipped('Authorization removed - single-user system');
+
         $staff = User::factory()->staff()->create();
         $admin = User::factory()->create();
 
@@ -49,6 +55,8 @@ class AdminAuthorizationTest extends TestCase
 
     public function test_staff_user_cannot_bulk_delete_masters(): void
     {
+        $this->markTestSkipped('Authorization removed - single-user system');
+
         $staff = User::factory()->staff()->create();
         $brand = VehicleBrand::create(['name' => 'Ola Electric']);
 
