@@ -77,7 +77,7 @@
                             </label>
                         @endif
 
-                        <x-input name="terms_and_conditions" label="Terms & Conditions (printed on invoices)" type="textarea"
+                        <x-input name="terms_and_conditions" label="Terms & Conditions (printed on invoices and estimates)" type="textarea"
                                  rows="4" :value="$profile->terms_and_conditions" />
                     </div>
                 </x-card>

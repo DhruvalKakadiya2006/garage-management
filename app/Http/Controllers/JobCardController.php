@@ -115,6 +115,11 @@ class JobCardController extends Controller
             $query->where('job_type', $validated['job_type']);
         }
 
+        // Exclude delivered jobs
+        if ($request->filled('exclude_delivered') && $request->boolean('exclude_delivered')) {
+            $query->where('status', '!=', 'delivered');
+        }
+
         // Apply sorting
         $sortColumn = $validated['sort'] ?? 'job_date';
         $sortDirection = $validated['direction'] ?? 'desc';

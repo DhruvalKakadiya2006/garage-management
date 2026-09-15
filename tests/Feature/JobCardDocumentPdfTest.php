@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\CompanyProfile;
 use App\Models\Customer;
 use App\Models\JobCard;
 use App\Models\LabourMaster;
@@ -159,6 +160,22 @@ class JobCardDocumentPdfTest extends TestCase
         $this->assertStringNotContainsString('Proposed quotation', $estimateHtml);
         $this->assertStringNotContainsString('TAX INVOICE', $estimateHtml);
         $this->assertStringNotContainsString('Payment Terms', $estimateHtml);
+    }
+
+    public function test_company_terms_and_conditions_render_on_invoices_and_estimates(): void
+    {
+        $jobCard = $this->makeBilledJobCard();
+        $terms = 'Goods once sold are not returnable.';
+
+        CompanyProfile::profile()->update([
+            'terms_and_conditions' => $terms,
+        ]);
+
+        $invoiceHtml = view('pdf.job-card', ['jobCard' => $jobCard, 'documentType' => 'invoice'])->render();
+        $estimateHtml = view('pdf.job-card', ['jobCard' => $jobCard, 'documentType' => 'estimate'])->render();
+
+        $this->assertStringContainsString($terms, $invoiceHtml);
+        $this->assertStringContainsString($terms, $estimateHtml);
     }
 
     public function test_document_generation_requires_line_items()

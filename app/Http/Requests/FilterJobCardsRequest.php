@@ -23,6 +23,7 @@ class FilterJobCardsRequest extends FormRequest
             'brand' => ['nullable', Rule::exists('vehicle_brands', 'name')],
             'payment_status' => 'nullable|in:all,paid,partially_paid,unbilled,unpaid',
             'job_type' => ['nullable', 'in:'.implode(',', array_keys(config('garage.option_lists.job_type')))],
+            'exclude_delivered' => 'nullable|boolean',
             'sort' => 'nullable|in:job_date,status,assigned_technician_id,grand_total,payment_status_label',
             'direction' => 'nullable|in:asc,desc',
             'per_page' => 'nullable|integer|min:5|max:100',

@@ -94,7 +94,7 @@
                             <x-heroicon-o-magnifying-glass class="w-4 h-4" />
                             Search
                         </x-button>
-                        @if(request()->hasAny(['search', 'from_date', 'to_date', 'technician', 'status', 'brand', 'payment_status', 'job_type', 'sort']))
+                        @if(request()->hasAny(['search', 'from_date', 'to_date', 'technician', 'status', 'brand', 'payment_status', 'job_type', 'exclude_delivered', 'sort']))
                             <x-button variant="secondary" type="button" onclick="window.location.href='{{ route('job-cards.index') }}'">
                                 Clear
                             </x-button>
@@ -183,6 +183,15 @@
                                 <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
                             </select>
                         </div>
+
+                        <div>
+                            <label for="exclude_delivered" class="block text-sm font-medium text-gray-700 mb-1">Filter Options</label>
+                            <label class="flex items-center gap-2 h-10 px-3 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="exclude_delivered" value="1" {{ request('exclude_delivered') ? 'checked' : '' }}
+                                       class="rounded border-gray-300 text-primary focus:ring-primary">
+                                <span class="text-sm text-gray-700">Hide Delivered Jobs</span>
+                            </label>
+                        </div>
                     </x-filter-panel>
 
                     {{-- Active Filters --}}
@@ -196,6 +205,7 @@
                             'brand' => request('brand'),
                             'payment_status' => request('payment_status') !== 'all' ? request('payment_status') : null,
                             'job_type' => request('job_type'),
+                            'exclude_delivered' => request('exclude_delivered') ? 'Hide Delivered Jobs' : null,
                         ]"
                         :baseRoute="'job-cards.index'"
                     />
@@ -233,59 +243,6 @@
                     </x-button>
                 </x-slot>
             </x-table-selection-bar>
-
-            <!-- Filters -->
-            <div class="bg-slate-50 rounded-xl border border-slate-200 shadow-sm p-4">
-                <form method="GET" action="{{ route('job-cards.index') }}" class="flex flex-wrap gap-4 items-end">
-                    <div class="flex-1 min-w-[180px]">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Assigned Technician</label>
-                        <select name="technician" class="block w-full h-10 rounded-md border border-gray-300 bg-white shadow-sm text-sm focus:border-primary focus:ring-primary">
-                            <option value="">-- All Technicians --</option>
-                            @foreach ($technicians as $tech)
-                                <option value="{{ $tech->id }}" {{ request('technician') == $tech->id ? 'selected' : '' }}>
-                                    {{ $tech->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="flex-1 min-w-[180px]">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                        <select name="status" class="block w-full h-10 rounded-md border border-gray-300 bg-white shadow-sm text-sm focus:border-primary focus:ring-primary">
-                            <option value="">-- All Statuses --</option>
-                            @foreach (config('garage.option_lists.job_card_status') as $statusValue => $statusLabel)
-                                <option value="{{ $statusValue }}" {{ request('status') == $statusValue ? 'selected' : '' }}>
-                                    {{ $statusLabel }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="flex-1 min-w-[180px]">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Brand</label>
-                        <select name="brand" class="block w-full h-10 rounded-md border border-gray-300 bg-white shadow-sm text-sm focus:border-primary focus:ring-primary">
-                            <option value="">-- All Brands --</option>
-                            @foreach ($brands as $brand)
-                                <option value="{{ $brand }}" {{ request('brand') == $brand ? 'selected' : '' }}>
-                                    {{ $brand }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">From Date</label>
-                        <input type="date" name="from_date" value="{{ request('from_date') }}"
-                               class="block w-full h-10 rounded-md border border-gray-300 bg-white shadow-sm text-sm focus:border-primary focus:ring-primary">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">To Date</label>
-                        <input type="date" name="to_date" value="{{ request('to_date') }}"
-                               class="block w-full h-10 rounded-md border border-gray-300 bg-white shadow-sm text-sm focus:border-primary focus:ring-primary">
-                    </div>
-                    <div class="flex gap-3">
-                        <x-button type="submit">Filter</x-button>
-                        <x-button variant="secondary" :href="route('job-cards.index')">Clear</x-button>
-                    </div>
-                </form>
-            </div>
 
             <x-data-table
                 :empty="$jobCards->isEmpty()"

@@ -30,7 +30,7 @@
         ];
     @endphp
 
-    <div class="py-6" x-data="jobCardForm(@json($initialData), @json($initialVehiclesData))">
+    <div class="py-6" x-data="jobCardForm(@js($initialData), @js($initialVehiclesData))">
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white shadow-sm sm:rounded-lg p-6">
 
