@@ -622,18 +622,18 @@ class JobCardController extends Controller
     public function shareInvoiceWhatsApp(JobCard $jobCard)
     {
         $jobCard->load('customer');
-        
+
         $mobile = $jobCard->customer->mobile ?? '';
         // Remove any non-numeric characters and ensure it starts with country code
         $mobile = preg_replace('/[^0-9]/', '', $mobile);
-        if ($mobile && !str_starts_with($mobile, '91')) {
-            $mobile = '91' . $mobile;
+        if ($mobile && ! str_starts_with($mobile, '91')) {
+            $mobile = '91'.$mobile;
         }
-        
-        $whatsappUrl = $mobile 
+
+        $whatsappUrl = $mobile
             ? "https://wa.me/{$mobile}"
-            : "https://wa.me/";
-            
+            : 'https://wa.me/';
+
         return redirect($whatsappUrl);
     }
 }
