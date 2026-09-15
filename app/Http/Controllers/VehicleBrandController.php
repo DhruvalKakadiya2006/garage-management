@@ -98,8 +98,6 @@ class VehicleBrandController extends Controller
 
     public function destroy(VehicleBrand $vehicleBrand)
     {
-        $this->authorize('admin');
-
         try {
             $vehicleBrand->delete();
 

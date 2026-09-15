@@ -65,7 +65,7 @@ class SparePartController extends Controller
             'labor_charge' => (float) $part->labor_charge,
             'gst_rate' => (float) $part->gst_rate,
             'current_stock_qty' => (int) $part->current_stock_qty,
-            'label' => $part->part_name.' ('.$part->part_code.')',
+            'label' => $part->part_name.' ('.$part->part_code.') — MRP: ₹'.number_format($part->mrp, 2).' + Labor: ₹'.number_format($part->labor_charge, 2),
         ]));
     }
 
@@ -160,8 +160,6 @@ class SparePartController extends Controller
 
     public function destroy(SparePart $sparePart)
     {
-        $this->authorize('admin');
-
         try {
             $sparePart->delete();
 

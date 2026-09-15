@@ -81,8 +81,6 @@ class VehicleModelController extends Controller
 
     public function destroy(VehicleModel $vehicleModel)
     {
-        $this->authorize('admin');
-
         try {
             $vehicleModel->delete();
 

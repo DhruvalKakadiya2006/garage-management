@@ -200,7 +200,7 @@
                                         <option value="">-- Select Service --</option>
                                         @foreach ($labourMasters as $lm)
                                             <option value="{{ $lm->id }}" data-rate="{{ $lm->standard_rate }}" data-taxable="{{ $lm->taxable ? '1' : '0' }}" data-gst="{{ $lm->taxable ? $lm->gst_rate : 0 }}">
-                                                {{ $lm->service_name }}
+                                                {{ $lm->service_name }} — ₹{{ number_format($lm->standard_rate, 2) }}
                                             </option>
                                         @endforeach
                                     </select>

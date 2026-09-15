@@ -162,8 +162,10 @@
                         <td class="align-middle px-6 py-2 whitespace-nowrap">
                             <x-table-checkbox :id="$invoice->id" />
                         </td>
-                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {{ $invoice->invoice_no }}
+                        <td class="align-middle px-6 py-2 whitespace-nowrap text-sm font-medium">
+                            <a href="{{ route('counter-invoices.show', $invoice) }}" class="text-primary hover:text-primary-700 hover:underline">
+                                {{ $invoice->invoice_no }}
+                            </a>
                         </td>
                         <td class="align-middle px-6 py-2 whitespace-nowrap text-sm text-gray-600">
                             {{ $invoice->invoice_date->format('d/m/Y') }}

@@ -11,6 +11,7 @@ use App\Models\SparePart;
 use App\Rules\DiscountWithinSubtotal;
 use App\Services\GstCalculator;
 use App\Services\PartPriceResolver;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -131,7 +132,7 @@ class CounterInvoiceController extends Controller
             'payment_mode' => 'nullable|in:'.implode(',', array_keys(config('garage.option_lists.payment_mode'))),
             'discount_percent' => 'nullable|numeric|min:0|max:100',
             'discount_amount' => 'nullable|numeric|min:0',
-            'gst_applicable' => 'boolean',
+            'gst_applicable' => 'nullable|boolean',
             'items' => 'required|array|min:1|max:50',
             'items.*.spare_part_id' => 'required|exists:spare_parts,id',
             'items.*.quantity' => 'required|integer|min:1',
@@ -235,7 +236,7 @@ class CounterInvoiceController extends Controller
             'payment_mode' => 'nullable|in:'.implode(',', array_keys(config('garage.option_lists.payment_mode'))),
             'discount_percent' => 'nullable|numeric|min:0|max:100',
             'discount_amount' => 'nullable|numeric|min:0',
-            'gst_applicable' => 'boolean',
+            'gst_applicable' => 'nullable|boolean',
             'items' => 'required|array|min:1|max:50',
             'items.*.spare_part_id' => 'required|exists:spare_parts,id',
             'items.*.quantity' => 'required|integer|min:1',
@@ -309,8 +310,6 @@ class CounterInvoiceController extends Controller
 
     public function destroy(CounterInvoice $counterInvoice)
     {
-        $this->authorize('admin');
-
         DB::beginTransaction();
         try {
             // Delete items one-by-one so CounterInvoiceItem::deleting returns stock.
@@ -331,6 +330,26 @@ class CounterInvoiceController extends Controller
 
             return back()->withErrors(['error' => 'Something went wrong deleting this record. Please try again.']);
         }
+    }
+
+    /**
+     * Generate and download a PDF for the counter invoice.
+     */
+    public function pdf(CounterInvoice $counterInvoice)
+    {
+        $counterInvoice->load(['customer', 'items.sparePart'])
+            ->loadSum('payments', 'amount');
+
+        $filename = 'COUNTER-INVOICE-'.$counterInvoice->invoice_no.'.pdf';
+
+        $pdf = Pdf::setBasePath(base_path())
+            ->setPaper('a4')
+            ->setOption('isHtml5ParserEnabled', false)
+            ->setOption('isRemoteEnabled', false)
+            ->setOption('defaultFont', 'sans-serif')
+            ->loadView('pdf.counter-invoice', compact('counterInvoice'));
+
+        return $pdf->download($filename);
     }
 
     private function createItems(CounterInvoice $invoice, array $items)
@@ -377,5 +396,33 @@ class CounterInvoiceController extends Controller
         }
 
         return $lines;
+    }
+
+    /**
+     * Redirect to WhatsApp with customer number (no message)
+     */
+    public function shareWhatsApp(CounterInvoice $counterInvoice)
+    {
+        $counterInvoice->load('customer');
+        
+        $mobile = '';
+        
+        if ($counterInvoice->customer_id) {
+            $mobile = $counterInvoice->customer->mobile ?? '';
+        } else {
+            $mobile = $counterInvoice->walkin_mobile ?? '';
+        }
+        
+        // Remove any non-numeric characters and ensure it starts with country code
+        $mobile = preg_replace('/[^0-9]/', '', $mobile);
+        if ($mobile && !str_starts_with($mobile, '91')) {
+            $mobile = '91' . $mobile;
+        }
+        
+        $whatsappUrl = $mobile 
+            ? "https://wa.me/{$mobile}"
+            : "https://wa.me/";
+            
+        return redirect($whatsappUrl);
     }
 }

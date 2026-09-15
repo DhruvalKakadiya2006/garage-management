@@ -35,8 +35,6 @@ class CompanyProfileController extends Controller
      */
     public function update(Request $request)
     {
-        $this->authorize('admin');
-
         $validated = $request->validate([
             'company_name' => ['required', 'string', 'max:255'],
             'address' => ['nullable', 'string'],

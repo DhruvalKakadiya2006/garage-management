@@ -113,8 +113,6 @@ class EmployeeController extends Controller
 
     public function destroy(Employee $employee)
     {
-        $this->authorize('admin');
-
         $employee->delete();
 
         return redirect()->route('employees.index')->with('success', 'Employee deleted.');

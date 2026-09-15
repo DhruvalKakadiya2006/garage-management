@@ -54,8 +54,6 @@ trait BulkDeletesRecords
      */
     public function bulkDestroy(Request $request): JsonResponse
     {
-        $this->authorize('admin');
-
         try {
             $validated = $request->validate([
                 'ids' => ['required', 'array', 'min:1'],

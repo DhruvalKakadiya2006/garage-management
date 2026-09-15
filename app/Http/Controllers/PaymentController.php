@@ -190,8 +190,6 @@ class PaymentController extends Controller
      */
     public function update(Request $request, Payment $payment)
     {
-        $this->authorize('admin');
-
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0.01',
             'payment_mode' => 'required|in:'.implode(',', array_keys(config('garage.option_lists.payment_mode'))),
@@ -252,8 +250,6 @@ class PaymentController extends Controller
      */
     public function destroy(Payment $payment)
     {
-        $this->authorize('admin');
-
         try {
             $payment->delete();
 

@@ -172,7 +172,7 @@
                             </div>
 
                             <div class="flex items-center gap-2">
-                                <input type="checkbox" name="gst_applicable" x-model="gstApplicable" @change="calculateTotals()"
+                                <input type="checkbox" name="gst_applicable" value="1" x-model="gstApplicable" @change="calculateTotals()"
                                        class="rounded border border-gray-300 text-primary shadow-sm">
                                 <span class="text-sm">GST Applicable</span>
                             </div>

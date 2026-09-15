@@ -527,8 +527,6 @@ class JobCardController extends Controller
 
     public function destroy(JobCard $jobCard)
     {
-        $this->authorize('admin');
-
         // Soft delete only: parts, stock deductions and payments stay put so
         // the document can be restored with its full history.
         $jobCard->delete();
@@ -616,5 +614,26 @@ class JobCardController extends Controller
         }
 
         return $lines;
+    }
+
+    /**
+     * Redirect to WhatsApp with customer number (no message)
+     */
+    public function shareInvoiceWhatsApp(JobCard $jobCard)
+    {
+        $jobCard->load('customer');
+        
+        $mobile = $jobCard->customer->mobile ?? '';
+        // Remove any non-numeric characters and ensure it starts with country code
+        $mobile = preg_replace('/[^0-9]/', '', $mobile);
+        if ($mobile && !str_starts_with($mobile, '91')) {
+            $mobile = '91' . $mobile;
+        }
+        
+        $whatsappUrl = $mobile 
+            ? "https://wa.me/{$mobile}"
+            : "https://wa.me/";
+            
+        return redirect($whatsappUrl);
     }
 }

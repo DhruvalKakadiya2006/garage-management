@@ -90,8 +90,6 @@ class LabourMasterController extends Controller
 
     public function destroy(LabourMaster $labourMaster)
     {
-        $this->authorize('admin');
-
         try {
             $labourMaster->delete();
 

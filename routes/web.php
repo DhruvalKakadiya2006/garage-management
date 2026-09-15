@@ -85,12 +85,16 @@ Route::middleware(['auth'])->group(function () {
     // so they are POST routes, not GET links.
     Route::post('job-cards/{jobCard}/invoice', [JobCardController::class, 'generateInvoice'])->name('job-cards.invoice');
     Route::post('job-cards/{jobCard}/estimate', [JobCardController::class, 'generateEstimate'])->name('job-cards.estimate');
+    // WhatsApp share routes
+    Route::get('job-cards/{jobCard}/share-invoice-whatsapp', [JobCardController::class, 'shareInvoiceWhatsApp'])->name('job-cards.share-invoice-whatsapp');
     Route::get('job-cards/{jobCard}', [JobCardController::class, 'show'])->name('job-cards.show');
     Route::get('job-cards/{jobCard}/edit', [JobCardController::class, 'edit'])->name('job-cards.edit');
     Route::put('job-cards/{jobCard}', [JobCardController::class, 'update'])->name('job-cards.update');
     Route::delete('job-cards/{jobCard}', [JobCardController::class, 'destroy'])->name('job-cards.destroy');
     Route::post('counter-invoices/bulk-delete', [CounterInvoiceController::class, 'bulkDestroy'])->name('counter-invoices.bulk-delete');
     Route::post('counter-invoices/bulk-export', [CounterInvoiceController::class, 'bulkExport'])->name('counter-invoices.bulk-export');
+    Route::get('counter-invoices/{counterInvoice}/pdf', [CounterInvoiceController::class, 'pdf'])->name('counter-invoices.pdf');
+    Route::get('counter-invoices/{counterInvoice}/share-whatsapp', [CounterInvoiceController::class, 'shareWhatsApp'])->name('counter-invoices.share-whatsapp');
     Route::resource('counter-invoices', CounterInvoiceController::class);
 
     // Payments routes

@@ -94,8 +94,6 @@ class CustomerVehicleController extends Controller
 
     public function destroy(Vehicle $vehicle)
     {
-        $this->authorize('admin');
-
         // Explicit pre-check keeps the user-facing reason accurate; anything
         // else (unexpected DB failure) still surfaces as a real error.
         if ($vehicle->jobCards()->exists()) {

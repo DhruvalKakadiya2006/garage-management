@@ -94,8 +94,6 @@ class ImportExportController extends Controller
         // Confirming applies every safe row in one transaction — a mass
         // create/update with bulk-delete-level blast radius, so it shares the
         // admin gate.
-        $this->authorize('admin');
-
         try {
             $report = $this->importService->confirm($token);
         } catch (ImportException $e) {

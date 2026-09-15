@@ -76,12 +76,6 @@
         ],
     ])
 
-    <div class="doc-subtitle">
-        {{ $isInvoice
-            ? 'Tax invoice for services rendered under Job Card ' . $jobCard->job_card_no
-            : 'Proposed quotation for the work described below. This is not a bill.' }}
-    </div>
-
     <div class="section">
         <table class="grid-2">
             <tr>
@@ -119,15 +113,11 @@
                     <div class="section-title">Job Details</div>
                     <div><span class="label">Job Date:</span> <span class="value">{{ $jobCard->job_date->format('d/m/Y') }}</span></div>
                     <div><span class="label">Type:</span> <span class="value">{{ ucwords(str_replace('_', ' ', $jobCard->job_type)) }}</span></div>
-                    <div><span class="label">Status:</span> <span class="value">{{ ucwords(str_replace('_', ' ', $jobCard->status)) }}</span></div>
                     @if ($jobCard->assignedTechnician)
                         <div><span class="label">Technician:</span> <span class="value">{{ $jobCard->assignedTechnician->name }}</span></div>
                     @endif
                     @if ($jobCard->supervisor)
                         <div><span class="label">Supervisor:</span> <span class="value">{{ $jobCard->supervisor->name }}</span></div>
-                    @endif
-                    @if ($jobCard->promised_delivery_date)
-                        <div><span class="label">Promised Delivery:</span> <span class="value">{{ $jobCard->promised_delivery_date->format('d/m/Y') }}</span></div>
                     @endif
                 </td>
             </tr>
@@ -191,12 +181,11 @@
             <thead>
                 <tr>
                     <th style="width:4%;">#</th>
-                    <th style="width:34%;">Service</th>
-                    <th style="width:22%;">Technician</th>
-                    <th class="right" style="width:10%;">Qty</th>
-                    <th class="right" style="width:12%;">Rate</th>
+                    <th style="width:46%;">Service</th>
+                    <th class="right" style="width:12%;">Qty</th>
+                    <th class="right" style="width:14%;">Rate</th>
                     <th class="right" style="width:10%;">GST%</th>
-                    <th class="right" style="width:12%;">Total</th>
+                    <th class="right" style="width:14%;">Total</th>
                 </tr>
             </thead>
             <tbody>
@@ -204,7 +193,6 @@
                     <tr>
                         <td>{{ $loop->iteration }}</td>
                         <td>{{ $labour->labourMaster->service_name }}</td>
-                        <td>{{ $labour->technician->name ?? '—' }}</td>
                         <td class="right">{{ $trimGst($labour->qty) }}</td>
                         <td class="right">{{ $money($labour->rate) }}</td>
                         <td class="right">{{ $jobCard->gst_applicable && $labour->labourMaster->taxable && $labour->labourMaster->gst_rate ? $trimGst($labour->labourMaster->gst_rate) : '—' }}</td>
@@ -302,11 +290,9 @@
     </div>
 
     <div class="section terms">
-        <div class="title">{{ $isInvoice ? 'Payment Terms' : 'Validity' }}</div>
+        <div class="title">{{ $isInvoice ? 'Payment Terms' : 'Terms & Conditions' }}</div>
         @if ($isInvoice)
             <p>Payment is due on delivery of the vehicle. Please retain this invoice as proof of the transaction.</p>
-        @else
-            <p>This estimate is valid for {{ config('garage.estimate_validity_days') }} days from the date of issue (until {{ $validUntil->format('d/m/Y') }}). Final invoice amount may change if additional work is required.</p>
         @endif
         @if ($profile->terms_and_conditions)
             <p style="margin-top:4pt;">{{ $profile->terms_and_conditions }}</p>
