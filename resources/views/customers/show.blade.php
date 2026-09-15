@@ -399,7 +399,7 @@
                     <input type="number" step="0.01" min="0.01" name="amount" x-model="amount"
                            class="block w-full rounded-md border border-gray-300 bg-white shadow-sm text-sm" required>
                     <p class="text-xs text-gray-500 mt-1" x-show="selectedDoc">
-                        Outstanding: <span class="font-medium" x-text="@js($currency) + selectedDoc.outstanding"></span>
+                        Outstanding: <span class="font-medium" x-text="selectedDoc ? (@js($currency) + selectedDoc.outstanding) : ''"></span>
                     </p>
                 </div>
                 <div>
